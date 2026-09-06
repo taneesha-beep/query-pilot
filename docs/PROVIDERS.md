@@ -35,8 +35,13 @@ cannot call one is not a candidate however generous its quota.
 | groq | `openai/gpt-oss-120b` | 200 | yes | 0.721 s | 78 / 49 |
 | groq | `qwen/qwen3.8-27b` | 200 | yes | 0.407 s | 19 / 2 |
 | google-ai-studio | `gemini-3.5-flash-lite` | 200 | yes | 0.830 s | 8 / 1 |
-| google-ai-studio | `gemini-3.8-flash` | 200 | yes | 1.136 s | 8 / 1 |
+| google-ai-studio | `gemini-3.8-flash` | 429 † | yes † | — | — |
 | cerebras | `qwen-3.8-27b`, `gpt-oss-120b`, `gemma-4-31b` | 402 | — | — | — |
+
+† `gemini-3.8-flash` **does** answer and **does** call a tool — it did both on the first
+probe of the day, at 1.136 s. It shows 429 in the current artifact because its ceiling is
+20 requests per day and this session's own probing spent them. The model works; the quota
+does not stretch. See the pair section below.
 
 ## Limits: documented beside observed
 
@@ -46,7 +51,7 @@ cannot call one is not a candidate however generous its quota.
 | groq | `openai/gpt-oss-120b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
 | groq | `qwen/qwen3.8-27b` | 30 | not probed | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
 | google-ai-studio | `gemini-3.5-flash-lite` | not published | **15** | not published | TBD | not published | TBD | not published | TBD |
-| google-ai-studio | `gemini-3.8-flash` | not published | **5** | not published | TBD | not published | TBD | not published | TBD |
+| google-ai-studio | `gemini-3.8-flash` | not published | **5** | not published | **20** | not published | TBD | not published | TBD |
 
 **Documented limits.** Groq publishes a Free Plan table at
 `https://console.groq.com/docs/rate-limits` (read 2026-09-06), columns MODEL ID · RPM ·
@@ -75,14 +80,39 @@ day's tokens, which costs the day. These fill in opportunistically from Phase 2'
 ledgers, where a full working-set run consumes real quota and the ledger records what
 happened when it ran out. Deliberate, not an oversight.
 
+## Credential pools
+
+Google's quota is enforced **per Cloud project, not per key**, so a second key issued
+inside the same project shares one ceiling while a key from a second project doubles the
+headroom. Nothing in the key itself says which one you have.
+
+Two pools are configured — `GEMINI_API_KEY` and `GEMINI_API_KEY_2` — and their
+independence was established by behaviour rather than by reading the console. The probe
+saturates the first pool, **confirms it is still refusing**, and calls the second one
+inside that window:
+
+| Step | Result |
+|---|---|
+| 20 concurrent requests on `GEMINI_API_KEY` | 20 × 429 — pool saturated |
+| 3 control requests on `GEMINI_API_KEY`, immediately after | 3 × 429 — still refusing |
+| 8 requests on `GEMINI_API_KEY_2`, in that window | **8 × 200** |
+
+**Independent.** The control step is what makes this mean anything: without proof that the
+first pool was refusing at that moment, the second pool answering would say nothing.
+
+The convention, which Phase 1's registry implements: `<PROVIDER>_API_KEY` plus optional
+`_2`, `_3`, … and **each suffixed credential is its own quota pool with its own token
+bucket**, never a fallback credential for the same pool. Two Google projects means two
+buckets of 15 RPM, not one bucket of 30.
+
 ## The pair
 
 | Role | Provider | Model string |
 |---|---|---|
 | **cheap** | groq | `openai/gpt-oss-20b` |
 | **strong** | groq | `openai/gpt-oss-120b` |
-| spillover, cheap | google-ai-studio | `gemini-3.5-flash-lite` |
-| spillover, strong | google-ai-studio | `gemini-3.8-flash` |
+| spillover, cheap | google-ai-studio | `gemini-3.5-flash-lite` (× 2 pools) |
+| ~~spillover, strong~~ | ~~google-ai-studio~~ | ~~`gemini-3.8-flash`~~ — **20 requests per day**, see below |
 
 Both tiers on Groq, with Google as the second provider the client spreads onto. Reasons:
 
@@ -93,7 +123,22 @@ Both tiers on Groq, with Google as the second provider the client spreads onto. 
   on the order of a thousand calls. At 5 RPM that is hours of wall clock before any token
   limit binds; at 30 RPM it is tens of minutes.
 - **Google still earns its place**, as the provider work spills onto when a Groq bucket
-  empties, and as the cross-provider comparison Phase 1.1 requires.
+  empties, and as the cross-provider comparison Phase 1.1 requires — but only on
+  `gemini-3.5-flash-lite`.
+
+**`gemini-3.8-flash` is not a spillover tier.** Its own 429 names the ceiling:
+`GenerateRequestsPerDayPerProjectPerModel-FreeTier` = **20**. Twenty requests per day per
+project — 40 across both pools. That is enough to verify the model answers and calls a
+tool, which is what 0.4 needed it for, and nowhere near enough to serve any part of a
+150-task run. It stays registered as a named model so the cascade can be pointed at it if
+the strong tier ever needs to move, and it is excluded from every capacity figure below.
+
+**The consequence, stated plainly: the strong tier has no fallback with real capacity.**
+Both cheap and strong sit on Groq, and Google can only mirror the cheap one. If Groq's
+`openai/gpt-oss-120b` becomes unavailable mid-project, there is no free strong model left
+with a workable daily allowance, and the escalation half of Phase 5 stops being
+measurable. This is the largest single-point-of-failure in the project's infrastructure
+and it is a consequence of the free-tier constraint, not of a design choice.
 
 **What would flip it.** If 2.4 and 3.6 show 20b and 120b too close to separate, the cascade
 has no gap to exploit and the strong tier moves to `gemini-3.8-flash`, accepting 5 RPM. If
@@ -103,9 +148,13 @@ of the work moves to Google and Groq becomes the spillover.
 ## The run budget
 
 **Measured daily capacity.** Groq: three usable models × 1,000 requests and 200,000 tokens
-each — **3,000 requests and 600,000 tokens per day**. Google: RPD and TPD are TBD, so its
-daily capacity is unknown; what is known is 15 RPM and 5 RPM, which bound its throughput
-but not its day.
+each — **3,000 requests and 600,000 tokens per day**.
+
+Google: two independent project pools, both serving `gemini-3.5-flash-lite` at 15 RPM, so
+**30 RPM combined**. Its RPD and TPD are still TBD and remain the project's most valuable
+unmeasured numbers — but the ceiling is known to be well above the burst probes recorded in
+`provider-check.json`, since flash-lite was still answering after them. `gemini-3.8-flash`
+contributes nothing: 20 requests per day per pool.
 
 **Runs planned, counted honestly.** The A1-strong arm of Phase 5 reuses the 3.6 run rather
 than repeating it, so it is not counted twice.
@@ -167,6 +216,16 @@ body — this one is retryable-after-fixing, and neither category covers it clea
 **`gemini-3.8-flash` returned a 503 mid-probe** and succeeded on the next run. Free tiers
 return transient server errors, and 1.2's retryable class needs to hold 503 as well as 429.
 
+**A daily ceiling of 20 requests was found by accident, and only because a 429 body was
+read rather than counted.** `gemini-3.8-flash` stopped answering partway through the day,
+and the reason was not the 5 RPM already recorded — it was
+`GenerateRequestsPerDayPerProjectPerModel-FreeTier` = 20, a different quota entirely. Two
+lessons for Phase 1.2. A 429 is not one condition: the same status code covers a limit that
+clears in seconds and a limit that clears at midnight Pacific, and a client that backs off
+identically for both will sit retrying a request that cannot succeed today. **The error
+classifier must read the quota named in the body, not just the status code**, and the
+ledger must record it so the next run knows which wall it hit.
+
 ## Reproducing this
 
 ```
@@ -174,5 +233,10 @@ set -a && . ./.env && set +a
 uv run python scripts/provider_check.py
 ```
 
-Keys are read from the environment, sent in headers, never placed in a URL, and never
-written to the report.
+Keys are read from the environment (`GROQ_API_KEY`, `GEMINI_API_KEY`, `GEMINI_API_KEY_2`,
+`CEREBRAS_API_KEY`), sent in headers, never placed in a URL, and never written to the
+report. A provider with more than one pool configured also gets the independence probe.
+
+**This script spends real quota** — roughly 120 requests, including two 40-request bursts
+on Groq and the Google saturation probe, which alone exhausts `gemini-3.8-flash` for the
+day. Do not run it casually.

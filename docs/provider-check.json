@@ -1,38 +1,41 @@
 {
-  "checked_utc": "2026-09-06T08:29:39Z",
+  "checked_utc": "2026-09-06T09:04:18Z",
   "burst_size": 0,
   "groq": {
+    "credential_pools": [
+      "GROQ_API_KEY"
+    ],
     "models": {
       "openai/gpt-oss-20b": {
         "completion": {
           "status": 200,
-          "latency_s": 0.518,
+          "latency_s": 0.594,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "921",
+            "x-ratelimit-remaining-requests": "925",
             "x-ratelimit-limit-tokens": "8000",
-            "x-ratelimit-remaining-tokens": "7824",
-            "x-ratelimit-reset-requests": "1h53m45.6s",
-            "x-ratelimit-reset-tokens": "1.319s"
+            "x-ratelimit-remaining-tokens": "7794",
+            "x-ratelimit-reset-requests": "1h48m0s",
+            "x-ratelimit-reset-tokens": "1.545s"
           },
           "error": null,
           "model_returned": "openai/gpt-oss-20b",
           "prompt_tokens": 78,
-          "completion_tokens": 24,
+          "completion_tokens": 41,
           "finish_reason": "stop",
           "tool_calls": [],
           "text": "ready"
         },
         "tool_call": {
           "status": 200,
-          "latency_s": 0.223,
+          "latency_s": 0.372,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "920",
+            "x-ratelimit-remaining-requests": "924",
             "x-ratelimit-limit-tokens": "8000",
-            "x-ratelimit-remaining-tokens": "7803",
-            "x-ratelimit-reset-requests": "1h55m12s",
-            "x-ratelimit-reset-tokens": "1.477s"
+            "x-ratelimit-remaining-tokens": "7566",
+            "x-ratelimit-reset-requests": "1h49m26.4s",
+            "x-ratelimit-reset-tokens": "3.255s"
           },
           "error": null,
           "model_returned": "openai/gpt-oss-20b",
@@ -48,38 +51,38 @@
       "openai/gpt-oss-120b": {
         "completion": {
           "status": 200,
-          "latency_s": 0.721,
+          "latency_s": 0.646,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "938",
+            "x-ratelimit-remaining-requests": "943",
             "x-ratelimit-limit-tokens": "8000",
-            "x-ratelimit-remaining-tokens": "7890",
-            "x-ratelimit-reset-requests": "1h29m16.8s",
-            "x-ratelimit-reset-tokens": "825ms"
+            "x-ratelimit-remaining-tokens": "7794",
+            "x-ratelimit-reset-requests": "1h22m4.8s",
+            "x-ratelimit-reset-tokens": "1.545s"
           },
           "error": null,
           "model_returned": "openai/gpt-oss-120b",
           "prompt_tokens": 78,
-          "completion_tokens": 49,
+          "completion_tokens": 42,
           "finish_reason": "stop",
           "tool_calls": [],
           "text": "ready"
         },
         "tool_call": {
           "status": 200,
-          "latency_s": 0.614,
+          "latency_s": 0.609,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "937",
+            "x-ratelimit-remaining-requests": "942",
             "x-ratelimit-limit-tokens": "8000",
-            "x-ratelimit-remaining-tokens": "7811",
-            "x-ratelimit-reset-requests": "1h30m43.2s",
-            "x-ratelimit-reset-tokens": "1.417s"
+            "x-ratelimit-remaining-tokens": "7581",
+            "x-ratelimit-reset-requests": "1h23m31.2s",
+            "x-ratelimit-reset-tokens": "3.142s"
           },
           "error": null,
           "model_returned": "openai/gpt-oss-120b",
           "prompt_tokens": 127,
-          "completion_tokens": 29,
+          "completion_tokens": 35,
           "finish_reason": "tool_calls",
           "tool_calls": [
             "list_tables"
@@ -90,13 +93,13 @@
       "qwen/qwen3.8-27b": {
         "completion": {
           "status": 200,
-          "latency_s": 0.407,
+          "latency_s": 0.367,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "997",
+            "x-ratelimit-remaining-requests": "999",
             "x-ratelimit-limit-tokens": "8000",
             "x-ratelimit-remaining-tokens": "7853",
-            "x-ratelimit-reset-requests": "4m19.2s",
+            "x-ratelimit-reset-requests": "1m26.4s",
             "x-ratelimit-reset-tokens": "1.102s"
           },
           "error": null,
@@ -109,14 +112,14 @@
         },
         "tool_call": {
           "status": 200,
-          "latency_s": 0.512,
+          "latency_s": 0.407,
           "headers": {
             "x-ratelimit-limit-requests": "1000",
-            "x-ratelimit-remaining-requests": "996",
+            "x-ratelimit-remaining-requests": "998",
             "x-ratelimit-limit-tokens": "8000",
-            "x-ratelimit-remaining-tokens": "7722",
-            "x-ratelimit-reset-requests": "5m45.6s",
-            "x-ratelimit-reset-tokens": "2.085s"
+            "x-ratelimit-remaining-tokens": "7474",
+            "x-ratelimit-reset-requests": "2m52.8s",
+            "x-ratelimit-reset-tokens": "3.945s"
           },
           "error": null,
           "model_returned": "qwen/qwen3.8-27b",
@@ -135,12 +138,12 @@
         "requests": 40,
         "limit_named_by_provider": "RPM=30",
         "concurrent": true,
-        "wall_clock_s": 0.819,
+        "wall_clock_s": 0.56,
         "status_counts": {
-          "429": 22,
-          "200": 18
+          "429": 11,
+          "200": 29
         },
-        "throttled": 22,
+        "throttled": 11,
         "retry_after_seen": [
           "2"
         ],
@@ -149,23 +152,21 @@
         ],
         "headers_last": {
           "x-ratelimit-limit-requests": "1000",
-          "x-ratelimit-remaining-requests": "913",
-          "x-ratelimit-limit-tokens": "8000",
-          "x-ratelimit-remaining-tokens": "7230",
-          "x-ratelimit-reset-requests": "2h5m16.799s",
-          "x-ratelimit-reset-tokens": "5.775s"
+          "x-ratelimit-remaining-requests": "895",
+          "x-ratelimit-reset-requests": "2h31m12s",
+          "retry-after": "2"
         }
       },
       "openai/gpt-oss-120b": {
         "requests": 40,
         "limit_named_by_provider": "RPM=30",
         "concurrent": true,
-        "wall_clock_s": 1.229,
+        "wall_clock_s": 0.925,
         "status_counts": {
-          "200": 17,
-          "429": 23
+          "200": 30,
+          "429": 10
         },
-        "throttled": 23,
+        "throttled": 10,
         "retry_after_seen": [
           "2"
         ],
@@ -174,16 +175,49 @@
         ],
         "headers_last": {
           "x-ratelimit-limit-requests": "1000",
-          "x-ratelimit-remaining-requests": "920",
-          "x-ratelimit-reset-requests": "1h55m12s",
-          "retry-after": "2"
+          "x-ratelimit-remaining-requests": "926",
+          "x-ratelimit-limit-tokens": "8000",
+          "x-ratelimit-remaining-tokens": "6130",
+          "x-ratelimit-reset-requests": "1h46m33.599s",
+          "x-ratelimit-reset-tokens": "14.025s"
         }
       }
     }
   },
   "cerebras": {
+    "credential_pools": [
+      "CEREBRAS_API_KEY"
+    ],
     "models": {
       "qwen-3.8-27b": {
+        "completion": {
+          "status": 402,
+          "latency_s": 0.449,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        },
+        "tool_call": {
+          "status": 402,
+          "latency_s": 0.373,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        }
+      },
+      "gpt-oss-120b": {
+        "completion": {
+          "status": 402,
+          "latency_s": 0.376,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        },
+        "tool_call": {
+          "status": 402,
+          "latency_s": 0.457,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        }
+      },
+      "gemma-4-31b": {
         "completion": {
           "status": 402,
           "latency_s": 0.384,
@@ -192,35 +226,7 @@
         },
         "tool_call": {
           "status": 402,
-          "latency_s": 0.431,
-          "headers": {},
-          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
-        }
-      },
-      "gpt-oss-120b": {
-        "completion": {
-          "status": 402,
-          "latency_s": 0.41,
-          "headers": {},
-          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
-        },
-        "tool_call": {
-          "status": 402,
-          "latency_s": 0.333,
-          "headers": {},
-          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
-        }
-      },
-      "gemma-4-31b": {
-        "completion": {
-          "status": 402,
-          "latency_s": 0.482,
-          "headers": {},
-          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
-        },
-        "tool_call": {
-          "status": 402,
-          "latency_s": 0.366,
+          "latency_s": 0.369,
           "headers": {},
           "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
         }
@@ -231,7 +237,7 @@
         "requests": 15,
         "limit_named_by_provider": null,
         "concurrent": true,
-        "wall_clock_s": 0.423,
+        "wall_clock_s": 0.497,
         "status_counts": {
           "402": 15
         },
@@ -243,11 +249,15 @@
     }
   },
   "google-ai-studio": {
+    "credential_pools": [
+      "GEMINI_API_KEY",
+      "GEMINI_API_KEY_2"
+    ],
     "models": {
       "gemini-3.5-flash-lite": {
         "completion": {
           "status": 200,
-          "latency_s": 0.83,
+          "latency_s": 0.969,
           "headers": {},
           "error": null,
           "model_returned": "gemini-3.5-flash-lite",
@@ -259,7 +269,7 @@
         },
         "tool_call": {
           "status": 200,
-          "latency_s": 0.713,
+          "latency_s": 0.757,
           "headers": {},
           "error": null,
           "model_returned": "gemini-3.5-flash-lite",
@@ -274,42 +284,28 @@
       },
       "gemini-3.8-flash": {
         "completion": {
-          "status": 200,
-          "latency_s": 1.136,
+          "status": 429,
+          "latency_s": 0.363,
           "headers": {},
-          "error": null,
-          "model_returned": "gemini-3.8-flash",
-          "prompt_tokens": 8,
-          "completion_tokens": 1,
-          "finish_reason": "STOP",
-          "tool_calls": [],
-          "text": "ready"
+          "error": "{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.8-flash\\nPlease retry in 32.252728268s.\",\n    \"status\": \"RESOURCE_EXHAUSTED\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.Help\",\n        \"links\": [\n          {\n            \"description\": \"Learn more about Gemini API quotas\",\n            \"url\": \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n          }\n        ]\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\",\n        \"violations\": [\n          {\n            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\n            \"quotaId\": \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\n            \"quotaDimensions\": {\n              \"location\": \"global\",\n              \"model\": \"gemini-3.8-flash\"\n            },\n            \"quotaValue\": \"20\"\n          }\n        ]\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.RetryInfo\",\n        \"retryDelay\": \"32s\"\n      }\n    ]\n  }\n}\n"
         },
         "tool_call": {
-          "status": 200,
-          "latency_s": 5.032,
+          "status": 429,
+          "latency_s": 0.197,
           "headers": {},
-          "error": null,
-          "model_returned": "gemini-3.8-flash",
-          "prompt_tokens": 40,
-          "completion_tokens": 10,
-          "finish_reason": "STOP",
-          "tool_calls": [
-            "list_tables"
-          ],
-          "text": ""
+          "error": "{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.8-flash\\nPlease retry in 32.04865493s.\",\n    \"status\": \"RESOURCE_EXHAUSTED\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.Help\",\n        \"links\": [\n          {\n            \"description\": \"Learn more about Gemini API quotas\",\n            \"url\": \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n          }\n        ]\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\",\n        \"violations\": [\n          {\n            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\n            \"quotaId\": \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\n            \"quotaDimensions\": {\n              \"location\": \"global\",\n              \"model\": \"gemini-3.8-flash\"\n            },\n            \"quotaValue\": \"20\"\n          }\n        ]\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.RetryInfo\",\n        \"retryDelay\": \"32s\"\n      }\n    ]\n  }\n}\n"
         }
       },
       "gemini-2.5-flash": {
         "completion": {
           "status": 404,
-          "latency_s": 0.246,
+          "latency_s": 0.245,
           "headers": {},
           "error": "{\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
         },
         "tool_call": {
           "status": 404,
-          "latency_s": 0.233,
+          "latency_s": 0.279,
           "headers": {},
           "error": "{\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
         }
@@ -320,10 +316,10 @@
         "requests": 20,
         "limit_named_by_provider": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier=15",
         "concurrent": true,
-        "wall_clock_s": 1.432,
+        "wall_clock_s": 1.521,
         "status_counts": {
-          "429": 6,
-          "200": 14
+          "200": 14,
+          "429": 6
         },
         "throttled": 6,
         "retry_after_seen": [],
@@ -334,20 +330,31 @@
       },
       "gemini-3.8-flash": {
         "requests": 20,
-        "limit_named_by_provider": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier=5",
+        "limit_named_by_provider": "GenerateRequestsPerDayPerProjectPerModel-FreeTier=20",
         "concurrent": true,
-        "wall_clock_s": 2.863,
+        "wall_clock_s": 0.261,
         "status_counts": {
-          "429": 17,
-          "200": 3
+          "429": 20
         },
-        "throttled": 17,
+        "throttled": 20,
         "retry_after_seen": [],
         "throttle_messages": [
           "{ \"error\": { \"code\": 429, \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for"
         ],
         "headers_last": {}
       }
+    },
+    "pool_independence": {
+      "model": "gemini-3.5-flash-lite",
+      "saturating_pool": "GEMINI_API_KEY",
+      "second_pool": "GEMINI_API_KEY_2",
+      "saturation": {
+        "429": 20
+      },
+      "first_pool_still_throttled": true,
+      "second_pool_ok": 8,
+      "second_pool_requests": 8,
+      "independent": true
     }
   }
 }

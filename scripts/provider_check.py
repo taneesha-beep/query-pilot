@@ -54,21 +54,21 @@ PROVIDERS: dict[str, dict[str, Any]] = {
     "groq": {
         "style": "openai",
         "url": "https://api.groq.com/openai/v1/chat/completions",
-        "key_env": "GROQ_API_KEY",
+        "key_envs": ["GROQ_API_KEY"],
         "models": ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"],
         "burst_models": {"openai/gpt-oss-20b": 40, "openai/gpt-oss-120b": 40},
     },
     "cerebras": {
         "style": "openai",
         "url": "https://api.cerebras.ai/v1/chat/completions",
-        "key_env": "CEREBRAS_API_KEY",
+        "key_envs": ["CEREBRAS_API_KEY"],
         "models": ["qwen-3.8-27b", "gpt-oss-120b", "gemma-4-31b"],
         "burst_models": {"qwen-3.8-27b": 15},
     },
     "google-ai-studio": {
         "style": "gemini",
         "url": "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        "key_env": "GEMINI_API_KEY",
+        "key_envs": ["GEMINI_API_KEY", "GEMINI_API_KEY_2"],
         "models": ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash"],
         "burst_models": {"gemini-3.5-flash-lite": 20, "gemini-3.8-flash": 20},
     },
@@ -120,10 +120,15 @@ def _request(url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[st
 
 
 def call(
-    provider: str, model: str, *, with_tool: bool = False, tokens: int = 128
+    provider: str,
+    model: str,
+    *,
+    with_tool: bool = False,
+    tokens: int = 128,
+    pool: str | None = None,
 ) -> dict[str, Any]:
     spec = PROVIDERS[provider]
-    key = os.environ[spec["key_env"]]
+    key = os.environ[pool or spec["key_envs"][0]]
     if spec["style"] == "openai":
         body: dict[str, Any] = {
             "model": model,
@@ -205,10 +210,14 @@ def _limit_named_in(throttled: list[dict[str, Any]]) -> str | None:
     return None
 
 
-def burst(provider: str, model: str, size: int = BURST) -> dict[str, Any]:
+def burst(
+    provider: str, model: str, size: int = BURST, key_env: str | None = None
+) -> dict[str, Any]:
     started = time.monotonic()
-    with ThreadPoolExecutor(max_workers=size) as pool:
-        results = list(pool.map(lambda _: call(provider, model, tokens=32), range(size)))
+    with ThreadPoolExecutor(max_workers=size) as workers:
+        results = list(
+            workers.map(lambda _: call(provider, model, tokens=32, pool=key_env), range(size))
+        )
     elapsed = time.monotonic() - started
     statuses: dict[str, int] = {}
     for r in results:
@@ -229,6 +238,39 @@ def burst(provider: str, model: str, size: int = BURST) -> dict[str, Any]:
     }
 
 
+def pool_independence(provider: str, model: str, pools: list[str]) -> dict[str, Any]:
+    """Establish whether two credentials draw on the same quota or on different ones.
+
+    Google's ceiling is per Cloud project, not per key, so a second key issued inside the
+    same project buys nothing while a key from a second project doubles the headroom.
+    Which one you have is not visible in the key. It is visible in behaviour: saturate the
+    first pool, confirm it is still refusing, and call the second one in that window.
+    """
+    first, second = pools[0], pools[1]
+    saturate = burst(provider, model, size=20, key_env=first)
+    with ThreadPoolExecutor(max_workers=3) as workers:
+        control = list(
+            workers.map(lambda _: call(provider, model, tokens=32, pool=first), range(3))
+        )
+    with ThreadPoolExecutor(max_workers=8) as workers:
+        other = list(workers.map(lambda _: call(provider, model, tokens=32, pool=second), range(8)))
+
+    control_throttled = all(r["status"] == 429 for r in control)
+    other_ok = sum(1 for r in other if r["status"] == 200)
+    return {
+        "model": model,
+        "saturating_pool": first,
+        "second_pool": second,
+        "saturation": saturate["status_counts"],
+        "first_pool_still_throttled": control_throttled,
+        "second_pool_ok": other_ok,
+        "second_pool_requests": len(other),
+        # Independent only if the first pool was demonstrably refusing at the moment the
+        # second one answered. Without that control the result means nothing.
+        "independent": control_throttled and other_ok == len(other),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--burst", type=int, default=0, help="override every burst size")
@@ -241,11 +283,12 @@ def main() -> int:
         "burst_size": args.burst,
     }
     for provider, spec in PROVIDERS.items():
-        if not os.environ.get(spec["key_env"]):
-            report[provider] = {"skipped": f"{spec['key_env']} not set"}
+        pools = [name for name in spec["key_envs"] if os.environ.get(name)]
+        if not pools:
+            report[provider] = {"skipped": f"{spec['key_envs'][0]} not set"}
             print(f"{provider}: skipped, no key")
             continue
-        entry: dict[str, Any] = {"models": {}}
+        entry: dict[str, Any] = {"credential_pools": pools, "models": {}}
         for model in [] if args.burst_only else spec["models"]:
             completion = summarise(provider, call(provider, model))
             tool = summarise(provider, call(provider, model, with_tool=True, tokens=256))
@@ -267,6 +310,15 @@ def main() -> int:
             print(
                 f"{provider:>17} burst {model:<26} {probe['status_counts']} "
                 f"in {probe['wall_clock_s']}s -> {named}"
+            )
+        if len(pools) > 1 and not args.burst_only:
+            probe = pool_independence(provider, spec["models"][0], pools)
+            entry["pool_independence"] = probe
+            verdict = "independent" if probe["independent"] else "SHARED or inconclusive"
+            print(
+                f"{provider:>17} pools {len(pools)}: {probe['second_pool']} answered "
+                f"{probe['second_pool_ok']}/{probe['second_pool_requests']} while "
+                f"{probe['saturating_pool']} was throttled -> {verdict}"
             )
         report[provider] = entry
 

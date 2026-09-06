@@ -53,3 +53,17 @@ def test_no_key_leaked_into_the_report() -> None:
     text = json.dumps(CHECK)
     for marker in ("api_key", "Authorization", "Bearer ", "x-goog-api-key"):
         assert marker not in text, f"{marker!r} appears in the committed provider report"
+
+
+def test_multiple_credential_pools_were_shown_to_be_independent() -> None:
+    # A second key inside the same Cloud project shares one ceiling and buys nothing. Where
+    # the inventory records more than one pool, it must also record the probe that proved
+    # they draw on different quota — and that probe must include the control step showing
+    # the first pool was still refusing when the second one answered.
+    for provider, entry in PROVIDERS.items():
+        if len(entry.get("credential_pools", [])) < 2:
+            continue
+        probe = entry.get("pool_independence")
+        assert probe, f"{provider} records several pools but no independence probe"
+        assert probe["first_pool_still_throttled"], f"{provider}: probe had no valid control"
+        assert probe["independent"], f"{provider}: pools share a quota; the extra key is idle"
