@@ -1,0 +1,4143 @@
+{
+  "dev_json_sha256": "30d64a3fccde493226df79687aed9e4a1c0129525baf44f29c0573d914d758a4",
+  "size": 1034,
+  "note": "tasks whose reference query executes; the frame the sets are drawn from",
+  "tasks": {
+    "dev-0000": {
+      "db_id": "concert_singer",
+      "difficulty": "easy"
+    },
+    "dev-0001": {
+      "db_id": "concert_singer",
+      "difficulty": "easy"
+    },
+    "dev-0002": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0003": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0004": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0005": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0006": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0007": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0008": {
+      "db_id": "concert_singer",
+      "difficulty": "easy"
+    },
+    "dev-0009": {
+      "db_id": "concert_singer",
+      "difficulty": "easy"
+    },
+    "dev-0010": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0011": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0012": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0013": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0014": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0015": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0016": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0017": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0018": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0019": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0020": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0021": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0022": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0023": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0024": {
+      "db_id": "concert_singer",
+      "difficulty": "extra"
+    },
+    "dev-0025": {
+      "db_id": "concert_singer",
+      "difficulty": "extra"
+    },
+    "dev-0026": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0027": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0028": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0029": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0030": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0031": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0032": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0033": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0034": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0035": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0036": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0037": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0038": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0039": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0040": {
+      "db_id": "concert_singer",
+      "difficulty": "medium"
+    },
+    "dev-0041": {
+      "db_id": "concert_singer",
+      "difficulty": "extra"
+    },
+    "dev-0042": {
+      "db_id": "concert_singer",
+      "difficulty": "extra"
+    },
+    "dev-0043": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0044": {
+      "db_id": "concert_singer",
+      "difficulty": "hard"
+    },
+    "dev-0045": {
+      "db_id": "pets_1",
+      "difficulty": "easy"
+    },
+    "dev-0046": {
+      "db_id": "pets_1",
+      "difficulty": "easy"
+    },
+    "dev-0047": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0048": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0049": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0050": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0051": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0052": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0053": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0054": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0055": {
+      "db_id": "pets_1",
+      "difficulty": "easy"
+    },
+    "dev-0056": {
+      "db_id": "pets_1",
+      "difficulty": "easy"
+    },
+    "dev-0057": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0058": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0059": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0060": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0061": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0062": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0063": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0064": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0065": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0066": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0067": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0068": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0069": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0070": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0071": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0072": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0073": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0074": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0075": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0076": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0077": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0078": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0079": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0080": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0081": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0082": {
+      "db_id": "pets_1",
+      "difficulty": "medium"
+    },
+    "dev-0083": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0084": {
+      "db_id": "pets_1",
+      "difficulty": "hard"
+    },
+    "dev-0085": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0086": {
+      "db_id": "pets_1",
+      "difficulty": "extra"
+    },
+    "dev-0087": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0088": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0089": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0090": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0091": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0092": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0093": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0094": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0095": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0096": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0097": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0098": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0099": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0100": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0101": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0102": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0103": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0104": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0105": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0106": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0107": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0108": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0109": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0110": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0111": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0112": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0113": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0114": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0115": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0116": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0117": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0118": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0119": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0120": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0121": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0122": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0123": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0124": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0125": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0126": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0127": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0128": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0129": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0130": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0131": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0132": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0133": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0134": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0135": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0136": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0137": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0138": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0139": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0140": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0141": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0142": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0143": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0144": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0145": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0146": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0147": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0148": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0149": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0150": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0151": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0152": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0153": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0154": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0155": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0156": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0157": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0158": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0159": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0160": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0161": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0162": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0163": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0164": {
+      "db_id": "car_1",
+      "difficulty": "easy"
+    },
+    "dev-0165": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0166": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0167": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0168": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0169": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0170": {
+      "db_id": "car_1",
+      "difficulty": "medium"
+    },
+    "dev-0171": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0172": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0173": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0174": {
+      "db_id": "car_1",
+      "difficulty": "hard"
+    },
+    "dev-0175": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0176": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0177": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0178": {
+      "db_id": "car_1",
+      "difficulty": "extra"
+    },
+    "dev-0179": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0180": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0181": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0182": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0183": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0184": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0185": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0186": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0187": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0188": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0189": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0190": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0191": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0192": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0193": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0194": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0195": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0196": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0197": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0198": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0199": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0200": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0201": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0202": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0203": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0204": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0205": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0206": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0207": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0208": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0209": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0210": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0211": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0212": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0213": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0214": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0215": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0216": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0217": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0218": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0219": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0220": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0221": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0222": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0223": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0224": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0225": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0226": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0227": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0228": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0229": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0230": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0231": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0232": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0233": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0234": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0235": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0236": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0237": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0238": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0239": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0240": {
+      "db_id": "flight_2",
+      "difficulty": "extra"
+    },
+    "dev-0241": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0242": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0243": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0244": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0245": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0246": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0247": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0248": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0249": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0250": {
+      "db_id": "flight_2",
+      "difficulty": "easy"
+    },
+    "dev-0251": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0252": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0253": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0254": {
+      "db_id": "flight_2",
+      "difficulty": "medium"
+    },
+    "dev-0255": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0256": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0257": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0258": {
+      "db_id": "flight_2",
+      "difficulty": "hard"
+    },
+    "dev-0259": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0260": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0261": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0262": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0263": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0264": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0265": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0266": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0267": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0268": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0269": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0270": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0271": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0272": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0273": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0274": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0275": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0276": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0277": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "extra"
+    },
+    "dev-0278": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "extra"
+    },
+    "dev-0279": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0280": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0281": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0282": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0283": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "extra"
+    },
+    "dev-0284": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "extra"
+    },
+    "dev-0285": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0286": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0287": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0288": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "medium"
+    },
+    "dev-0289": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0290": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0291": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0292": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0293": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0294": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "hard"
+    },
+    "dev-0295": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0296": {
+      "db_id": "employee_hire_evaluation",
+      "difficulty": "easy"
+    },
+    "dev-0297": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0298": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0299": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0300": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0301": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0302": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0303": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0304": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0305": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0306": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0307": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0308": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0309": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0310": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0311": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0312": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0313": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0314": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0315": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0316": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0317": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0318": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0319": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0320": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0321": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0322": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0323": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0324": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0325": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0326": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0327": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0328": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0329": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0330": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0331": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0332": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0333": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0334": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0335": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0336": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0337": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0338": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0339": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0340": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0341": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0342": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0343": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0344": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0345": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0346": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0347": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0348": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0349": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0350": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0351": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0352": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0353": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0354": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0355": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0356": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0357": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0358": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0359": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0360": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0361": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0362": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0363": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0364": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0365": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0366": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0367": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0368": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0369": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0370": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "medium"
+    },
+    "dev-0371": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0372": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0373": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0374": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "extra"
+    },
+    "dev-0375": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0376": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0377": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0378": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "easy"
+    },
+    "dev-0379": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0380": {
+      "db_id": "cre_Doc_Template_Mgt",
+      "difficulty": "hard"
+    },
+    "dev-0381": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0382": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0383": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0384": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0385": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0386": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0387": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0388": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0389": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0390": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0391": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0392": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0393": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0394": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0395": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0396": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0397": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0398": {
+      "db_id": "course_teach",
+      "difficulty": "easy"
+    },
+    "dev-0399": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0400": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0401": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0402": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0403": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0404": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0405": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0406": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0407": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0408": {
+      "db_id": "course_teach",
+      "difficulty": "medium"
+    },
+    "dev-0409": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0410": {
+      "db_id": "course_teach",
+      "difficulty": "hard"
+    },
+    "dev-0411": {
+      "db_id": "museum_visit",
+      "difficulty": "easy"
+    },
+    "dev-0412": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0413": {
+      "db_id": "museum_visit",
+      "difficulty": "easy"
+    },
+    "dev-0414": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0415": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0416": {
+      "db_id": "museum_visit",
+      "difficulty": "easy"
+    },
+    "dev-0417": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0418": {
+      "db_id": "museum_visit",
+      "difficulty": "hard"
+    },
+    "dev-0419": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0420": {
+      "db_id": "museum_visit",
+      "difficulty": "extra"
+    },
+    "dev-0421": {
+      "db_id": "museum_visit",
+      "difficulty": "extra"
+    },
+    "dev-0422": {
+      "db_id": "museum_visit",
+      "difficulty": "hard"
+    },
+    "dev-0423": {
+      "db_id": "museum_visit",
+      "difficulty": "hard"
+    },
+    "dev-0424": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0425": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0426": {
+      "db_id": "museum_visit",
+      "difficulty": "extra"
+    },
+    "dev-0427": {
+      "db_id": "museum_visit",
+      "difficulty": "extra"
+    },
+    "dev-0428": {
+      "db_id": "museum_visit",
+      "difficulty": "medium"
+    },
+    "dev-0429": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0430": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0431": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0432": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0433": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0434": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0435": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0436": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0437": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0438": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0439": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0440": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0441": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0442": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0443": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0444": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0445": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0446": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0447": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0448": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0449": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0450": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0451": {
+      "db_id": "wta_1",
+      "difficulty": "extra"
+    },
+    "dev-0452": {
+      "db_id": "wta_1",
+      "difficulty": "extra"
+    },
+    "dev-0453": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0454": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0455": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0456": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0457": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0458": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0459": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0460": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0461": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0462": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0463": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0464": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0465": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0466": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0467": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0468": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0469": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0470": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0471": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0472": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0473": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0474": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0475": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0476": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0477": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0478": {
+      "db_id": "wta_1",
+      "difficulty": "easy"
+    },
+    "dev-0479": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0480": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0481": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0482": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0483": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0484": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0485": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0486": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0487": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0488": {
+      "db_id": "wta_1",
+      "difficulty": "hard"
+    },
+    "dev-0489": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0490": {
+      "db_id": "wta_1",
+      "difficulty": "medium"
+    },
+    "dev-0491": {
+      "db_id": "battle_death",
+      "difficulty": "easy"
+    },
+    "dev-0492": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0493": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0494": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0495": {
+      "db_id": "battle_death",
+      "difficulty": "easy"
+    },
+    "dev-0496": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0497": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0498": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0499": {
+      "db_id": "battle_death",
+      "difficulty": "hard"
+    },
+    "dev-0500": {
+      "db_id": "battle_death",
+      "difficulty": "extra"
+    },
+    "dev-0501": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0502": {
+      "db_id": "battle_death",
+      "difficulty": "easy"
+    },
+    "dev-0503": {
+      "db_id": "battle_death",
+      "difficulty": "extra"
+    },
+    "dev-0504": {
+      "db_id": "battle_death",
+      "difficulty": "extra"
+    },
+    "dev-0505": {
+      "db_id": "battle_death",
+      "difficulty": "extra"
+    },
+    "dev-0506": {
+      "db_id": "battle_death",
+      "difficulty": "medium"
+    },
+    "dev-0507": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0508": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0509": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0510": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0511": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0512": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0513": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0514": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0515": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0516": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0517": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0518": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0519": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0520": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0521": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0522": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0523": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0524": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0525": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0526": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0527": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0528": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0529": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0530": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0531": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0532": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0533": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0534": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0535": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0536": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0537": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0538": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0539": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0540": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0541": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0542": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0543": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0544": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0545": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0546": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0547": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0548": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0549": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0550": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0551": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0552": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0553": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0554": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0555": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0556": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0557": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0558": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0559": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0560": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0561": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0562": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0563": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0564": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0565": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0566": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0567": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0568": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0569": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0570": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "medium"
+    },
+    "dev-0571": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0572": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0573": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0574": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0575": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0576": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "extra"
+    },
+    "dev-0577": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0578": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0579": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0580": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0581": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0582": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "easy"
+    },
+    "dev-0583": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0584": {
+      "db_id": "student_transcripts_tracking",
+      "difficulty": "hard"
+    },
+    "dev-0585": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0586": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0587": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0588": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0589": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0590": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0591": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0592": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0593": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0594": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0595": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0596": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0597": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0598": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0599": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0600": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0601": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0602": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0603": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0604": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0605": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0606": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0607": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0608": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0609": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0610": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0611": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0612": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0613": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0614": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0615": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0616": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0617": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0618": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0619": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0620": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0621": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0622": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0623": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0624": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0625": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0626": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0627": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0628": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0629": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0630": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0631": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0632": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0633": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0634": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0635": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0636": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0637": {
+      "db_id": "tvshow",
+      "difficulty": "extra"
+    },
+    "dev-0638": {
+      "db_id": "tvshow",
+      "difficulty": "extra"
+    },
+    "dev-0639": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0640": {
+      "db_id": "tvshow",
+      "difficulty": "medium"
+    },
+    "dev-0641": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0642": {
+      "db_id": "tvshow",
+      "difficulty": "easy"
+    },
+    "dev-0643": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0644": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0645": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0646": {
+      "db_id": "tvshow",
+      "difficulty": "hard"
+    },
+    "dev-0647": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0648": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0649": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0650": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0651": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0652": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0653": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0654": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0655": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0656": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0657": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0658": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0659": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0660": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0661": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0662": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0663": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0664": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0665": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0666": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0667": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0668": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0669": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0670": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0671": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0672": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0673": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0674": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0675": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0676": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0677": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0678": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0679": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0680": {
+      "db_id": "poker_player",
+      "difficulty": "medium"
+    },
+    "dev-0681": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0682": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0683": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0684": {
+      "db_id": "poker_player",
+      "difficulty": "hard"
+    },
+    "dev-0685": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0686": {
+      "db_id": "poker_player",
+      "difficulty": "easy"
+    },
+    "dev-0687": {
+      "db_id": "voter_1",
+      "difficulty": "easy"
+    },
+    "dev-0688": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0689": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0690": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0691": {
+      "db_id": "voter_1",
+      "difficulty": "easy"
+    },
+    "dev-0692": {
+      "db_id": "voter_1",
+      "difficulty": "easy"
+    },
+    "dev-0693": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0694": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0695": {
+      "db_id": "voter_1",
+      "difficulty": "extra"
+    },
+    "dev-0696": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0697": {
+      "db_id": "voter_1",
+      "difficulty": "extra"
+    },
+    "dev-0698": {
+      "db_id": "voter_1",
+      "difficulty": "extra"
+    },
+    "dev-0699": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0700": {
+      "db_id": "voter_1",
+      "difficulty": "extra"
+    },
+    "dev-0701": {
+      "db_id": "voter_1",
+      "difficulty": "medium"
+    },
+    "dev-0702": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0703": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0704": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0705": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0706": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0707": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0708": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0709": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0710": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0711": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0712": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0713": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0714": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0715": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0716": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0717": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0718": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0719": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0720": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0721": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0722": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0723": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0724": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0725": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0726": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0727": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0728": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0729": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0730": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0731": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0732": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0733": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0734": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0735": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0736": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0737": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0738": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0739": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0740": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0741": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0742": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0743": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0744": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0745": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0746": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0747": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0748": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0749": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0750": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0751": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0752": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0753": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0754": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0755": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0756": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0757": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0758": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0759": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0760": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0761": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0762": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0763": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0764": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0765": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0766": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0767": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0768": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0769": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0770": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0771": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0772": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0773": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0774": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0775": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0776": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0777": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0778": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0779": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0780": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0781": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0782": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0783": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0784": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0785": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0786": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0787": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0788": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0789": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0790": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0791": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0792": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0793": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0794": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0795": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0796": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0797": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0798": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0799": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0800": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0801": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0802": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0803": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0804": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0805": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0806": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0807": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0808": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0809": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0810": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0811": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0812": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0813": {
+      "db_id": "world_1",
+      "difficulty": "easy"
+    },
+    "dev-0814": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0815": {
+      "db_id": "world_1",
+      "difficulty": "hard"
+    },
+    "dev-0816": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0817": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0818": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0819": {
+      "db_id": "world_1",
+      "difficulty": "extra"
+    },
+    "dev-0820": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0821": {
+      "db_id": "world_1",
+      "difficulty": "medium"
+    },
+    "dev-0822": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0823": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0824": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0825": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0826": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0827": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0828": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0829": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0830": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0831": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0832": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0833": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0834": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0835": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0836": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0837": {
+      "db_id": "orchestra",
+      "difficulty": "easy"
+    },
+    "dev-0838": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0839": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0840": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0841": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0842": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0843": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0844": {
+      "db_id": "orchestra",
+      "difficulty": "extra"
+    },
+    "dev-0845": {
+      "db_id": "orchestra",
+      "difficulty": "extra"
+    },
+    "dev-0846": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0847": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0848": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0849": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0850": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0851": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0852": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0853": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0854": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0855": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0856": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0857": {
+      "db_id": "orchestra",
+      "difficulty": "hard"
+    },
+    "dev-0858": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0859": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0860": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0861": {
+      "db_id": "orchestra",
+      "difficulty": "medium"
+    },
+    "dev-0862": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0863": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0864": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0865": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0866": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0867": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0868": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0869": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0870": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0871": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0872": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0873": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0874": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0875": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0876": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0877": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0878": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0879": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0880": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0881": {
+      "db_id": "network_1",
+      "difficulty": "easy"
+    },
+    "dev-0882": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0883": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0884": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0885": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0886": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0887": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0888": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0889": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0890": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0891": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0892": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0893": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0894": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0895": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0896": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0897": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0898": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0899": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0900": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0901": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0902": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0903": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0904": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0905": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0906": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0907": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0908": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0909": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0910": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0911": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0912": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0913": {
+      "db_id": "network_1",
+      "difficulty": "medium"
+    },
+    "dev-0914": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0915": {
+      "db_id": "network_1",
+      "difficulty": "hard"
+    },
+    "dev-0916": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0917": {
+      "db_id": "network_1",
+      "difficulty": "extra"
+    },
+    "dev-0918": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0919": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0920": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0921": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0922": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0923": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0924": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0925": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0926": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0927": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0928": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0929": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0930": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0931": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0932": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0933": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0934": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0935": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0936": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0937": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0938": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0939": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0940": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0941": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0942": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0943": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0944": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0945": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0946": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0947": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0948": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0949": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0950": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0951": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0952": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0953": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0954": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0955": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0956": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0957": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0958": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0959": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0960": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0961": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0962": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0963": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0964": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0965": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0966": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0967": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0968": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0969": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0970": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0971": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0972": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0973": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0974": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0975": {
+      "db_id": "dog_kennels",
+      "difficulty": "hard"
+    },
+    "dev-0976": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0977": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0978": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0979": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0980": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0981": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0982": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0983": {
+      "db_id": "dog_kennels",
+      "difficulty": "extra"
+    },
+    "dev-0984": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0985": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0986": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0987": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0988": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0989": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0990": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0991": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0992": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0993": {
+      "db_id": "dog_kennels",
+      "difficulty": "easy"
+    },
+    "dev-0994": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0995": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0996": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0997": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0998": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-0999": {
+      "db_id": "dog_kennels",
+      "difficulty": "medium"
+    },
+    "dev-1000": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1001": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1002": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1003": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1004": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1005": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1006": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1007": {
+      "db_id": "singer",
+      "difficulty": "easy"
+    },
+    "dev-1008": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1009": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1010": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1011": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1012": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1013": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1014": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1015": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1016": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1017": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1018": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1019": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1020": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1021": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1022": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1023": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1024": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1025": {
+      "db_id": "singer",
+      "difficulty": "medium"
+    },
+    "dev-1026": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1027": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1028": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1029": {
+      "db_id": "singer",
+      "difficulty": "hard"
+    },
+    "dev-1030": {
+      "db_id": "real_estate_properties",
+      "difficulty": "easy"
+    },
+    "dev-1031": {
+      "db_id": "real_estate_properties",
+      "difficulty": "medium"
+    },
+    "dev-1032": {
+      "db_id": "real_estate_properties",
+      "difficulty": "medium"
+    },
+    "dev-1033": {
+      "db_id": "real_estate_properties",
+      "difficulty": "hard"
+    }
+  }
+}

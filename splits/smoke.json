@@ -1,0 +1,24 @@
+{
+  "name": "smoke",
+  "seed": 20260906,
+  "dev_json_sha256": "30d64a3fccde493226df79687aed9e4a1c0129525baf44f29c0573d914d758a4",
+  "frame_size": 1034,
+  "count": 15,
+  "task_ids": [
+    "dev-0003",
+    "dev-0030",
+    "dev-0126",
+    "dev-0207",
+    "dev-0317",
+    "dev-0388",
+    "dev-0489",
+    "dev-0638",
+    "dev-0675",
+    "dev-0699",
+    "dev-0700",
+    "dev-0710",
+    "dev-0816",
+    "dev-0870",
+    "dev-1022"
+  ]
+}
