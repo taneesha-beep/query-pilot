@@ -1,0 +1,21 @@
+# Working document, deliberately not part of the repository.
+AGENT-ROADMAP.md
+
+# Substrate: databases and downloaded archives are acquired, never committed.
+data/
+
+# Run output: ledgers and transcripts. Only derived summaries are committed.
+runs/
+
+# Secrets.
+.env
+
+# Environments and caches.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# macOS.
+.DS_Store
