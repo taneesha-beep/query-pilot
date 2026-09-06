@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -205,3 +206,37 @@ def messages() -> list[Message]:
 @pytest.fixture
 def http() -> FakeHttp:
     return FakeHttp()
+
+
+@dataclass
+class FakeClock:
+    """Virtual time. Sleeping records the delay and advances the clock, instantly.
+
+    This is what lets the backoff *schedule* be asserted rather than endured: a test can
+    check that the delays doubled, that they sat inside their jitter band, and that a
+    daily wall shut a pool for hours, in no time at all. A test that slept through its own
+    backoff would be slow, and a slow test that also depends on timing is flaky.
+    """
+
+    t: float = 1_000.0
+    wall: datetime = field(default_factory=lambda: datetime(2026, 9, 6, 18, 0, tzinfo=UTC))
+    slept: list[float] = field(default_factory=list)
+
+    def monotonic(self) -> float:
+        return self.t
+
+    def now_utc(self) -> datetime:
+        return self.wall + timedelta(seconds=self.t - 1_000.0)
+
+    async def sleep(self, seconds: float) -> None:
+        if seconds > 0:
+            self.slept.append(seconds)
+            self.t += seconds
+
+    def advance(self, seconds: float) -> None:
+        self.t += seconds
+
+
+@pytest.fixture
+def clock() -> FakeClock:
+    return FakeClock()

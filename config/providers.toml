@@ -25,15 +25,23 @@ per_provider_concurrency = 4
 # inside this; a per-day wall does not, and raises AllPoolsExhausted instead of blocking.
 wait_ceiling_s = 60.0
 
+# No daily reset boundary, deliberately. Groq's requests-per-day countdown was observed
+# advancing 86.4 s per request — one thousandth of a day — which is a bucket refilling
+# continuously rather than resetting at an hour.
 [providers.groq]
 style = "openai"
 url = "https://api.groq.com/openai/v1/chat/completions"
 key_env = "GROQ_API_KEY"
 
+# Declared, not observed: midnight Pacific is Google's documented rollover for free-tier
+# daily quotas and this project has not watched one happen. It sits in configuration so
+# that being wrong costs one refused request and one line, rather than a day of capacity.
 [providers.google-ai-studio]
 style = "google"
 url = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 key_env = "GEMINI_API_KEY"
+daily_reset_time = "00:00"
+daily_reset_timezone = "America/Los_Angeles"
 
 # --- endpoints -------------------------------------------------------------------------
 # RPD and TPM come from Groq's own headers; RPM from its 429 body, which names the ceiling

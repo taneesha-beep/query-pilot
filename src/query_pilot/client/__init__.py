@@ -11,7 +11,10 @@ about that cannot be normalised, such as Google serving no rate-limit headers at
 carried as an absence rather than filled in with a guess.
 """
 
+from query_pilot.client.buckets import BucketBook, ModelBuckets, TokenBucket
+from query_pilot.client.classify import Action, Disposition, Scope, classify
 from query_pilot.client.client import Client
+from query_pilot.client.clock import Clock, SystemClock
 from query_pilot.client.config import ClientConfig, Endpoint, Limits, RoleSpec, discover_pools
 from query_pilot.client.errors import (
     ClientError,
@@ -24,6 +27,14 @@ from query_pilot.client.errors import (
 from query_pilot.client.http import USER_AGENT, HttpClient, HttpResponse, HttpxClient
 from query_pilot.client.providers import Provider
 from query_pilot.client.registry import Candidate, Registry
+from query_pilot.client.resets import seconds_until_daily_reset
+from query_pilot.client.retry import RetryPolicy
+from query_pilot.client.scheduler import (
+    AllPoolsExhausted,
+    JsonlQuotaWalls,
+    QuotaScheduler,
+    QuotaWall,
+)
 from query_pilot.client.types import (
     Completion,
     Credential,
@@ -36,29 +47,44 @@ from query_pilot.client.types import (
 
 __all__ = [
     "USER_AGENT",
+    "Action",
+    "AllPoolsExhausted",
+    "BucketBook",
     "Candidate",
     "Client",
     "ClientConfig",
     "ClientError",
+    "Clock",
     "Completion",
     "ConfigError",
     "Credential",
+    "Disposition",
     "Endpoint",
     "HttpClient",
     "HttpResponse",
     "HttpxClient",
+    "JsonlQuotaWalls",
     "Limits",
     "MalformedResponseError",
     "Message",
+    "ModelBuckets",
     "ModelConfig",
     "Provider",
     "ProviderHTTPError",
     "QuotaFact",
+    "QuotaScheduler",
+    "QuotaWall",
     "RateLimit",
     "Registry",
+    "RetryPolicy",
     "RoleSpec",
+    "Scope",
+    "SystemClock",
+    "TokenBucket",
     "ToolCall",
     "ToolSchema",
     "TransportError",
+    "classify",
     "discover_pools",
+    "seconds_until_daily_reset",
 ]

@@ -65,6 +65,11 @@ class ProviderSpec:
     style: str
     url: str
     key_env: str
+    #: When this provider's daily quotas roll over, for the ones that reset on a boundary
+    #: rather than refilling continuously. Absent means the boundary is unknown; see
+    #: `resets.py`, which explains why the two providers differ here.
+    daily_reset_time: str | None = None
+    daily_reset_timezone: str | None = None
 
 
 def build_provider(spec: ProviderSpec, credential: Credential, http: HttpClient) -> Provider:

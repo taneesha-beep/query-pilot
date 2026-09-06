@@ -105,6 +105,8 @@ class ClientConfig:
                 style=_require(entry, "style", f"{source}: provider {name!r}"),
                 url=_require(entry, "url", f"{source}: provider {name!r}"),
                 key_env=_require(entry, "key_env", f"{source}: provider {name!r}"),
+                daily_reset_time=entry.get("daily_reset_time"),
+                daily_reset_timezone=entry.get("daily_reset_timezone"),
             )
             for name, entry in (raw.get("providers") or {}).items()
         }
