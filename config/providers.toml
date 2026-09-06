@@ -1,0 +1,102 @@
+# Provider endpoints and their measured limits.
+#
+# Every model string in this file is PINNED here and read from configuration, never
+# written at a call site. `gemini-2.5-flash` was listed by Google's models endpoint and
+# returned 404 as retired on 2026-09-06, before a line of client code existed; a model
+# string that lives in one file is a one-line fix when that happens again.
+#
+# Limits carry their evidence. `source = "observed"` means a request was refused and the
+# provider named the ceiling; `source = "declared"` means the provider stated the number
+# in a response header or its documentation without this project ever reaching it. An
+# absent dimension is UNMODELLED, not unlimited — see the comments on Google below.
+# All figures trace to docs/PROVIDERS.md, measured 2026-09-06.
+
+[client]
+# In flight at once. The buckets bind long before these do: at Groq's observed 30 RPM and
+# 0.5-0.7 s latency, the rate limit permits about 0.35 concurrent requests. What these
+# actually bound is token-bucket overshoot, because token counts do not exist until a
+# response comes back and so are charged after the fact. Four in flight against Groq's
+# 8,000 TPM is a few percent of overshoot. The 0.4 probe showed 40 concurrent connections
+# accepted, so neither number is near what a provider tolerates.
+max_concurrency = 8
+per_provider_concurrency = 4
+
+# How long complete() will wait for a bucket before giving up. A per-minute wall clears
+# inside this; a per-day wall does not, and raises AllPoolsExhausted instead of blocking.
+wait_ceiling_s = 60.0
+
+[providers.groq]
+style = "openai"
+url = "https://api.groq.com/openai/v1/chat/completions"
+key_env = "GROQ_API_KEY"
+
+[providers.google-ai-studio]
+style = "google"
+url = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+key_env = "GEMINI_API_KEY"
+
+# --- endpoints -------------------------------------------------------------------------
+# RPD and TPM come from Groq's own headers; RPM from its 429 body, which names the ceiling
+# it enforced. TPD is Groq's published Free Plan figure and has never been reached, so it
+# is declared rather than observed.
+
+[endpoints."groq/gpt-oss-20b"]
+provider = "groq"
+model = "openai/gpt-oss-20b"
+rpm = 30
+rpd = 1000
+tpm = 8000
+tpd = 200000
+sources = { rpm = "observed", rpd = "declared", tpm = "declared", tpd = "declared" }
+
+[endpoints."groq/gpt-oss-120b"]
+provider = "groq"
+model = "openai/gpt-oss-120b"
+rpm = 30
+rpd = 1000
+tpm = 8000
+tpd = 200000
+sources = { rpm = "observed", rpd = "declared", tpm = "declared", tpd = "declared" }
+
+[endpoints."groq/qwen3.8-27b"]
+provider = "groq"
+model = "qwen/qwen3.8-27b"
+rpd = 1000
+tpm = 8000
+tpd = 200000
+sources = { rpd = "declared", tpm = "declared", tpd = "declared" }
+
+# Google publishes no per-model free-tier figures any more and serves no rate-limit
+# headers, so the only limits here are ones its 429 bodies named. RPD, TPM and TPD for
+# flash-lite are deliberately absent: this project has not measured them and does not
+# guess. The consequence is stated rather than hidden — the client cannot pre-empt a
+# Google daily wall, only react to one and record what it named.
+[endpoints."google/gemini-3.5-flash-lite"]
+provider = "google-ai-studio"
+model = "gemini-3.5-flash-lite"
+rpm = 15
+sources = { rpm = "observed" }
+
+# Registered so the strong tier can be pointed at it if it ever has to move, and excluded
+# from every capacity figure: 20 requests per day per project is not a spillover tier.
+[endpoints."google/gemini-3.8-flash"]
+provider = "google-ai-studio"
+model = "gemini-3.8-flash"
+rpm = 5
+rpd = 20
+sources = { rpm = "observed", rpd = "observed" }
+
+# --- roles -----------------------------------------------------------------------------
+# The one config value that moves a role onto another provider is `endpoint`. Spillover is
+# tried in the order written, after every pool of the primary endpoint is refusing.
+
+[roles.cheap]
+endpoint = "groq/gpt-oss-20b"
+spillover = ["google/gemini-3.5-flash-lite"]
+
+# No spillover: both tiers sit on Groq and Google has no free strong model with workable
+# daily capacity. This empty list is the single point of failure named in docs/PROVIDERS.md,
+# left visible rather than papered over with a model that allows 20 requests a day.
+[roles.strong]
+endpoint = "groq/gpt-oss-120b"
+spillover = []

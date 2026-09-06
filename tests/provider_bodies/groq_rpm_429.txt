@@ -1,0 +1,1 @@
+{"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01knx5npqkfc19q5jefzfvdfv5` service tier `on_demand` on requests per minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.c
