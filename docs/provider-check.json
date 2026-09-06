@@ -1,0 +1,353 @@
+{
+  "checked_utc": "2026-09-06T08:29:39Z",
+  "burst_size": 0,
+  "groq": {
+    "models": {
+      "openai/gpt-oss-20b": {
+        "completion": {
+          "status": 200,
+          "latency_s": 0.518,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "921",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7824",
+            "x-ratelimit-reset-requests": "1h53m45.6s",
+            "x-ratelimit-reset-tokens": "1.319s"
+          },
+          "error": null,
+          "model_returned": "openai/gpt-oss-20b",
+          "prompt_tokens": 78,
+          "completion_tokens": 24,
+          "finish_reason": "stop",
+          "tool_calls": [],
+          "text": "ready"
+        },
+        "tool_call": {
+          "status": 200,
+          "latency_s": 0.223,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "920",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7803",
+            "x-ratelimit-reset-requests": "1h55m12s",
+            "x-ratelimit-reset-tokens": "1.477s"
+          },
+          "error": null,
+          "model_returned": "openai/gpt-oss-20b",
+          "prompt_tokens": 127,
+          "completion_tokens": 29,
+          "finish_reason": "tool_calls",
+          "tool_calls": [
+            "list_tables"
+          ],
+          "text": ""
+        }
+      },
+      "openai/gpt-oss-120b": {
+        "completion": {
+          "status": 200,
+          "latency_s": 0.721,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "938",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7890",
+            "x-ratelimit-reset-requests": "1h29m16.8s",
+            "x-ratelimit-reset-tokens": "825ms"
+          },
+          "error": null,
+          "model_returned": "openai/gpt-oss-120b",
+          "prompt_tokens": 78,
+          "completion_tokens": 49,
+          "finish_reason": "stop",
+          "tool_calls": [],
+          "text": "ready"
+        },
+        "tool_call": {
+          "status": 200,
+          "latency_s": 0.614,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "937",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7811",
+            "x-ratelimit-reset-requests": "1h30m43.2s",
+            "x-ratelimit-reset-tokens": "1.417s"
+          },
+          "error": null,
+          "model_returned": "openai/gpt-oss-120b",
+          "prompt_tokens": 127,
+          "completion_tokens": 29,
+          "finish_reason": "tool_calls",
+          "tool_calls": [
+            "list_tables"
+          ],
+          "text": ""
+        }
+      },
+      "qwen/qwen3.8-27b": {
+        "completion": {
+          "status": 200,
+          "latency_s": 0.407,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "997",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7853",
+            "x-ratelimit-reset-requests": "4m19.2s",
+            "x-ratelimit-reset-tokens": "1.102s"
+          },
+          "error": null,
+          "model_returned": "qwen/qwen3.8-27b",
+          "prompt_tokens": 19,
+          "completion_tokens": 2,
+          "finish_reason": "stop",
+          "tool_calls": [],
+          "text": "ready"
+        },
+        "tool_call": {
+          "status": 200,
+          "latency_s": 0.512,
+          "headers": {
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-remaining-requests": "996",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-tokens": "7722",
+            "x-ratelimit-reset-requests": "5m45.6s",
+            "x-ratelimit-reset-tokens": "2.085s"
+          },
+          "error": null,
+          "model_returned": "qwen/qwen3.8-27b",
+          "prompt_tokens": 270,
+          "completion_tokens": 14,
+          "finish_reason": "tool_calls",
+          "tool_calls": [
+            "list_tables"
+          ],
+          "text": ""
+        }
+      }
+    },
+    "bursts": {
+      "openai/gpt-oss-20b": {
+        "requests": 40,
+        "limit_named_by_provider": "RPM=30",
+        "concurrent": true,
+        "wall_clock_s": 0.819,
+        "status_counts": {
+          "429": 22,
+          "200": 18
+        },
+        "throttled": 22,
+        "retry_after_seen": [
+          "2"
+        ],
+        "throttle_messages": [
+          "{\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01knx5npqkfc19q5jefzfvdfv5` service tier `on_demand` on requests per minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.c"
+        ],
+        "headers_last": {
+          "x-ratelimit-limit-requests": "1000",
+          "x-ratelimit-remaining-requests": "913",
+          "x-ratelimit-limit-tokens": "8000",
+          "x-ratelimit-remaining-tokens": "7230",
+          "x-ratelimit-reset-requests": "2h5m16.799s",
+          "x-ratelimit-reset-tokens": "5.775s"
+        }
+      },
+      "openai/gpt-oss-120b": {
+        "requests": 40,
+        "limit_named_by_provider": "RPM=30",
+        "concurrent": true,
+        "wall_clock_s": 1.229,
+        "status_counts": {
+          "200": 17,
+          "429": 23
+        },
+        "throttled": 23,
+        "retry_after_seen": [
+          "2"
+        ],
+        "throttle_messages": [
+          "{\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01knx5npqkfc19q5jefzfvdfv5` service tier `on_demand` on requests per minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s. Need more tokens? Upgrade to Dev Tier today at https://console.groq."
+        ],
+        "headers_last": {
+          "x-ratelimit-limit-requests": "1000",
+          "x-ratelimit-remaining-requests": "920",
+          "x-ratelimit-reset-requests": "1h55m12s",
+          "retry-after": "2"
+        }
+      }
+    }
+  },
+  "cerebras": {
+    "models": {
+      "qwen-3.8-27b": {
+        "completion": {
+          "status": 402,
+          "latency_s": 0.384,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        },
+        "tool_call": {
+          "status": 402,
+          "latency_s": 0.431,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        }
+      },
+      "gpt-oss-120b": {
+        "completion": {
+          "status": 402,
+          "latency_s": 0.41,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        },
+        "tool_call": {
+          "status": 402,
+          "latency_s": 0.333,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        }
+      },
+      "gemma-4-31b": {
+        "completion": {
+          "status": 402,
+          "latency_s": 0.482,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        },
+        "tool_call": {
+          "status": 402,
+          "latency_s": 0.366,
+          "headers": {},
+          "error": "{\"message\":\"Payment required to access this resource. Visit your billing tab.\",\"type\":\"payment_required_error\",\"param\":\"quota\",\"code\":\"payment_required\"}"
+        }
+      }
+    },
+    "bursts": {
+      "qwen-3.8-27b": {
+        "requests": 15,
+        "limit_named_by_provider": null,
+        "concurrent": true,
+        "wall_clock_s": 0.423,
+        "status_counts": {
+          "402": 15
+        },
+        "throttled": 0,
+        "retry_after_seen": [],
+        "throttle_messages": [],
+        "headers_last": {}
+      }
+    }
+  },
+  "google-ai-studio": {
+    "models": {
+      "gemini-3.5-flash-lite": {
+        "completion": {
+          "status": 200,
+          "latency_s": 0.83,
+          "headers": {},
+          "error": null,
+          "model_returned": "gemini-3.5-flash-lite",
+          "prompt_tokens": 8,
+          "completion_tokens": 1,
+          "finish_reason": "STOP",
+          "tool_calls": [],
+          "text": "Ready"
+        },
+        "tool_call": {
+          "status": 200,
+          "latency_s": 0.713,
+          "headers": {},
+          "error": null,
+          "model_returned": "gemini-3.5-flash-lite",
+          "prompt_tokens": 40,
+          "completion_tokens": 10,
+          "finish_reason": "STOP",
+          "tool_calls": [
+            "list_tables"
+          ],
+          "text": ""
+        }
+      },
+      "gemini-3.8-flash": {
+        "completion": {
+          "status": 200,
+          "latency_s": 1.136,
+          "headers": {},
+          "error": null,
+          "model_returned": "gemini-3.8-flash",
+          "prompt_tokens": 8,
+          "completion_tokens": 1,
+          "finish_reason": "STOP",
+          "tool_calls": [],
+          "text": "ready"
+        },
+        "tool_call": {
+          "status": 200,
+          "latency_s": 5.032,
+          "headers": {},
+          "error": null,
+          "model_returned": "gemini-3.8-flash",
+          "prompt_tokens": 40,
+          "completion_tokens": 10,
+          "finish_reason": "STOP",
+          "tool_calls": [
+            "list_tables"
+          ],
+          "text": ""
+        }
+      },
+      "gemini-2.5-flash": {
+        "completion": {
+          "status": 404,
+          "latency_s": 0.246,
+          "headers": {},
+          "error": "{\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+        },
+        "tool_call": {
+          "status": 404,
+          "latency_s": 0.233,
+          "headers": {},
+          "error": "{\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+        }
+      }
+    },
+    "bursts": {
+      "gemini-3.5-flash-lite": {
+        "requests": 20,
+        "limit_named_by_provider": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier=15",
+        "concurrent": true,
+        "wall_clock_s": 1.432,
+        "status_counts": {
+          "429": 6,
+          "200": 14
+        },
+        "throttled": 6,
+        "retry_after_seen": [],
+        "throttle_messages": [
+          "{ \"error\": { \"code\": 429, \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for"
+        ],
+        "headers_last": {}
+      },
+      "gemini-3.8-flash": {
+        "requests": 20,
+        "limit_named_by_provider": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier=5",
+        "concurrent": true,
+        "wall_clock_s": 2.863,
+        "status_counts": {
+          "429": 17,
+          "200": 3
+        },
+        "throttled": 17,
+        "retry_after_seen": [],
+        "throttle_messages": [
+          "{ \"error\": { \"code\": 429, \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for"
+        ],
+        "headers_last": {}
+      }
+    }
+  }
+}
