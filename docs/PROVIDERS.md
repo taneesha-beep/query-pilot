@@ -71,6 +71,20 @@ serves no rate-limit headers, but its 429 body carries the quota it enforced —
 `GenerateRequestsPerMinutePerProjectPerModel-FreeTier`, value **15** for
 `gemini-3.5-flash-lite` and **5** for `gemini-3.8-flash`, with a `retryDelay` of 26 s.
 
+**Two grades of evidence sit in those observed columns, and they are not the same.** A
+figure is either one this project **was refused at** or one the provider **stated**. Groq's
+RPM is the first kind: 40 concurrent requests, 11 refused, and a 429 body naming the
+ceiling. Its RPD and TPM are the second: read out of headers on requests that succeeded,
+with nothing here having reached either. Google's 15 and 5 are the first kind. Where a
+number below is used to plan capacity, which kind it is matters, so the distinction is kept
+rather than flattened into one word.
+
+**Groq's daily allowance is per model, and the evidence for it is a pair of counters.**
+After identical 40-request bursts, `x-ratelimit-remaining-requests` read **895** on
+`openai/gpt-oss-20b` and **926** on `openai/gpt-oss-120b`. Two counters, not one. That is
+what the run-budget line below rests on when it multiplies 1,000 requests by three models,
+and it is also why Phase 1 keys its quota buckets on the model rather than on the provider.
+
 **Where documented and observed can be compared, they agree.** Every Groq figure matched.
 That is worth recording precisely because the item exists on the assumption that they
 might not.
@@ -147,14 +161,20 @@ of the work moves to Google and Groq becomes the spillover.
 
 ## The run budget
 
-**Measured daily capacity.** Groq: three usable models × 1,000 requests and 200,000 tokens
-each — **3,000 requests and 600,000 tokens per day**.
+**Daily capacity, with each figure's evidence named.** Groq: three usable models × 1,000
+requests and 200,000 tokens each — **3,000 requests and 600,000 tokens per day**. The 1,000
+is header-stated and the per-model split is evidenced by the two counters above; **the
+200,000 is Groq's published figure and has never been reached here**, so the token half of
+that total is documented arithmetic rather than a measurement.
 
-Google: two independent project pools, both serving `gemini-3.5-flash-lite` at 15 RPM, so
-**30 RPM combined**. Its RPD and TPD are still TBD and remain the project's most valuable
-unmeasured numbers — but the ceiling is known to be well above the burst probes recorded in
-`provider-check.json`, since flash-lite was still answering after them. `gemini-3.8-flash`
-contributes nothing: 20 requests per day per pool.
+Google: two independent project pools. Pool one serves `gemini-3.5-flash-lite` at 15 RPM,
+observed. **"30 RPM combined" is an inference, not a measurement** — pool two was never
+asked for more than 8 requests at once, so its own ceiling has never been reached and 15 is
+assumed from it being the same free tier on the same model. Reasonable, and still an
+assumption. Its RPD and TPD are TBD and remain the project's most valuable unmeasured
+numbers — the ceiling is known to be above the burst probes in `provider-check.json`, since
+flash-lite was still answering after them. `gemini-3.8-flash` contributes nothing: 20
+requests per day per pool.
 
 **Runs planned, counted honestly.** The A1-strong arm of Phase 5 reuses the 3.6 run rather
 than repeating it, so it is not counted twice.
@@ -216,6 +236,23 @@ body — this one is retryable-after-fixing, and neither category covers it clea
 **`gemini-3.8-flash` returned a 503 mid-probe** and succeeded on the next run. Free tiers
 return transient server errors, and 1.2's retryable class needs to hold 503 as well as 429.
 
+**A daily refusal asks to be retried in 32 seconds.** Found on 2026-09-07 by re-reading the
+body already recorded here, while building the client — no further quota spent. The 429 on
+`gemini-3.8-flash` carries a `RetryInfo` detail of `retryDelay: 32s` **beside** a `quotaId`
+of `GenerateRequestsPerDayPerProjectPerModel-FreeTier`. The two contradict each other: the
+hint says half a minute, the quota does not move until midnight Pacific. A client that
+honours the hint retries every 32 seconds for the rest of the day and never succeeds.
+**The quota named in the body outranks the retry hint the same body gives**, and Phase 1.2
+disregards the hint on exactly this one case.
+
+**Truncating an error body cost a fixture.** `provider_check.py` caps throttle messages at
+300 characters, so although this document quotes
+`GenerateRequestsPerMinutePerProjectPerModel-FreeTier` = 15, **no per-minute body survives
+intact anywhere in the artifact** — the value was extracted at probe time and the document
+it came from was cut. Phase 1's test fixture for that case had to be reconstructed from the
+recorded daily body, and the client now keeps error bodies whole. A quota a provider names
+once is worth more than the bytes it takes to store.
+
 **A daily ceiling of 20 requests was found by accident, and only because a 429 body was
 read rather than counted.** `gemini-3.8-flash` stopped answering partway through the day,
 and the reason was not the 5 RPM already recorded — it was
@@ -225,6 +262,24 @@ clears in seconds and a limit that clears at midnight Pacific, and a client that
 identically for both will sit retrying a request that cannot succeed today. **The error
 classifier must read the quota named in the body, not just the status code**, and the
 ledger must record it so the next run knows which wall it hit.
+
+## What Phase 1 did with these findings
+
+Recorded here so this document stays the place the provider facts live, and so a reader
+does not have to open the client to learn which of them turned into behaviour.
+
+| Finding | Where it landed |
+|---|---|
+| Two pools are two quota ceilings | Buckets keyed on provider, **pool and model** together |
+| RPD is per model (the 895/926 counters) | The same keying; a provider-wide bucket would be wrong in both directions |
+| Google publishes no per-model daily figure | That limit is **absent** from `config/providers.toml`, meaning unmodelled rather than unlimited — the client cannot pre-empt that wall, only record it |
+| A 429 is not one condition | The classifier reads the quota named in the body; a per-minute wall moves the work, a per-day wall shuts the pool until the boundary |
+| A daily refusal's 32 s retry hint | Deliberately disregarded when the quota it names is a daily one |
+| Cloudflare's `error code: 1010` | Its own terminal class, `bot_block`, explicitly not `auth` |
+| `gemini-2.5-flash` retired on day one | Model strings pinned in `config/providers.toml`; no call site can name one |
+| A transient 503 | Retryable, with exponential backoff and jitter |
+| Groq's RPD reset advancing 86.4 s per request | Modelled as continuous refill, with **no** daily reset boundary — unlike Google, which resets at midnight Pacific |
+| Cloudflare answers Python's default agent | The client sends a real User-Agent on every request |
 
 ## Reproducing this
 
