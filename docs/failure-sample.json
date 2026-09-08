@@ -1,0 +1,182 @@
+{
+  "protocol": {
+    "fixed_on": "2026-09-08, before the run of 2.4 started",
+    "population": "tasks recorded complete whose comparison did not solve",
+    "excluded": "tasks recorded failed: no model answer to read",
+    "seed": 20260908,
+    "sample_size": 30,
+    "how_drawn": "all 26: the population is not larger than 30",
+    "seen_before_the_protocol_was_fixed": [
+      "dev-0126",
+      "dev-0388",
+      "dev-0489"
+    ],
+    "note": "Counts out of the sample. Never re-weighted into a rate."
+  },
+  "run": {
+    "run_id": "20260908-133316-faecd5",
+    "ledger": "runs/20260908-133316-faecd5/ledger.jsonl",
+    "tasks_complete": 150,
+    "tasks_failed": 0,
+    "failed_task_ids": [],
+    "non_solves": 26
+  },
+  "drawn": [
+    {
+      "task_id": "dev-0106",
+      "reason": "row_count",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0110",
+      "reason": "value_mismatch",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0125",
+      "reason": "value_mismatch",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0126",
+      "reason": "value_mismatch",
+      "db_id": "car_1",
+      "seen_before": true
+    },
+    {
+      "task_id": "dev-0133",
+      "reason": "value_mismatch",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0150",
+      "reason": "value_mismatch",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0152",
+      "reason": "row_count",
+      "db_id": "car_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0263",
+      "reason": "value_mismatch",
+      "db_id": "employee_hire_evaluation",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0354",
+      "reason": "row_count",
+      "db_id": "cre_Doc_Template_Mgt",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0404",
+      "reason": "row_count",
+      "db_id": "course_teach",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0489",
+      "reason": "value_mismatch",
+      "db_id": "wta_1",
+      "seen_before": true
+    },
+    {
+      "task_id": "dev-0490",
+      "reason": "value_mismatch",
+      "db_id": "wta_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0549",
+      "reason": "row_count",
+      "db_id": "student_transcripts_tracking",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0571",
+      "reason": "value_mismatch",
+      "db_id": "student_transcripts_tracking",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0613",
+      "reason": "value_mismatch",
+      "db_id": "tvshow",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0617",
+      "reason": "value_mismatch",
+      "db_id": "tvshow",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0758",
+      "reason": "row_count",
+      "db_id": "world_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0760",
+      "reason": "column_count",
+      "db_id": "world_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0816",
+      "reason": "row_count",
+      "db_id": "world_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0820",
+      "reason": "row_count",
+      "db_id": "world_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0851",
+      "reason": "column_count",
+      "db_id": "orchestra",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0883",
+      "reason": "row_count",
+      "db_id": "network_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0897",
+      "reason": "row_count",
+      "db_id": "network_1",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0937",
+      "reason": "value_mismatch",
+      "db_id": "dog_kennels",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0980",
+      "reason": "value_mismatch",
+      "db_id": "dog_kennels",
+      "seen_before": false
+    },
+    {
+      "task_id": "dev-0999",
+      "reason": "row_count",
+      "db_id": "dog_kennels",
+      "seen_before": false
+    }
+  ]
+}
