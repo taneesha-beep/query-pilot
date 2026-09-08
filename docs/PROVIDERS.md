@@ -281,6 +281,7 @@ does not have to open the client to learn which of them turned into behaviour.
 | A daily refusal's 32 s retry hint | Deliberately disregarded when the quota it names is a daily one |
 | Cloudflare's `error code: 1010` | Its own terminal class, `bot_block`, explicitly not `auth` |
 | `gemini-2.5-flash` retired on day one | Model strings pinned in `config/providers.toml`; no call site can name one |
+| Both providers call tools, and neither in the same shape | Normalised in `providers/`: Groq's `arguments` arrive as a **JSON string**, Google's `args` as an **object**. **1.5 found what that asymmetry had cost** — the Google side carried no guard, so a `functionCall` whose `args` was not an object escaped the client as a bare `ValueError`, which is not a `ClientError` and so was never classified. A run would have filed a provider's malformed answer under `executor_error`, the one label 1.3 reserves for this project's own bugs. Both sides now refuse it as `malformed_response` |
 | A transient 503 | Retryable, with exponential backoff and jitter |
 | Groq's RPD reset advancing 86.4 s per request | Modelled as continuous refill, with **no** daily reset boundary — unlike Google, which resets at midnight Pacific |
 | Cloudflare answers Python's default agent | The client sends a real User-Agent on every request |

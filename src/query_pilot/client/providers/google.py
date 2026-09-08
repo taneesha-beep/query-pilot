@@ -139,7 +139,7 @@ class GoogleProvider:
         usage = body.get("usageMetadata") or {}
         return Completion(
             text="".join(part.get("text", "") for part in parts if "text" in part),
-            tool_calls=tuple(_tool_calls(parts)),
+            tool_calls=tuple(self._tool_calls(parts, model, response.text)),
             prompt_tokens=usage.get("promptTokenCount"),
             completion_tokens=usage.get("candidatesTokenCount"),
             provider=self.name,
@@ -151,6 +151,35 @@ class GoogleProvider:
             rate_limit=None,
             raw=body,
         )
+
+    def _tool_calls(
+        self, parts: Sequence[Mapping[str, Any]], model: str, body: str
+    ) -> Iterable[ToolCall]:
+        """Normalise every ``functionCall`` in a parts list, refusing what cannot be read.
+
+        Google states these arguments arrive as an object, and every call recorded at 0.4
+        did. It is still a value a provider chose rather than one this package controls,
+        and an agent running a tool with silently-dropped arguments is worse than one that
+        stops — so anything that is not an object is a named failure here rather than a
+        ``ValueError`` escaping the client unclassified. The OpenAI-shaped adapter has
+        refused the same thing since 1.1; this side had no guard until 1.5's fault tests
+        went looking for one.
+        """
+        for index, part in enumerate(parts):
+            call = part.get("functionCall")
+            if not call:
+                continue
+            name = call.get("name") or ""
+            raw_arguments = call.get("args")
+            if raw_arguments is not None and not isinstance(raw_arguments, Mapping):
+                raise MalformedResponseError(
+                    f"tool call {name!r} arguments are not an object",
+                    provider=self.name,
+                    model=model,
+                    pool=self.pool,
+                    body=body,
+                )
+            yield ToolCall(id=f"{name}-{index}", name=name, arguments=dict(raw_arguments or {}))
 
     # -- errors ----------------------------------------------------------------------
     def _http_error(self, response: HttpResponse, model: str) -> ProviderHTTPError:
@@ -204,15 +233,6 @@ def _as_object(content: str) -> dict[str, Any]:
     except ValueError:
         return {"result": content}
     return parsed if isinstance(parsed, dict) else {"result": parsed}
-
-
-def _tool_calls(parts: Sequence[Mapping[str, Any]]) -> Iterable[ToolCall]:
-    for index, part in enumerate(parts):
-        call = part.get("functionCall")
-        if not call:
-            continue
-        name = call.get("name") or ""
-        yield ToolCall(id=f"{name}-{index}", name=name, arguments=dict(call.get("args") or {}))
 
 
 def quota_from(body: str) -> QuotaFact | None:

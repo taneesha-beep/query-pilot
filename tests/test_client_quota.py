@@ -240,6 +240,30 @@ async def test_a_retryable_failure_is_backed_off_on_the_schedule(http, clock):
     assert clock.slept[1] > clock.slept[0]
 
 
+async def test_a_timeout_is_retried_on_the_same_pool_and_then_answered(http, clock):
+    """A failure with no response at all, which is a different shape from a bad response.
+
+    503 already covers the retryable-status path. This one never reaches a status: the
+    transport raises, so there is no body to classify and no quota to read, and the only
+    thing that makes it retryable is the exception's own class. It stays on the pool it
+    started on — nothing about a timeout says that pool is out of quota.
+    """
+    policy = RetryPolicy(max_attempts=4, base_s=0.5, factor=2.0, jitter=0.25)
+    timed_out = TransportError(
+        "read timed out after 30.0s",
+        provider="groq",
+        model="openai/gpt-oss-20b",
+        pool="groq#1",
+    )
+    http.replies = [timed_out, timed_out, groq_reply()]
+    completion = await client_for(http, clock, policy=policy).complete("cheap", ASK)
+
+    assert completion.text == "ready"
+    assert [r.pool for r in http.requests] == ["groq#1", "groq#1", "groq#1"]
+    assert len(clock.slept) == 2
+    assert clock.slept[1] > clock.slept[0]
+
+
 async def test_a_terminal_error_is_not_retried(http, clock):
     http.replies = [response(GOOGLE_RETIRED_404, status=404)]
     with pytest.raises(ProviderHTTPError) as raised:
@@ -371,6 +395,38 @@ async def test_a_minute_wall_moves_the_work_rather_than_waiting(http, clock):
     # Nothing was waited for. There was another pool with room.
     assert clock.slept == []
     assert [r.provider for r in http.requests] == ["groq", "google-ai-studio"]
+
+
+async def test_a_429_that_names_nothing_shuts_the_pool_for_a_minute_and_the_work_moves(http, clock):
+    """The end of the path `test_a_429_that_names_nothing_is_treated_as_the_shorter_wall`
+    starts.
+
+    That one asks the classifier what an unnamed wall means. This one spends it: no quota
+    id, no `retry-after`, no prose — nothing to read but the status. The pool shuts for the
+    minute the classifier assumes, and because assuming the shorter wall is only safe if
+    nothing waits on it, the request is answered elsewhere in the same instant.
+    """
+    walls: list[QuotaWall] = []
+    http.replies = [response("too many requests", status=429), google_reply()]
+    client = client_for(http, clock, quota_walls=walls.append)
+    completion = await client.complete("cheap", ASK)
+
+    assert completion.text == "ready"
+    assert [r.pool for r in http.requests] == ["groq#1", "google-ai-studio#1"]
+    assert clock.slept == []  # moved rather than waited
+
+    buckets = client.scheduler.book.known()[GROQ_CHEAP]
+    assert buckets.blocked_until - 1_000.0 == pytest.approx(60.0)
+
+    # Where the assumption is visible to a reader later. The failure *reason* is the
+    # coarse label — an unnamed wall is filed beside the per-minute ones, because that is
+    # what it was guessed to be — and the *scope* is what says nobody named it. A ledger
+    # counting `quota_minute` rows is counting this case too, and the scope is how a run
+    # tells the guess apart from the observation.
+    assert buckets.blocked_reason == "quota_minute"
+    assert [(w.reason, w.scope) for w in walls] == [("quota_minute", "unknown")]
+    assert walls[0].quota_id is None and walls[0].retry_after_s is None
+    assert walls[0].body == "too many requests"  # whole, however little it says
 
 
 async def test_work_walks_down_the_pools_of_one_provider_before_leaving_it(http, clock):

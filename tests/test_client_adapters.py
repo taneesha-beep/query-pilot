@@ -358,6 +358,94 @@ async def test_groq_names_its_ceiling_in_prose_and_the_adapter_reads_it(http, me
     assert quota.retry_after_s == pytest.approx(2.0)
 
 
+async def test_a_retry_after_header_is_read_when_the_body_names_no_ceiling(http, messages):
+    """The header path, on its own, with nothing in the body corroborating it.
+
+    Groq's recorded refusal names its ceiling in prose *and* sends the header, so a test
+    using that body cannot tell which of the two the adapter read. This one can: there is
+    no ceiling in the body to find, and a delay still comes back.
+    """
+    http.replies = [response("Rate limited, mate.", status=429, headers={"retry-after": "7"})]
+    with pytest.raises(ProviderHTTPError) as raised:
+        await groq(http).complete(messages, None, GROQ_MODEL)
+    quota = raised.value.quota
+    assert quota is not None
+    assert quota.retry_after_s == pytest.approx(7.0)
+    # Nothing was invented to go with it. An unnamed ceiling stays unnamed, and quota
+    # control decides what an unnamed wall costs.
+    assert (quota.quota_id, quota.quota_metric, quota.quota_value) == (None, None, None)
+
+
+async def test_the_header_outranks_the_bodys_own_hint_when_the_two_disagree(http, messages):
+    """Two hints, one request. The transport-level one wins.
+
+    A body's prose is written when the message is composed; the header is set when the
+    response is sent, and it is the one an HTTP intermediary can correct. This is a
+    smaller cousin of the rule quota control applies one level up, where the quota a body
+    names outranks the retry hint the same body gives.
+    """
+    body = GROQ_RPM_429.replace("try again in 2s", "try again in 2m30s")
+    http.replies = [response(body, status=429, headers={"retry-after": "9"})]
+    with pytest.raises(ProviderHTTPError) as raised:
+        await groq(http).complete(messages, None, GROQ_MODEL)
+    quota = raised.value.quota
+    assert quota is not None
+    assert quota.retry_after_s == pytest.approx(9.0)
+    # The ceiling itself still comes from the body, which is the only place it appears.
+    assert (quota.quota_id, quota.quota_value) == ("RPM", 30)
+
+
+async def test_a_429_naming_nothing_and_carrying_no_header_yields_no_quota_fact(http, messages):
+    # An absent limit is unmodelled, not a limit of zero and not a limit of sixty seconds.
+    # What to do with a wall nobody named is quota control's decision, not the adapter's.
+    http.replies = [response("too many requests", status=429)]
+    with pytest.raises(ProviderHTTPError) as raised:
+        await groq(http).complete(messages, None, GROQ_MODEL)
+    assert raised.value.status == 429
+    assert raised.value.quota is None
+
+
+async def test_tool_arguments_that_parse_but_are_not_an_object_are_a_named_failure(
+    http, messages, tool
+):
+    # Valid JSON, and still unusable: a tool takes named arguments, so a bare array cannot
+    # be spread over them. The near miss is worth its own case because it reaches a
+    # different branch from a string that does not parse at all.
+    http.replies = [
+        groq_reply(
+            text="",
+            tool_calls=[
+                {
+                    "id": "call_abc",
+                    "type": "function",
+                    "function": {"name": "lookup_forecast", "arguments": '["Pune"]'},
+                }
+            ],
+        )
+    ]
+    with pytest.raises(MalformedResponseError, match="arguments are not an object"):
+        await groq(http).complete(messages, [tool], GROQ_MODEL)
+
+
+@pytest.mark.parametrize("args", [["Pune"], "Pune", 7], ids=["a list", "a string", "a number"])
+async def test_google_tool_arguments_that_are_not_an_object_are_a_named_failure(
+    http, messages, tool, args
+):
+    """The same refusal on the other side of the normalisation, added by 1.5.
+
+    Google states these arrive as an object and every call recorded at 0.4 did, so this
+    side had no guard: the three shapes below escaped as a bare ``ValueError`` or
+    ``TypeError``, which is not a :class:`ClientError` at all. Quota control would never
+    have seen it to classify it, and a run would have filed a provider's malformed answer
+    under ``executor_error`` — the one label 1.3 reserved for this project's own bugs.
+    """
+    http.replies = [
+        google_reply(text="", function_calls=[{"name": "lookup_forecast", "args": args}])
+    ]
+    with pytest.raises(MalformedResponseError, match="arguments are not an object"):
+        await google(http).complete(messages, [tool], GOOGLE_MODEL)
+
+
 async def test_an_error_body_is_kept_whole(http, messages):
     # The per-minute body this suite needs was lost because the 0.4 probe truncated at 300
     # characters. A quota a provider names once is worth more than the bytes to store it.
