@@ -66,7 +66,14 @@ class IncompleteReason(StrEnum):
 #: Every remaining task would fail identically against a retired model or a refused key,
 #: so the run stops instead of burning the list proving it. `bad_request` and
 #: `malformed_response` are deliberately absent: those can be about one task's content.
-FATAL_ERROR_CLASSES = frozenset({"auth", "bot_block", "payment_required", "model_not_found"})
+#:
+#: `config` is here because `ConfigError`'s own docstring — "the configuration or the
+#: environment cannot produce a working call" — is this set's definition written out. A run
+#: with no credential for its role failed ten identical tasks proving that once; at 150 it
+#: would prove it fifteen times over.
+FATAL_ERROR_CLASSES = frozenset(
+    {"auth", "bot_block", "config", "payment_required", "model_not_found"}
+)
 
 
 def fatal_reason(error: BaseException) -> IncompleteReason | None:

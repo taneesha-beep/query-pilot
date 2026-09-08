@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from conftest import GOOGLE_DAILY_429
-from query_pilot.client.errors import ProviderHTTPError, TransportError
+from query_pilot.client.errors import ConfigError, ProviderHTTPError, TransportError
 from query_pilot.client.scheduler import AllPoolsExhausted
 from query_pilot.client.types import Completion
 from query_pilot.run import (
@@ -289,6 +289,34 @@ async def test_a_broken_configuration_stops_the_run_rather_than_burning_the_task
     assert calls == ["t-0"]
     (task,) = rows_of(ledger.path, "task")
     assert task["error_class"] == reason
+
+
+async def test_a_missing_credential_stops_the_run_at_the_first_task(tmp_path):
+    """The defect this closes, seen for real: ten tasks failed identically on one key.
+
+    `ConfigError` is "the configuration or the environment cannot produce a working call",
+    which is `client_fatal`'s definition written out. It classified as `unclassified`,
+    which is not in `FATAL_ERROR_CLASSES`, so the run continued and burned the list proving
+    the same thing ten times. At 150 tasks it would have proved it fifteen times over.
+    """
+    ledger = ledger_for(tmp_path)
+    config = config_for([f"t-{i}" for i in range(6)])
+    calls: list[str] = []
+
+    async def executor(context):
+        calls.append(context.task_id)
+        raise ConfigError("role 'strong' has no credential pool; set one of: GROQ_API_KEY")
+
+    with ledger:
+        report = await Run(config, ledger).execute(executor)
+
+    assert report.incomplete_reason == IncompleteReason.CLIENT_FATAL
+    assert calls == ["t-0"]
+    assert report.tasks_failed == 1 and report.tasks_remaining == 6
+    (task,) = rows_of(ledger.path, "task")
+    assert task["error_class"] == "config"
+    # And the message survives to the row, which is the second half of the same defect.
+    assert "GROQ_API_KEY" in task["detail"]["message"]
 
 
 async def test_a_failure_that_is_about_one_task_does_not_stop_the_run(tmp_path):

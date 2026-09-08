@@ -40,6 +40,8 @@ from query_pilot.client.classify import Action, Scope, classify
 from query_pilot.client.client import Client
 from query_pilot.client.config import ClientConfig, Limits
 from query_pilot.client.errors import (
+    ClientError,
+    ConfigError,
     MalformedResponseError,
     ProviderHTTPError,
     QuotaFact,
@@ -200,6 +202,29 @@ def test_a_transport_failure_is_retryable_and_an_unreadable_answer_is_not():
     unreadable = MalformedResponseError("no candidates", provider="groq", model="m", pool="groq#1")
     assert classify(transport).action is Action.RETRY
     assert classify(unreadable).action is Action.TERMINAL
+
+
+def test_a_broken_environment_is_named_config_rather_than_left_unclassified():
+    """The field this returns is what the run ledger records, and what 2.5 counts."""
+    broken = ConfigError("role 'strong' has no credential pool; set one of: GROQ_API_KEY")
+    assert (classify(broken).action, classify(broken).reason) == (Action.TERMINAL, "config")
+
+
+def test_a_client_error_this_rule_has_never_seen_stays_unclassified():
+    """The catch-all keeps its meaning: `config` is a new class, not a widened one.
+
+    It matters that these two stay apart, because `run.guard.FATAL_ERROR_CLASSES` holds
+    one of them and must not hold the other — a class nobody has seen is not a class
+    anything should end a run on.
+    """
+
+    class Novel(ClientError):
+        pass
+
+    assert (classify(Novel("?")).action, classify(Novel("?")).reason) == (
+        Action.TERMINAL,
+        "unclassified",
+    )
 
 
 # --- the backoff schedule, asserted rather than endured -------------------------------

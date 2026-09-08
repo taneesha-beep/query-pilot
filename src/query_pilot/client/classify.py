@@ -19,6 +19,12 @@ A two-valued classifier gets this wrong, and the 0.4 inventory paid for the evid
   request cannot succeed, so it is terminal — but it is **not** an auth failure, it has its
   own name, and its message says what actually fixes it.
 
+**A `ConfigError` is classified here too, although it never reached a provider.** It is
+the one failure this rule sees that no request was made for: a missing credential, an
+unknown role, a wire style nothing implements. It is terminal for the same reason a retired
+model is, and it is named ``config`` rather than left in ``unclassified`` because the run
+ledger records this field and a broken environment must not read as an unrecognised one.
+
 So the answer has three actions rather than two. ``RETRY`` is the same pool after a
 backoff. ``BLOCK`` shuts one pool for a stated time and sends the work elsewhere — no delay
 this classifier computes is ever spent waiting when another pool is free. ``TERMINAL`` is
@@ -37,6 +43,7 @@ from enum import Enum
 
 from query_pilot.client.errors import (
     ClientError,
+    ConfigError,
     MalformedResponseError,
     ProviderHTTPError,
     QuotaFact,
@@ -104,6 +111,12 @@ def quota_scope(quota: QuotaFact | None, body: str) -> Scope:
 
 def classify(error: ClientError) -> Disposition:
     """Decide what one failure means. Pure: no clock, no calendar, no I/O."""
+    if isinstance(error, ConfigError):
+        # No request was made, so every request after this one fails identically. Its own
+        # reason rather than `unclassified`: that is the catch-all for a ClientError this
+        # rule has never seen, and a catch-all must not be treated as fatal while this one
+        # must be. `run.guard.FATAL_ERROR_CLASSES` is where that consequence lives.
+        return Disposition(Action.TERMINAL, "config")
     if isinstance(error, TransportError):
         return Disposition(Action.RETRY, "transport")
     if isinstance(error, MalformedResponseError):

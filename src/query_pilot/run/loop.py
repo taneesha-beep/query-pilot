@@ -394,6 +394,13 @@ class Run:
             # that is not a ClientError did not come from a provider, so it is named as
             # what it is and the exception type goes into `detail` rather than into a
             # field Phase 2.5 will count failure classes out of.
+            #
+            # The message goes into `detail` beside the type. A row reading only
+            # {"exception": "ConfigError"} is a mystery; the message it threw away —
+            # "role 'strong' has no credential pool; set one of: GROQ_API_KEY" — was the
+            # whole diagnosis. Safe to record because no exception in this project carries
+            # a credential: `errors.py` records no request headers, and the only two places
+            # that read `Credential.value` put it straight into one.
             if isinstance(error, ClientError):
                 context.last_error_class = classify(error).reason
             elif context.last_error_class is None:
@@ -408,7 +415,7 @@ class Run:
                 context,
                 FAILED,
                 self.clock.monotonic() - started,
-                {"exception": type(error).__name__},
+                {"exception": type(error).__name__, "message": str(error)},
             )
             return
         detail = result.detail if isinstance(result, TaskResult) else {}

@@ -299,7 +299,10 @@ async def test_a_bug_in_the_executor_is_not_filed_under_a_providers_failure_clas
     assert report.tasks_failed == 1 and report.status == "complete"
     (row,) = rows_of(ledger.path, "task")
     assert row["error_class"] == "executor_error"
-    assert row["detail"] == {"exception": "KeyError"}
+    # The type is what 1.3 decided goes here. The message goes beside it: a row carrying
+    # only the class name is a failure nobody can diagnose without re-running it, which is
+    # exactly what 2.5 cannot do.
+    assert row["detail"] == {"exception": "KeyError", "message": "'schema'"}
 
 
 def test_a_run_that_lists_a_task_twice_is_refused():
