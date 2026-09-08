@@ -90,6 +90,28 @@ class TaskContext:
     def agent(self) -> str:
         return self.run.config.agent
 
+    def budget_stop(self) -> IncompleteReason | None:
+        """Whether the run should stop now, recorded if it should. **For multi-turn work.**
+
+        :meth:`Run._worker` checks the guard before dispatching a task and never during
+        one, which is exactly right for an executor that makes a single call: a ceiling can
+        be crossed by at most the tasks already in flight. **A multi-turn executor breaks
+        that arithmetic** — it spends several requests inside one task, and a ceiling
+        crossed at its second turn should not buy it another twelve.
+
+        So a multi-turn executor calls this between turns and stops when it answers. The
+        reason is recorded on the guard here rather than left to the next worker check, so
+        that a run whose last task crossed the ceiling still ends with the right
+        ``incomplete_reason`` instead of a plain ``complete``.
+
+        Nothing here learns what a turn is. This returns the run's own stopping condition;
+        what the executor does with it is the executor's business.
+        """
+        reason = self.run.guard.check()
+        if reason is not None:
+            self.run.guard.stop(reason)
+        return reason
+
     def record(self, completion: Completion, *, turn: int = 1) -> AttemptRow:
         """An answered attempt."""
         self.attempts += 1

@@ -40,7 +40,15 @@ from query_pilot.run.loop import TaskContext, TaskResult
 from query_pilot.sandbox import CopyScope, Sandbox, SubstrateCopies
 from query_pilot.tasks import Task
 
-__all__ = ["A0", "MAX_OUTPUT_TOKENS", "ROLE", "SYSTEM_PROMPT", "Attempt", "build_prompt"]
+__all__ = [
+    "A0",
+    "ANSWER_RULES",
+    "MAX_OUTPUT_TOKENS",
+    "ROLE",
+    "SYSTEM_PROMPT",
+    "Attempt",
+    "build_prompt",
+]
 
 #: Held constant against A1. See the module docstring.
 ROLE: Final = "strong"
@@ -55,11 +63,14 @@ ROLE: Final = "strong"
 #: ceiling gets raised against evidence.
 MAX_OUTPUT_TOKENS: Final = 1024
 
-SYSTEM_PROMPT: Final = (
-    "You are an expert SQLite analyst. You are given the complete schema of one SQLite "
-    "database and one question about it. Reply with a single SQLite SELECT statement that "
-    "answers the question, and nothing else.\n"
-    "\n"
+#: What a correct answer looks like, shared with A1 **verbatim**.
+#:
+#: Split out of :data:`SYSTEM_PROMPT` in 3.2 and shared rather than copied, because the
+#: A0-against-A1 figure is a statement about the agent loop only if everything else is held
+#: constant — and a second copy of these five lines is a second thing that can drift. The
+#: concatenation below is pinned by a test to the exact string A0 was measured with, so
+#: this refactor cannot have moved the prompt that produced 124 of 150.
+ANSWER_RULES: Final = (
     "Rules:\n"
     "- Use only the tables and columns in the schema, spelled exactly as they appear.\n"
     "- Return exactly the columns the question asks for, in the order it asks for them, "
@@ -67,6 +78,13 @@ SYSTEM_PROMPT: Final = (
     "- Add ORDER BY only when the question asks for an order.\n"
     "- Add DISTINCT only when the question asks for distinct values.\n"
     "- Write one statement. Do not explain it, and do not end it with a semicolon."
+)
+
+SYSTEM_PROMPT: Final = (
+    "You are an expert SQLite analyst. You are given the complete schema of one SQLite "
+    "database and one question about it. Reply with a single SQLite SELECT statement that "
+    "answers the question, and nothing else.\n"
+    "\n" + ANSWER_RULES
 )
 
 
