@@ -68,10 +68,24 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1 and 2 are complete; Phase 3 is open.** A0 exists, has been measured over the
-whole working set, and every one of its failures has been read by hand. A1 — the agent with
-tools, a loop and repair — does not exist yet, and no row above that names it will carry a
-number until it does.
+**Phases 1 and 2 are complete; Phase 3 is under way.** A0 exists, has been measured over
+the whole working set, and every one of its failures has been read by hand. **A1 now exists
+too — four tools and the agent loop — but it has not been measured**, so every row above
+that names it still reads `TBD` and will until 3.6 runs it over the same 150 tasks. No
+number in this README comes from anything but a committed ledger.
+
+**What A1 is, and what is deliberately held constant.** It is given no schema: it discovers
+one with `list_tables`, `describe_table`, `sample_rows` and `execute_sql`, each with an
+explicit JSON schema, each returning a structured error rather than raising so the model can
+repair itself inside a trajectory. Everything else is A0's — the same model on the same
+`strong` role, the same output ceiling, the same answer rules word for word, the same
+sandbox, and a final query re-executed and compared by the same equivalence rule. The loop is
+the only thing that moved, which is the only condition under which the difference between the
+two rows above is a statement about the loop.
+
+Every turn, tool call and tool result is written to an append-only transcript, one file per
+task, from which the exact conversation sent to the provider at any turn can be rebuilt. That
+file is what the trajectory metrics, the containment measurement and the viewer all read.
 
 **A0 is a deliberately strong baseline**, because a weak one manufactures a result in A1's
 favour. It gets the whole schema, read live from the database rather than from a dataset

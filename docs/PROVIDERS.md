@@ -27,7 +27,9 @@ empties, and to compare cost. It leaves no slack if one of the two changes its t
 
 Latency is one warm call, not a distribution. Tool calling was probed separately with a
 one-function schema, because Phase 3's agent is tools all the way down and a model that
-cannot call one is not a candidate however generous its quota.
+cannot call one is not a candidate however generous its quota. **Four tools across several
+turns is a different exercise and was measured separately in 3.1** — see *Four tools, and
+one call a turn* below.
 
 | Provider | Model string | Chat | Tool call | Latency | Prompt/completion tokens |
 |---|---|---|---|---|---|
@@ -226,6 +228,46 @@ tasks":
    ceiling across every resume while its wall clock starts fresh each session.
 4. **If it still does not fit, runs get cut, not tasks** — in the roadmap's stated order,
    which takes the cascade's two runs out before it touches anything measured.
+
+## Four tools, and one call a turn
+
+**Measured 2026-09-08 in 3.1, nine requests, `docs/a1-tool-probe.json`.** Groq,
+`openai/gpt-oss-120b`, three tasks from `splits/smoke.json`, three turns each, all four of
+A1's tool schemas offered on every turn. It is here rather than in a phase write-up because
+these are facts about how this provider's model behaves, and a later session sizing a turn
+limit or a prompt budget will come looking for them beside the quota numbers.
+
+The table above proves a model calls **a** tool. None of the following follows from it.
+
+| | |
+|---|---|
+| Called `list_tables` first, before naming any table | **3 of 3 tasks** |
+| Tools called at least once, of four offered | **4 of 4** — none went unused |
+| Maximum tool calls in one assistant message | **1** |
+| Turns observed emitting more than one call | **0 of 9** |
+| Prompt growth per turn | **+50 to +107 tokens** (466 → 516 → 601) |
+
+**The finding that matters for a turn limit: this model does not batch.** The OpenAI
+tool-call format permits several calls in one message and this model used one, in every turn
+of every task. **A turn is therefore a tool call**, so a turn limit has to absorb one request
+per table the model chooses to describe — and a session that read the format and assumed
+batching would derive a limit less than half the size it needs. `src/query_pilot/agents/a1.py`
+derives `TURN_LIMIT` against this.
+
+**It also describes selectively rather than exhaustively** — one table per trajectory, not
+all four or all six of the schema — which is why prompt growth is far below what a
+describe-everything trajectory would cost, and why A1's projected token cost for a full
+working-set run is a fraction of a first estimate. `docs/a1-tool-sizes.json` holds the
+worst-case arithmetic these numbers are the realistic counterpart to.
+
+**What this run does not record:** the served model string. The probe script did not carry
+`model_returned` at the time, and it is written up as *not recorded* rather than inferred.
+The requested model is read from `config/providers.toml` at the `strong` role, whose
+spillover list is empty, so no other endpoint could have served these calls. The script
+records both per turn from now on. **No accuracy figure was taken from this run** and none
+may be — it ran on the smoke set and reports tool and turn behaviour only.
+
+---
 
 ## Findings the calls turned up
 
