@@ -26,7 +26,18 @@ from pathlib import Path
 
 from query_pilot.sandbox import Sandbox
 
-__all__ = ["Column", "ForeignKey", "Schema", "Table", "read_schema", "render_schema"]
+__all__ = [
+    "Column",
+    "ForeignKey",
+    "Schema",
+    "Table",
+    "quote",
+    "read_schema",
+    "read_table",
+    "read_table_names",
+    "render_schema",
+    "render_table",
+]
 
 #: Tables SQLite maintains for itself. Not part of anyone's question.
 _INTERNAL_PREFIX = "sqlite_"
@@ -81,6 +92,23 @@ class Schema:
     tables: tuple[Table, ...]
 
 
+def read_table_names(sandbox: Sandbox, database: Path | str, db_id: str) -> tuple[str, ...]:
+    """Every table a question could be about, in name order, without SQLite's own.
+
+    Its own function rather than the first half of :func:`read_schema` because 3.1's
+    ``list_tables`` needs exactly this and nothing else, and two implementations of "which
+    tables exist" is the divergence constraint 41 exists to prevent — A0 renders what this
+    returns and A1 is told what this returns.
+    """
+    listing = sandbox.execute(
+        database,
+        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
+    )
+    if not listing.ok:
+        raise RuntimeError(f"could not read the schema of {db_id}: {listing.error}")
+    return tuple(name for (name,) in listing.rows if not name.startswith(_INTERNAL_PREFIX))
+
+
 def read_schema(sandbox: Sandbox, database: Path | str, db_id: str) -> Schema:
     """Read every table, column, type, primary key and foreign key from one database.
 
@@ -90,22 +118,14 @@ def read_schema(sandbox: Sandbox, database: Path | str, db_id: str) -> Schema:
     an exception is the honest outcome. The run loop files that as `executor_error`, which
     is exactly what 1.3 reserved the label for.
     """
-    listing = sandbox.execute(
-        database,
-        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
-    )
-    if not listing.ok:
-        raise RuntimeError(f"could not read the schema of {db_id}: {listing.error}")
-
-    tables = []
-    for (name,) in listing.rows:
-        if name.startswith(_INTERNAL_PREFIX):
-            continue
-        tables.append(_read_table(sandbox, database, db_id, name))
+    tables = [
+        read_table(sandbox, database, db_id, name)
+        for name in read_table_names(sandbox, database, db_id)
+    ]
     return Schema(db_id=db_id, tables=tuple(tables))
 
 
-def _read_table(sandbox: Sandbox, database: Path | str, db_id: str, name: str) -> Table:
+def read_table(sandbox: Sandbox, database: Path | str, db_id: str, name: str) -> Table:
     info = sandbox.execute(database, f"PRAGMA table_info({quote(name)})")
     if not info.ok:
         raise RuntimeError(f"could not read {db_id}.{name}: {info.error}")
@@ -131,6 +151,40 @@ def _read_table(sandbox: Sandbox, database: Path | str, db_id: str, name: str) -
     return Table(name=name, columns=columns, foreign_keys=foreign_keys)
 
 
+def render_table(table: Table) -> str:
+    """One table as the `CREATE TABLE` statement :func:`render_schema` would emit for it.
+
+    Split out so that 3.1's ``describe_table`` returns **the same characters** A0's prompt
+    carries for that table, rather than a second rendering of the same facts. Constraint 41
+    is about the two agents reading one description of one world; a separate renderer here
+    would satisfy the letter of it and break the point of it.
+    """
+    lines = [f"CREATE TABLE {quote(table.name)} ("]
+    key_columns = sorted(
+        (column for column in table.columns if column.primary_key),
+        key=lambda column: column.primary_key,
+    )
+    entries = []
+    for column in table.columns:
+        entry = f"  {quote(column.name)} {column.type}"
+        if column.primary_key and len(key_columns) == 1:
+            entry += " PRIMARY KEY"
+        elif column.not_null:
+            entry += " NOT NULL"
+        entries.append(entry)
+    if len(key_columns) > 1:
+        names = ", ".join(quote(column.name) for column in key_columns)
+        entries.append(f"  PRIMARY KEY ({names})")
+    for key in table.foreign_keys:
+        target = quote(key.to_table)
+        if key.to_column is not None:
+            target += f" ({quote(key.to_column)})"
+        entries.append(f"  FOREIGN KEY ({quote(key.column)}) REFERENCES {target}")
+    lines.append(",\n".join(entries))
+    lines.append(");")
+    return "\n".join(lines)
+
+
 def render_schema(schema: Schema) -> str:
     """The schema as `CREATE TABLE` statements, which is the form a model has seen most.
 
@@ -145,30 +199,4 @@ def render_schema(schema: Schema) -> str:
     prompt would exceed what 2.3 specifies and would give Phase 4.2's planted row values a
     second, unmeasured way into the prompt.
     """
-    blocks = []
-    for table in schema.tables:
-        lines = [f"CREATE TABLE {quote(table.name)} ("]
-        key_columns = sorted(
-            (column for column in table.columns if column.primary_key),
-            key=lambda column: column.primary_key,
-        )
-        entries = []
-        for column in table.columns:
-            entry = f"  {quote(column.name)} {column.type}"
-            if column.primary_key and len(key_columns) == 1:
-                entry += " PRIMARY KEY"
-            elif column.not_null:
-                entry += " NOT NULL"
-            entries.append(entry)
-        if len(key_columns) > 1:
-            names = ", ".join(quote(column.name) for column in key_columns)
-            entries.append(f"  PRIMARY KEY ({names})")
-        for key in table.foreign_keys:
-            target = quote(key.to_table)
-            if key.to_column is not None:
-                target += f" ({quote(key.to_column)})"
-            entries.append(f"  FOREIGN KEY ({quote(key.column)}) REFERENCES {target}")
-        lines.append(",\n".join(entries))
-        lines.append(");")
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks)
+    return "\n\n".join(render_table(table) for table in schema.tables)

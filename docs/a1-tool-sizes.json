@@ -1,0 +1,372 @@
+{
+  "split": "working",
+  "tasks": 150,
+  "databases": 20,
+  "budget": {
+    "endpoint": "groq/gpt-oss-120b",
+    "tpm": 8000,
+    "max_output_tokens": 1024,
+    "chars_per_prompt_token": 3.265,
+    "chars_per_prompt_token_source": "docs/a0-prompt-sizes.json",
+    "budget_chars": 22776.6,
+    "note": "One attempt must stay under tpm at concurrency 1 or the client's own bucket ends the run as pools_exhausted with no provider having refused anything. A1's last attempt carries every tool result of the trajectory, so this is the budget every tool result in one trajectory shares."
+  },
+  "caps": {
+    "RESULT_ROWS": 10,
+    "SAMPLE_ROWS_DEFAULT": 5,
+    "SAMPLE_ROWS_MAX": 10,
+    "VALUE_CHARS": 120
+  },
+  "tools": [
+    "list_tables",
+    "describe_table",
+    "sample_rows",
+    "execute_sql"
+  ],
+  "worst_database": {
+    "db_id": "student_transcripts_tracking",
+    "tables": 11,
+    "exhaustive_chars": 9292,
+    "exhaustive_tokens_estimated": 2846,
+    "share_of_budget": 0.408
+  },
+  "largest_tool_result": {
+    "chars": 3161,
+    "tokens_estimated": 968,
+    "backstop": 6000,
+    "backstop_margin": 1.898,
+    "note": "The largest single tool result the working set produces under these caps. TOOL_RESULT_CHARS must sit above it, on the same reasoning 2.2 used for the sandbox's row and byte caps. If the backstop ever binds in a real run, RESULT_ROWS was the wrong shape rather than the backstop the wrong size."
+  },
+  "longest_value": {
+    "chars": 60,
+    "where": "real_estate_properties.Properties",
+    "cap": 120,
+    "cap_margin": 2.0,
+    "text_values_seen": 111235,
+    "text_values_over_cap": 0,
+    "note": "VALUE_CHARS truncates nothing in this substrate. It is here for the pathology the row cap cannot bound \u2014 few rows holding very large values \u2014 which is the pair the sandbox's row and byte caps bound one layer down."
+  },
+  "databases_measured": [
+    {
+      "db_id": "battle_death",
+      "tables": 3,
+      "list_tables_chars": 61,
+      "describe_table_chars_sum": 571,
+      "describe_table_chars_max": 234,
+      "sample_rows_chars_sum": {
+        "5": 1222,
+        "10": 1770
+      },
+      "sample_rows_chars_max": {
+        "5": 530,
+        "10": 763
+      },
+      "exhaustive_chars": 2402
+    },
+    {
+      "db_id": "car_1",
+      "tables": 6,
+      "list_tables_chars": 145,
+      "describe_table_chars_sum": 976,
+      "describe_table_chars_max": 246,
+      "sample_rows_chars_sum": {
+        "5": 1188,
+        "10": 1868
+      },
+      "sample_rows_chars_max": {
+        "5": 344,
+        "10": 575
+      },
+      "exhaustive_chars": 2989
+    },
+    {
+      "db_id": "concert_singer",
+      "tables": 4,
+      "list_tables_chars": 95,
+      "describe_table_chars_sum": 775,
+      "describe_table_chars_max": 248,
+      "sample_rows_chars_sum": {
+        "5": 1185,
+        "10": 1531
+      },
+      "sample_rows_chars_max": {
+        "5": 413,
+        "10": 636
+      },
+      "exhaustive_chars": 2401
+    },
+    {
+      "db_id": "course_teach",
+      "tables": 3,
+      "list_tables_chars": 73,
+      "describe_table_chars_sum": 470,
+      "describe_table_chars_max": 268,
+      "sample_rows_chars_sum": {
+        "5": 626,
+        "10": 839
+      },
+      "sample_rows_chars_max": {
+        "5": 323,
+        "10": 418
+      },
+      "exhaustive_chars": 1382
+    },
+    {
+      "db_id": "cre_Doc_Template_Mgt",
+      "tables": 4,
+      "list_tables_chars": 106,
+      "describe_table_chars_sum": 981,
+      "describe_table_chars_max": 347,
+      "sample_rows_chars_sum": {
+        "5": 1151,
+        "10": 1809
+      },
+      "sample_rows_chars_max": {
+        "5": 445,
+        "10": 742
+      },
+      "exhaustive_chars": 2896
+    },
+    {
+      "db_id": "dog_kennels",
+      "tables": 8,
+      "list_tables_chars": 175,
+      "describe_table_chars_sum": 2199,
+      "describe_table_chars_max": 637,
+      "sample_rows_chars_sum": {
+        "5": 3690,
+        "10": 6261
+      },
+      "sample_rows_chars_max": {
+        "5": 1078,
+        "10": 2009
+      },
+      "exhaustive_chars": 8635
+    },
+    {
+      "db_id": "employee_hire_evaluation",
+      "tables": 4,
+      "list_tables_chars": 86,
+      "describe_table_chars_sum": 707,
+      "describe_table_chars_max": 245,
+      "sample_rows_chars_sum": {
+        "5": 1004,
+        "10": 1483
+      },
+      "sample_rows_chars_max": {
+        "5": 441,
+        "10": 704
+      },
+      "exhaustive_chars": 2276
+    },
+    {
+      "db_id": "flight_2",
+      "tables": 3,
+      "list_tables_chars": 74,
+      "describe_table_chars_sum": 549,
+      "describe_table_chars_max": 294,
+      "sample_rows_chars_sum": {
+        "5": 788,
+        "10": 1326
+      },
+      "sample_rows_chars_max": {
+        "5": 350,
+        "10": 587
+      },
+      "exhaustive_chars": 1949
+    },
+    {
+      "db_id": "museum_visit",
+      "tables": 3,
+      "list_tables_chars": 63,
+      "describe_table_chars_sum": 493,
+      "describe_table_chars_max": 273,
+      "sample_rows_chars_sum": {
+        "5": 664,
+        "10": 849
+      },
+      "sample_rows_chars_max": {
+        "5": 264,
+        "10": 395
+      },
+      "exhaustive_chars": 1405
+    },
+    {
+      "db_id": "network_1",
+      "tables": 3,
+      "list_tables_chars": 71,
+      "describe_table_chars_sum": 545,
+      "describe_table_chars_max": 232,
+      "sample_rows_chars_sum": {
+        "5": 400,
+        "10": 624
+      },
+      "sample_rows_chars_max": {
+        "5": 158,
+        "10": 256
+      },
+      "exhaustive_chars": 1240
+    },
+    {
+      "db_id": "orchestra",
+      "tables": 4,
+      "list_tables_chars": 93,
+      "describe_table_chars_sum": 861,
+      "describe_table_chars_max": 266,
+      "sample_rows_chars_sum": {
+        "5": 1382,
+        "10": 2169
+      },
+      "sample_rows_chars_max": {
+        "5": 465,
+        "10": 813
+      },
+      "exhaustive_chars": 3123
+    },
+    {
+      "db_id": "pets_1",
+      "tables": 3,
+      "list_tables_chars": 64,
+      "describe_table_chars_sum": 496,
+      "describe_table_chars_max": 206,
+      "sample_rows_chars_sum": {
+        "5": 577,
+        "10": 822
+      },
+      "sample_rows_chars_max": {
+        "5": 350,
+        "10": 593
+      },
+      "exhaustive_chars": 1382
+    },
+    {
+      "db_id": "poker_player",
+      "tables": 2,
+      "list_tables_chars": 51,
+      "describe_table_chars_sum": 370,
+      "describe_table_chars_max": 239,
+      "sample_rows_chars_sum": {
+        "5": 684,
+        "10": 793
+      },
+      "sample_rows_chars_max": {
+        "5": 366,
+        "10": 474
+      },
+      "exhaustive_chars": 1214
+    },
+    {
+      "db_id": "real_estate_properties",
+      "tables": 5,
+      "list_tables_chars": 163,
+      "describe_table_chars_sum": 1824,
+      "describe_table_chars_max": 989,
+      "sample_rows_chars_sum": {
+        "5": 2673,
+        "10": 4065
+      },
+      "sample_rows_chars_max": {
+        "5": 1839,
+        "10": 3161
+      },
+      "exhaustive_chars": 6052
+    },
+    {
+      "db_id": "singer",
+      "tables": 2,
+      "list_tables_chars": 43,
+      "describe_table_chars_sum": 336,
+      "describe_table_chars_max": 193,
+      "sample_rows_chars_sum": {
+        "5": 655,
+        "10": 925
+      },
+      "sample_rows_chars_max": {
+        "5": 347,
+        "10": 492
+      },
+      "exhaustive_chars": 1304
+    },
+    {
+      "db_id": "student_transcripts_tracking",
+      "tables": 11,
+      "list_tables_chars": 292,
+      "describe_table_chars_sum": 3126,
+      "describe_table_chars_max": 573,
+      "sample_rows_chars_sum": {
+        "5": 3641,
+        "10": 5874
+      },
+      "sample_rows_chars_max": {
+        "5": 946,
+        "10": 1629
+      },
+      "exhaustive_chars": 9292
+    },
+    {
+      "db_id": "tvshow",
+      "tables": 3,
+      "list_tables_chars": 74,
+      "describe_table_chars_sum": 756,
+      "describe_table_chars_max": 270,
+      "sample_rows_chars_sum": {
+        "5": 1719,
+        "10": 2965
+      },
+      "sample_rows_chars_max": {
+        "5": 601,
+        "10": 1061
+      },
+      "exhaustive_chars": 3795
+    },
+    {
+      "db_id": "voter_1",
+      "tables": 3,
+      "list_tables_chars": 79,
+      "describe_table_chars_sum": 558,
+      "describe_table_chars_max": 343,
+      "sample_rows_chars_sum": {
+        "5": 566,
+        "10": 707
+      },
+      "sample_rows_chars_max": {
+        "5": 283,
+        "10": 284
+      },
+      "exhaustive_chars": 1344
+    },
+    {
+      "db_id": "world_1",
+      "tables": 3,
+      "list_tables_chars": 78,
+      "describe_table_chars_sum": 968,
+      "describe_table_chars_max": 459,
+      "sample_rows_chars_sum": {
+        "5": 1483,
+        "10": 2658
+      },
+      "sample_rows_chars_max": {
+        "5": 986,
+        "10": 1830
+      },
+      "exhaustive_chars": 3704
+    },
+    {
+      "db_id": "wta_1",
+      "tables": 3,
+      "list_tables_chars": 78,
+      "describe_table_chars_sum": 1152,
+      "describe_table_chars_max": 806,
+      "sample_rows_chars_sum": {
+        "5": 2395,
+        "10": 4101
+      },
+      "sample_rows_chars_max": {
+        "5": 1776,
+        "10": 3072
+      },
+      "exhaustive_chars": 5331
+    }
+  ],
+  "why_this_file_exists": "src/query_pilot/agents/tools.py chooses RESULT_ROWS, SAMPLE_ROWS_MAX and VALUE_CHARS, and src/query_pilot/agents/a1.py chooses a turn limit and a tool-call limit. All five are policy choices and this is what they were derived against. tests/test_agents.py reads this file so CI checks the arithmetic with no substrate and no keys, the same shape as docs/sandbox-caps.json."
+}

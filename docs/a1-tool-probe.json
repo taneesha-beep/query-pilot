@@ -1,0 +1,242 @@
+{
+  "provider": "groq",
+  "role": "strong",
+  "model": "openai/gpt-oss-120b",
+  "date": "2026-09-08",
+  "split": "smoke",
+  "requests_spent": 9,
+  "max_turns": 3,
+  "first_tool_called": [
+    "list_tables",
+    "list_tables",
+    "list_tables"
+  ],
+  "tools_called_at_least_once": [
+    "describe_table",
+    "execute_sql",
+    "list_tables",
+    "sample_rows"
+  ],
+  "tools_never_called": [],
+  "calls_per_turn_max": 1,
+  "parallel_tool_calls_observed": false,
+  "stopped": [
+    "answer",
+    "turn_limit",
+    "turn_limit"
+  ],
+  "probes": [
+    {
+      "task_id": "dev-0003",
+      "db_id": "concert_singer",
+      "turns": [
+        {
+          "turn": 1,
+          "tool_calls": [
+            {
+              "name": "list_tables",
+              "arguments": {}
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 466,
+          "completion_tokens": 35,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "list_tables",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "tool_calls": [
+            {
+              "name": "describe_table",
+              "arguments": {
+                "table": "singer"
+              }
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 516,
+          "completion_tokens": 48,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "describe_table",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "tool_calls": [],
+          "calls_in_this_turn": 0,
+          "finish_reason": "stop",
+          "prompt_tokens": 601,
+          "completion_tokens": 67,
+          "text_chars": 55,
+          "found_sql": true
+        }
+      ],
+      "stopped": "answer"
+    },
+    {
+      "task_id": "dev-0030",
+      "db_id": "concert_singer",
+      "turns": [
+        {
+          "turn": 1,
+          "tool_calls": [
+            {
+              "name": "list_tables",
+              "arguments": {}
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 466,
+          "completion_tokens": 74,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "list_tables",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "tool_calls": [
+            {
+              "name": "describe_table",
+              "arguments": {
+                "table": "singer"
+              }
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 516,
+          "completion_tokens": 121,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "describe_table",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "tool_calls": [
+            {
+              "name": "execute_sql",
+              "arguments": {
+                "sql": "SELECT DISTINCT Country FROM singer WHERE Country IN (SELECT Country FROM singer WHERE Age > 40) AND Country IN (SELECT Country FROM singer WHERE Age < 30)"
+              }
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 601,
+          "completion_tokens": 249,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "execute_sql",
+              "ok": true,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "stopped": "turn_limit"
+    },
+    {
+      "task_id": "dev-0126",
+      "db_id": "car_1",
+      "turns": [
+        {
+          "turn": 1,
+          "tool_calls": [
+            {
+              "name": "list_tables",
+              "arguments": {}
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 462,
+          "completion_tokens": 31,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "list_tables",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "tool_calls": [
+            {
+              "name": "describe_table",
+              "arguments": {
+                "table": "cars_data"
+              }
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 526,
+          "completion_tokens": 47,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "describe_table",
+              "ok": true,
+              "error": null
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "tool_calls": [
+            {
+              "name": "sample_rows",
+              "arguments": {
+                "limit": 5,
+                "table": "cars_data"
+              }
+            }
+          ],
+          "calls_in_this_turn": 1,
+          "finish_reason": "tool_calls",
+          "prompt_tokens": 633,
+          "completion_tokens": 64,
+          "text_chars": 0,
+          "results": [
+            {
+              "name": "sample_rows",
+              "ok": true,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "stopped": "turn_limit"
+    }
+  ],
+  "what_this_is_not": "Not a result. It runs on the smoke set, it reports tool and turn behaviour only, and no accuracy figure is taken from it. 3.6 is the measured run.",
+  "model_returned": "not recorded: this run predates the per-turn model fields in scripts/a1_tool_probe.py. The model above is what roles.strong resolves to in config/providers.toml, which has an empty spillover list, so no other endpoint could have served these calls."
+}

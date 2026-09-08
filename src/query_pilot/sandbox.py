@@ -186,6 +186,14 @@ class SandboxResult:
     """
 
     rows: tuple[tuple[Any, ...], ...] = ()
+    #: The result's column names, as SQLite named them. Added in 3.1 and **additive**: the
+    #: equivalence rule compares rows and has never been given a column name (decision 2 —
+    #: right values under wrong names score), so nothing this field holds can move a
+    #: verdict. It exists because A1's ``execute_sql`` hands a result back to a model, and
+    #: a grid of bare values is much harder to read than a named one.
+    #:
+    #: Empty for a statement SQLite reports no description for, and for every error.
+    columns: tuple[str, ...] = ()
     truncated_by: str | None = None
     error: str | None = None
     timed_out: bool = False
@@ -270,12 +278,14 @@ class Sandbox:
             return 0
 
         rows: list[tuple[Any, ...]] = []
+        columns: tuple[str, ...] = ()
         total = 0
         truncated_by: str | None = None
         try:
             with self.connect(database) as conn:
                 conn.set_progress_handler(watch, self.progress_interval)
                 cursor = conn.execute(sql)
+                columns = tuple(column[0] for column in cursor.description or ())
                 # Both caps are checked *before* a row is kept, so `truncated` always means
                 # at least one row was actually dropped and `result_bytes` never exceeds
                 # the cap it is measured against. A result that merely reaches a cap
@@ -301,6 +311,7 @@ class Sandbox:
             )
         return SandboxResult(
             rows=tuple(rows),
+            columns=columns,
             truncated_by=truncated_by,
             result_bytes=total,
             elapsed_s=time.perf_counter() - started,
