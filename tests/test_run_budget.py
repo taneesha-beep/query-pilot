@@ -17,6 +17,8 @@ from pathlib import Path
 import pytest
 
 from conftest import GOOGLE_DAILY_429
+from query_pilot.agents import ROLE
+from query_pilot.client.config import ClientConfig
 from query_pilot.client.errors import ConfigError, ProviderHTTPError, TransportError
 from query_pilot.client.scheduler import AllPoolsExhausted
 from query_pilot.client.types import Completion
@@ -34,7 +36,8 @@ from query_pilot.run import (
     write_summary,
 )
 
-WORKING_SET_CONFIG = Path(__file__).resolve().parents[1] / "config" / "runs" / "working-set.toml"
+REPO = Path(__file__).resolve().parents[1]
+WORKING_SET_CONFIG = REPO / "config" / "runs" / "working-set.toml"
 
 
 class SteppingClock:
@@ -125,8 +128,52 @@ def test_the_committed_run_config_declares_ceilings_that_trace_to_measured_capac
     assert config.wall_clock_ceiling_s == 14_400
     assert config.wall_clock_ceiling_s > 150 / 30 * 60
 
-    assert config.concurrency == 8  # matches max_concurrency in config/providers.toml
+    assert config.concurrency == 1
     assert config.agent == "A0" and config.params == {"split": "working"}
+
+
+def test_the_declared_concurrency_cannot_burst_past_the_endpoints_per_minute_token_ceiling():
+    """What the concurrency of 1 was derived from, and what it admits and rejects.
+
+    Tokens are charged to the buckets when an answer arrives, so `concurrency` requests are
+    in flight before any of them is paid for. Charged together they put the per-minute token
+    bucket into a deficit of about `concurrency x tokens-per-attempt`, which refills at
+    `tpm / 60` a second. A deficit deeper than `wait_ceiling_s` of refill makes the client
+    raise `AllPoolsExhausted`, which `fatal_reason` treats as fatal — so the run ends as
+    `pools_exhausted` **without a provider having refused anything.** Simulated over the
+    real 150 tasks, concurrency 8 ended the run at task 91 of 150.
+
+    Every number here is read from a committed file rather than written in this test:
+    `docs/a0-prompt-sizes.json` for what an attempt costs and `config/providers.toml` for
+    what the endpoint allows. No substrate and no keys are needed to check the arithmetic.
+    """
+    sizes = json.loads((REPO / "docs" / "a0-prompt-sizes.json").read_text())
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    config = RunConfig.load(WORKING_SET_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+
+    worst_case = sizes["worst_case_attempt_tokens"]
+    assert worst_case == sizes["prompt_tokens_estimated"]["max"] + sizes["max_output_tokens"]
+    assert sizes["split"] == config.params["split"]
+
+    # A deficit is survivable while it can be repaid inside the wait ceiling.
+    survivable = limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert config.concurrency * worst_case <= survivable
+
+    # And it admits by a margin rather than by a hair. What it rejects, at these sizes:
+    assert 4 * worst_case > survivable
+    assert 8 * worst_case > survivable
+    assert config.concurrency * worst_case * 3 < survivable
+
+    # The median attempt would survive eight in flight, which is why this is not visible
+    # in an average and was not visible in 2.3's ten smoke tasks. What breaks it is that
+    # the split's order groups by database — up to `longest_same_database_run` tasks in a
+    # row share one schema — so a burst is usually a burst of one prompt size, and on the
+    # largest schema in the split that size alone is enough.
+    assert sizes["longest_same_database_run"] >= 8
+    largest = sizes["largest_database"]["prompt_tokens_estimated"]
+    assert 8 * largest > survivable
+    assert 8 * (sizes["prompt_tokens_estimated"]["median"] + 200) < survivable
 
 
 def test_a_run_config_file_missing_a_ceiling_is_refused(tmp_path):

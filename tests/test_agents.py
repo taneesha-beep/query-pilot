@@ -25,14 +25,15 @@ from query_pilot.agents import (
     SYSTEM_PROMPT,
     build_prompt,
     extract_sql,
+    project,
     read_schema,
     render_schema,
     split_statements,
 )
-from query_pilot.client.errors import ProviderHTTPError
+from query_pilot.client.errors import ConfigError, ProviderHTTPError
 from query_pilot.client.types import Completion
 from query_pilot.equivalence import NO_SQL
-from query_pilot.run import Run, RunConfig, RunLedger, read_rows
+from query_pilot.run import Run, RunConfig, RunLedger, TaskResult, read_rows
 from query_pilot.sandbox import Sandbox, SubstrateCopies, database_path
 from query_pilot.tasks import Task, load_split, load_tasks
 
@@ -615,3 +616,162 @@ async def test_a0_is_a_run_executor_and_its_verdict_reaches_the_ledger(
     assert len(rows) == 1
     assert rows[0]["detail"]["solved"] is True
     assert rows[0]["detail"]["sql"] == ANSWER
+
+
+# --- the projection: a run's ledger, folded into the file that gets committed -------------------
+
+
+def _ledger_with(tmp_path: Path, outcomes, *, run_id="r-1", declared=None):
+    """Drive a real Run with stub task outcomes, so the projection reads a real ledger."""
+    ids = list(declared or [t for t, _ in outcomes])
+    config = RunConfig.start(
+        "A0", ids, run_id=run_id, token_ceiling=10_000_000, wall_clock_ceiling_s=3600.0
+    )
+    ledger = RunLedger(run_id, root=tmp_path / "runs")
+    detail_of = dict(outcomes)
+
+    async def executor(context):
+        context.record(
+            Completion(
+                text="x",
+                tool_calls=(),
+                prompt_tokens=400,
+                completion_tokens=100,
+                provider="groq",
+                model="openai/gpt-oss-120b",
+                pool="groq#1",
+                finish_reason="stop",
+                latency_s=0.5,
+            )
+        )
+        detail = detail_of[context.task_id]
+        if isinstance(detail, BaseException):
+            raise detail
+        return TaskResult(detail=detail)
+
+    return ledger, config, executor
+
+
+def _solved(sql="SELECT 1", *, reference_rows=1):
+    return {
+        "solved": True,
+        "reason": "solved",
+        "db_id": "db",
+        "sql": sql,
+        "reference_sql": "SELECT 1",
+        "reference_rows": reference_rows,
+    }
+
+
+def _unsolved(reason="row_count", **extra):
+    return {
+        "solved": False,
+        "reason": reason,
+        "db_id": "db",
+        "sql": "SELECT 2",
+        "reference_sql": "SELECT 1",
+        "reference_rows": 1,
+        **extra,
+    }
+
+
+async def test_the_projection_counts_what_the_ledger_says_and_names_where_it_came_from(tmp_path):
+    ledger, config, executor = _ledger_with(
+        tmp_path,
+        [
+            ("t-0", _solved()),
+            ("t-1", _solved()),
+            ("t-2", _unsolved()),
+            ("t-3", _unsolved("no_sql")),
+        ],
+    )
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working", empty_reference_tasks=1)
+
+    assert document["execution_accuracy"] == {
+        "solved": 2,
+        "of": 4,
+        "percent": 50.0,
+        "empty_result_floor": {
+            "tasks": 1,
+            "of": 4,
+            "percent": 25.0,
+            "what_it_means": document["execution_accuracy"]["empty_result_floor"]["what_it_means"],
+        },
+    }
+    assert document["reasons"] == {"solved": 2, "row_count": 1, "no_sql": 1}
+    # Constraint 12: a figure without its provider, model, date and ledger is not a result.
+    measurement = document["measurement"]
+    assert measurement["provider_and_model"] == ["groq/openai/gpt-oss-120b"]
+    assert measurement["ledger"] == str(ledger.path)
+    assert measurement["run_id"] == "r-1" and measurement["date"][:2] == "20"
+    assert document["tokens"]["total"] == 2000 and document["tokens"]["money"] == 0.0
+    assert document["tokens"]["per_solved_task"] == 1000.0
+
+
+async def test_a_run_that_did_not_answer_every_task_gets_no_rate(tmp_path):
+    """The same refusal 1.3 makes: 2 of 3 answered is not a percentage of anything."""
+    ledger, config, executor = _ledger_with(
+        tmp_path,
+        [
+            ("t-0", _solved()),
+            ("t-1", ConfigError("no credential")),
+            ("t-2", _solved()),
+        ],
+    )
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working", empty_reference_tasks=0)
+
+    # A ConfigError ends the run at the first task, so t-2 was never asked.
+    assert document["run"]["tasks_complete"] == 1 and document["run"]["tasks_failed"] == 1
+    assert str(document["execution_accuracy"]["percent"]).startswith("TBD (run incomplete")
+    assert str(document["tokens"]["per_solved_task"]).startswith("TBD")
+    failed = [t for t in document["tasks"] if t["status"] == "failed"]
+    assert failed[0]["exception"] == "ConfigError" and "solved" not in failed[0]
+    # The message stays in the ledger and out of the committed file.
+    assert "message" not in failed[0]
+
+
+async def test_a_figure_the_projection_was_not_given_reads_tbd_rather_than_being_invented(tmp_path):
+    ledger, config, executor = _ledger_with(tmp_path, [("t-0", _solved())])
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working")
+
+    assert document["execution_accuracy"]["empty_result_floor"]["tasks"] == "TBD"
+    assert document["execution_accuracy"]["empty_result_floor"]["percent"] == "TBD"
+    assert "by_difficulty" not in document
+
+
+async def test_the_projection_carries_what_2_5_reads_thirty_of_by_hand(tmp_path):
+    ledger, config, executor = _ledger_with(
+        tmp_path,
+        [
+            (
+                "t-0",
+                _unsolved(
+                    "value_mismatch",
+                    detail="row 0 column 1: 41 != 42",
+                    candidate_rows=3,
+                    candidate_timed_out=False,
+                ),
+            )
+        ],
+    )
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(
+        ledger.path, split="working", difficulty={"t-0": "hard"}, empty_reference_tasks=0
+    )
+
+    (row,) = document["tasks"]
+    assert row["sql"] == "SELECT 2" and row["reference_sql"] == "SELECT 1"
+    assert row["detail"] == "row 0 column 1: 41 != 42"
+    assert row["difficulty"] == "hard"
+    assert document["by_difficulty"] == {"hard": {"solved": 0, "of": 1, "percent": 0.0}}

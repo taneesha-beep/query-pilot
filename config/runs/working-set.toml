@@ -47,11 +47,39 @@ token_ceiling = 1500000
 # would abort it for waiting. The token ceiling is the one that is inherited.
 wall_clock_ceiling_s = 14400
 
-# Matches max_concurrency in config/providers.toml, where the number is justified. It is
-# also the overshoot bound: a ceiling can be crossed by at most concurrency - 1 tasks
-# beyond the one that crossed it, because a token count does not exist until the answer
-# arrives and in-flight work is drained rather than abandoned.
-concurrency = 8
+# One. Lowered from 8 on 2026-09-08, before this run started, and the reason is a measured
+# failure mode rather than a preference.
+#
+# Tokens are charged to the buckets when an answer arrives, so `concurrency` requests can
+# be in flight before any of them is paid for. When that burst is charged at once it puts
+# the per-minute token bucket into a deficit of roughly `concurrency x tokens-per-attempt`,
+# and the client waits for it to refill. `wait_ceiling_s` in config/providers.toml is 60,
+# the bucket refills at tpm/60 a second, so a deficit above one minute of refill — above
+# the endpoint's whole TPM of 8,000 — makes the wait exceed the ceiling. The client then
+# raises AllPoolsExhausted, which run/guard.py treats as fatal, and the run ends as
+# `pools_exhausted` with most of its tasks unrun. **No provider has refused anything at
+# that point.** It is this project's own scheduling ending its own measurement.
+#
+# So the condition to stay under is:  concurrency x tokens-per-attempt < 8,000.
+#
+# Measured, not assumed. A0's prompt was rebuilt for all 150 working-set tasks and sized
+# against the ten real attempts of run 20260908-130225-514f3e, whose prompt_tokens are
+# known: 3.265 characters a token, largest prompt 1,212 tokens, and a completion ceiling
+# of 1,024 — so the worst a single attempt can cost is 2,236 tokens. Against that:
+#
+#   concurrency 8  ->  under 1,000 tokens an attempt. The measured mean is near 690 and
+#                      the largest schema alone exceeds it. Simulated over the real 150,
+#                      the run died at task 91 of 150 with `pools_exhausted`.
+#   concurrency 4  ->  under 2,000. The worst case is 2,236, so the margin is negative.
+#   concurrency 1  ->  under 8,000 against a worst case of 2,236. 3.6x of margin.
+#
+# And it buys nothing: the run is token-bucket bound at 8,000 TPM either way, so the same
+# simulation projects 11.9 minutes at concurrency 1 against 11.7 at 4. Sixteen seconds is
+# not worth a measurement that stops two thirds of the way through.
+#
+# Still the overshoot bound as well: a ceiling can be crossed by at most concurrency - 1
+# tasks beyond the one that crossed it, which at 1 is zero.
+concurrency = 1
 
 # Free-form, inside the fingerprint, and never inspected by the run machinery. A run that
 # changed any of this between sessions is not the same run.

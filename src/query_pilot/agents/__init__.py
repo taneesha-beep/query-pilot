@@ -20,6 +20,7 @@ from query_pilot.agents.a0 import (
     Attempt,
     build_prompt,
 )
+from query_pilot.agents.results import RESULTS_NAME, project, write_results
 from query_pilot.agents.schema import (
     Column,
     ForeignKey,
@@ -34,6 +35,7 @@ __all__ = [
     "A0",
     "MAX_OUTPUT_TOKENS",
     "NO_SQL_FOUND",
+    "RESULTS_NAME",
     "ROLE",
     "SYSTEM_PROMPT",
     "Attempt",
@@ -44,7 +46,9 @@ __all__ = [
     "Table",
     "build_prompt",
     "extract_sql",
+    "project",
     "read_schema",
     "render_schema",
     "split_statements",
+    "write_results",
 ]
