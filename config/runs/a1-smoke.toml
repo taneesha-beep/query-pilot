@@ -1,0 +1,60 @@
+# A few-task acceptance run for A1, and the ceilings it is held to.
+#
+# A1 has never met a real provider as a loop. This is the run that changes that, before 3.6
+# relies on it — the same place `config/runs/smoke-set.toml` sits for A0. Every ceiling below
+# is a POLICY CHOICE and says what it was derived from, because a ceiling that cannot be
+# traced back to a measurement is a guess wearing a number's clothes.
+#
+# The task IDs are not here. They live in splits/smoke.json, which is the single committed
+# source of who is in the smoke set.
+
+[run]
+agent = "A1"
+
+# 120,000 tokens, cumulative across every resume of this run ID.
+#
+# Derivation, and it is arithmetic over committed numbers rather than a guess:
+#
+#   - A1's worst single attempt is PROMPT_CEILING_CHARS / 3.265 + MAX_OUTPUT_TOKENS
+#     = 22,776 / 3.265 + 1,024 = 8,000 tokens. The characters-per-token ratio is measured in
+#     docs/a0-prompt-sizes.json over ten real attempts; the ceiling itself is derived in
+#     docs/a1-tool-sizes.json.
+#   - A trajectory makes at most TURN_LIMIT + REPAIR_LIMIT = 15 attempts, and its prompt
+#     grows every turn rather than starting at the ceiling. docs/a1-tool-probe.json measured
+#     that growth at +50 to +107 tokens a turn from a 466-token opening, so a 15-turn
+#     trajectory's prompts sum to roughly 15,000 tokens, not 15 x 8,000.
+#   - Five tasks at that shape is roughly 75,000. 120,000 is that with room for two
+#     trajectories that behave worse than the probe did.
+#
+# It is deliberately far below the working-set run's 1,500,000: this run exists to find out
+# whether the loop works, and a loop that does not work should stop costing quota early.
+token_ceiling = 120000
+
+# Twenty minutes, per session rather than per run.
+#
+# Derivation: five tasks at up to 15 requests is 75 requests, and Groq's observed ceiling is
+# 30 requests a minute (docs/PROVIDERS.md, a 429 body naming it), so the rate-limited floor
+# is about 150 seconds. A0's measured 150-task run took 12.3 minutes at one request a task.
+# Twenty minutes is far above the floor on purpose: the ceiling exists to stop a run that is
+# STUCK, not one that is slow.
+wall_clock_ceiling_s = 1200
+
+# One, and for A1 this is not the same choice it was for A0 — it is forced.
+#
+# Constraint 46: concurrency x tokens-per-attempt must stay under the strong endpoint's
+# 8,000 TPM, or the client's own bucket ends the run as `pools_exhausted` with no provider
+# having refused anything. A0's worst attempt was 2,236 tokens, which left 3.6x of margin at
+# concurrency 1 and a negative margin at 4. A1's worst attempt is 8,000 tokens — the whole
+# per-minute budget — because PROMPT_CEILING_CHARS is derived as exactly that ceiling minus
+# the output allowance. So at concurrency 2 a single pair of worst-case attempts in flight
+# puts the bucket into a deficit deeper than wait_ceiling_s of refill.
+#
+# Restated, because 3.6 must do this arithmetic again and not re-derive it from scratch:
+# every A1 run declaration is bound to concurrency 1 for as long as PROMPT_CEILING_CHARS is
+# derived from the endpoint's whole TPM. Raising concurrency requires lowering that ceiling
+# first, which costs trajectory length.
+concurrency = 1
+
+# Free-form, inside the fingerprint, never inspected by the run machinery.
+[run.params]
+split = "smoke"

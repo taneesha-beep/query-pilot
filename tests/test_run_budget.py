@@ -17,7 +17,13 @@ from pathlib import Path
 import pytest
 
 from conftest import GOOGLE_DAILY_429
-from query_pilot.agents import ROLE
+from query_pilot.agents import (
+    MAX_OUTPUT_TOKENS,
+    PROMPT_CEILING_CHARS,
+    REPAIR_LIMIT,
+    ROLE,
+    TURN_LIMIT,
+)
 from query_pilot.client.config import ClientConfig
 from query_pilot.client.errors import ConfigError, ProviderHTTPError, TransportError
 from query_pilot.client.scheduler import AllPoolsExhausted
@@ -568,3 +574,42 @@ def test_the_six_reasons_a_run_can_be_incomplete_stay_distinct():
         "operator",
         "killed",
     }
+
+
+def test_a1_s_run_declaration_is_bound_to_concurrency_1_by_its_own_prompt_ceiling():
+    """**Constraint 46 binds A1 harder than it bound A0, and this is the arithmetic.**
+
+    A0's worst attempt was 2,236 tokens and left 3.6x of margin at concurrency 1. A1's worst
+    attempt is the *whole* per-minute budget, because `PROMPT_CEILING_CHARS` is derived as
+    exactly `(tpm - max_output_tokens) x chars_per_prompt_token` — so one worst-case attempt
+    is 8,000 tokens and a second one in flight cannot be repaid inside the wait ceiling.
+
+    This is why every A1 run declaration says concurrency 1, and why raising it would mean
+    lowering `PROMPT_CEILING_CHARS` first, which costs trajectory length. A future session
+    declaring a new A1 run must redo this, and this test is where it is written down.
+    """
+    sizes = json.loads((REPO / "docs" / "a1-tool-sizes.json").read_text())
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    config = RunConfig.load(
+        REPO / "config" / "runs" / "a1-smoke.toml", [f"t-{i}" for i in range(5)], run_id="r-1"
+    )
+
+    # The ceiling is the endpoint's own budget, read from the derivation rather than retyped.
+    assert sizes["budget"]["tpm"] == limits.tpm
+    worst_case = (
+        PROMPT_CEILING_CHARS / sizes["budget"]["chars_per_prompt_token"] + MAX_OUTPUT_TOKENS
+    )
+    assert round(worst_case) == limits.tpm
+
+    survivable = limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert config.concurrency == 1
+    assert config.concurrency * worst_case <= survivable
+
+    # What it rejects, and there is no margin to spare: two is already over.
+    assert 2 * worst_case > survivable
+
+    # The request ceiling the smoke script adds on top is in a unit no run config carries.
+    # Five tasks at `TURN_LIMIT + REPAIR_LIMIT` requests each is the worst case it bounds.
+    assert (TURN_LIMIT + REPAIR_LIMIT) * 5 <= 80
+    assert config.agent == "A1" and config.params == {"split": "smoke"}
