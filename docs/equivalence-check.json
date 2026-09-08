@@ -1,0 +1,25 @@
+{
+  "frame_size": 1034,
+  "shuffle_seed": 20260908,
+  "tolerance": {
+    "absolute": 1e-09,
+    "relative": 1e-09
+  },
+  "self_comparison": {
+    "solved": 1034,
+    "rate": 1.0,
+    "empty_results": 49,
+    "empty_share": 0.047389
+  },
+  "row_order": {
+    "reference_orders_rows": 231,
+    "reference_fixes_no_order": 803
+  },
+  "permutation_control": {
+    "unordered_permuted": 344,
+    "unordered_still_solved": 344,
+    "ordered_permuted": 57,
+    "ordered_now_rejected": 57
+  },
+  "failures": []
+}
