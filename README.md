@@ -61,8 +61,8 @@ Read once, after everything else is finished.
 
 ## Status
 
-Phase 1 of 7. **Nothing is measured yet and no table above will have a number in it until
-Phase 2.**
+**Phase 1 is complete; Phase 2 is open.** No agent exists yet, and **no table above will
+have a number in it until Phase 2 has one to put there.**
 
 What exists is the infrastructure those measurements will run on: an async client over two
 providers and their quota pools, with token buckets keyed per pool per model, classified
@@ -72,6 +72,21 @@ killed run resumes from without repeating or skipping a task, and a budget guard
 a run at a declared token or wall-clock ceiling and marks it incomplete — a summary derived
 from an incomplete run carries no derived number at all, only the word `TBD` and the reason
 it stopped.
+
+And the measuring instrument itself, **written and committed before a single query was
+generated**, because deciding what counts as a correct answer after seeing results is how a
+project talks itself into a better number. Row order, column order, duplicate rows, NULL,
+float tolerance, empty results and errors are each decided, priced and worked through in
+[docs/EQUIVALENCE.md](docs/EQUIVALENCE.md). Applied to the 1,034 reference queries against
+themselves it reports **100.00%**; permuting the rows of every result it compares leaves
+every unordered answer solved and rejects every ordered one, which is the half of that
+check with teeth.
+
+Two things it establishes that qualify every accuracy figure this project will report.
+**49 of the 1,034 reference queries return no rows**, so a query returning nothing scores
+**4.7389%** by doing nothing at all. And every known limit of the rule — ties in an ordered
+reference, positional column matching, multiset duplicates, no text-to-number coercion —
+pushes the number **down**, which makes execution accuracy here a **lower bound**.
 
 Provider limits, and which of them were measured against which were merely stated, are in
 [docs/PROVIDERS.md](docs/PROVIDERS.md).

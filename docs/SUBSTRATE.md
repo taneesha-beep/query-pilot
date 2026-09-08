@@ -106,9 +106,14 @@ absorbed.
 ### What "executes" means here, exactly
 
 **Executes = does not raise.** An empty result is a legitimate reference result, not a
-failure: the equivalence rule in Phase 2.1 scores an empty result against an empty
-reference as a solve, so excluding the 49 zero-row tasks would delete the one case where
-the instrument is most easily fooled. They stay in the frame.
+failure: the equivalence rule scores an empty result against an empty reference as a
+**solve**, so excluding the 49 zero-row tasks would delete the one case where the
+instrument is most easily fooled. They stay in the frame.
+
+*Written forward at 0.2, settled at 2.1:* [docs/EQUIVALENCE.md](EQUIVALENCE.md) confirms
+that rule and prices it — 49 of 1,034 is **4.7389%**, which is what a query returning
+nothing scores by doing nothing at all. That floor belongs beside every accuracy figure
+this project reports.
 
 Connections are opened read-only and configured with
 `text_factory = lambda b: b.decode("utf-8", errors="replace")`. This is load-bearing and
@@ -118,6 +123,12 @@ both raising `OperationalError: Could not decode to UTF-8 column 'last_name' wit
 'Treyes Albarrac��N'`. That is a defect in the stored bytes surfacing through the
 client's codec, not a defect in the query, and the Spider evaluation scripts tolerate it
 the same way. Without the tolerance the recorded rate would be 99.81%.
+
+*Settled at 2.1:* the equivalence rule **inherits this tolerance rather than deciding it
+again**. The decode policy belongs to the connection, not to the comparison — both sides of
+every comparison are read through a connection configured this way, so both carry U+FFFD
+and compare equal, and **a decode fault is never read as a wrong answer**. The rule itself
+decodes nothing. See [docs/EQUIVALENCE.md](EQUIVALENCE.md).
 
 ### What this number is not
 
