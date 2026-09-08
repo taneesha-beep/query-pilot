@@ -9,6 +9,11 @@ quota lands in the run's own ledger, in order beside the attempts around it.
 
 Nothing here knows what a task *is*, either. :class:`Run` executes an injected callable
 and every test in this package passes a stub. A0 does not exist until 2.3.
+
+Three things this package owns and the client deliberately does not: an append-only ledger
+a killed run resumes from, a budget guard that stops a run at a declared ceiling rather
+than letting it degrade, and a summary that refuses to present an unfinished run as a
+result.
 """
 
 from query_pilot.run.config import (
@@ -17,6 +22,12 @@ from query_pilot.run.config import (
     RunConfigChanged,
     RunError,
     new_run_id,
+)
+from query_pilot.run.guard import (
+    FATAL_ERROR_CLASSES,
+    BudgetGuard,
+    IncompleteReason,
+    fatal_reason,
 )
 from query_pilot.run.ledger import (
     COMPLETE,
@@ -45,6 +56,14 @@ from query_pilot.run.loop import (
     TaskExecutor,
     TaskResult,
 )
+from query_pilot.run.summary import (
+    SUMMARY_NAME,
+    IncompleteRun,
+    Summary,
+    read_summary,
+    summarise,
+    write_summary,
+)
 
 __all__ = [
     "COMPLETE",
@@ -53,11 +72,16 @@ __all__ = [
     "ERROR",
     "EXECUTOR_ERROR",
     "FAILED",
+    "FATAL_ERROR_CLASSES",
     "LEDGER_NAME",
     "OK",
     "STATUS_COMPLETE",
     "STATUS_INCOMPLETE",
+    "SUMMARY_NAME",
     "AttemptRow",
+    "BudgetGuard",
+    "IncompleteReason",
+    "IncompleteRun",
     "LedgerState",
     "Run",
     "RunConfig",
@@ -68,11 +92,16 @@ __all__ = [
     "RunReport",
     "RunStartRow",
     "Segment",
+    "Summary",
     "TaskContext",
     "TaskExecutor",
     "TaskResult",
     "TaskRow",
+    "fatal_reason",
     "new_run_id",
     "read_ledger",
     "read_rows",
+    "read_summary",
+    "summarise",
+    "write_summary",
 ]

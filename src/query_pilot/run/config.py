@@ -8,10 +8,16 @@ or a ledger, exactly as it was built in 1.1 and 1.2.
 
 The fingerprint is the guard against a resumed run quietly becoming two experiments in one
 file. It covers everything a run declares *except* its ID: the agent, the task list in
-order, and the parameters. Resuming an ID whose recorded fingerprint disagrees with the
-one being offered raises rather than appending, because the alternative is a ledger whose
-first half measured one thing and whose second half measured another, with nothing in the
-file saying so.
+order, the ceilings and the parameters. Resuming an ID whose recorded fingerprint
+disagrees with the one being offered raises rather than appending, because the alternative
+is a ledger whose first half measured one thing and whose second half measured another,
+with nothing in the file saying so. **The ceilings are inside the fingerprint on purpose**
+— raising a budget mid-run is precisely the change that must not happen quietly.
+
+**Both ceilings are required and there is no way to construct a run without them.** The
+roadmap says every run declares a token ceiling and a wall-clock ceiling before it starts;
+an optional field with a sensible default would be a run that declared neither while
+looking like it had.
 """
 
 from __future__ import annotations
@@ -19,8 +25,10 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from query_pilot.client.clock import Clock, SystemClock
@@ -73,6 +81,13 @@ class RunConfig:
     run_id: str
     agent: str
     task_ids: tuple[str, ...]
+    #: Total tokens this run may spend, cumulative across every resume of this run ID.
+    #: Traced to a measured figure in docs/PROVIDERS.md; see config/runs/.
+    token_ceiling: int
+    #: Seconds this run may spend in **one session**. A run spanning a quota reset spends
+    #: most of its calendar time not running, and a ceiling that counted those hours would
+    #: abort it for waiting.
+    wall_clock_ceiling_s: float
     concurrency: int = DEFAULT_CONCURRENCY
     params: Mapping[str, Any] = field(default_factory=dict)
 
@@ -88,6 +103,10 @@ class RunConfig:
             raise RunError(f"run {self.run_id!r} lists duplicate task IDs: {', '.join(seen)}")
         if self.concurrency < 1:
             raise RunError(f"run {self.run_id!r}: concurrency must be at least 1")
+        if self.token_ceiling <= 0:
+            raise RunError(f"run {self.run_id!r}: token_ceiling must be positive")
+        if self.wall_clock_ceiling_s <= 0:
+            raise RunError(f"run {self.run_id!r}: wall_clock_ceiling_s must be positive")
 
     @classmethod
     def start(
@@ -95,6 +114,8 @@ class RunConfig:
         agent: str,
         task_ids: Sequence[str],
         *,
+        token_ceiling: int,
+        wall_clock_ceiling_s: float,
         run_id: str | None = None,
         concurrency: int = DEFAULT_CONCURRENCY,
         params: Mapping[str, Any] | None = None,
@@ -106,8 +127,55 @@ class RunConfig:
             run_id=run_id or new_run_id(clock, rng),
             agent=agent,
             task_ids=tuple(task_ids),
+            token_ceiling=token_ceiling,
+            wall_clock_ceiling_s=wall_clock_ceiling_s,
             concurrency=concurrency,
             params=dict(params or {}),
+        )
+
+    @classmethod
+    def load(
+        cls,
+        path: Path | str,
+        task_ids: Sequence[str],
+        *,
+        run_id: str | None = None,
+        agent: str | None = None,
+        clock: Clock | None = None,
+        rng: random.Random | None = None,
+    ) -> RunConfig:
+        """Read a committed run declaration, and take the task list from the caller.
+
+        The ceilings live in the committed file because the roadmap requires them to be
+        declared before a run starts and reviewable afterwards. The **task IDs do not**:
+        they come from `splits/`, which is the single committed source of who is in the
+        working set, and duplicating them into a second file is how the two drift apart
+        without either admitting it.
+        """
+        source = Path(path)
+        try:
+            raw = tomllib.loads(source.read_text())
+        except FileNotFoundError as exc:
+            raise RunError(f"no run configuration at {source}") from exc
+        except tomllib.TOMLDecodeError as exc:
+            raise RunError(f"{source}: {exc}") from exc
+
+        run = raw.get("run")
+        if not isinstance(run, dict):
+            raise RunError(f"{source}: needs a [run] table")
+        for required in ("agent", "token_ceiling", "wall_clock_ceiling_s"):
+            if required not in run:
+                raise RunError(f"{source}: [run] is missing {required!r}")
+        return cls.start(
+            agent if agent is not None else str(run["agent"]),
+            task_ids,
+            token_ceiling=int(run["token_ceiling"]),
+            wall_clock_ceiling_s=float(run["wall_clock_ceiling_s"]),
+            run_id=run_id,
+            concurrency=int(run.get("concurrency", DEFAULT_CONCURRENCY)),
+            params=dict(run.get("params") or {}),
+            clock=clock,
+            rng=rng,
         )
 
     def declared(self) -> dict[str, Any]:
@@ -115,6 +183,8 @@ class RunConfig:
         return {
             "agent": self.agent,
             "task_ids": list(self.task_ids),
+            "token_ceiling": self.token_ceiling,
+            "wall_clock_ceiling_s": self.wall_clock_ceiling_s,
             "concurrency": self.concurrency,
             "params": dict(self.params),
         }

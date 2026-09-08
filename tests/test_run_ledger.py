@@ -98,6 +98,9 @@ def ledger_for(tmp_path: Path, run_id: str = "r-1") -> RunLedger:
 
 
 def config_for(task_ids, *, run_id: str = "r-1", agent: str = "A0", concurrency: int = 1, **kw):
+    """Ceilings high enough that the budget guard never fires; 1.4's tests are where it does."""
+    kw.setdefault("token_ceiling", 10_000_000)
+    kw.setdefault("wall_clock_ceiling_s", 86_400.0)
     return RunConfig.start(agent, list(task_ids), run_id=run_id, concurrency=concurrency, **kw)
 
 
@@ -313,6 +316,16 @@ def test_a_run_with_no_tasks_or_no_agent_is_refused():
         config_for(["t-1"], agent="")
 
 
+def test_a_run_cannot_be_declared_without_both_ceilings():
+    """Not optional with a default: that is a run declaring neither while looking equipped."""
+    with pytest.raises(TypeError):
+        RunConfig.start("A0", ["t-1"], run_id="r-1")
+    with pytest.raises(RunError, match="token_ceiling must be positive"):
+        config_for(["t-1"], token_ceiling=0)
+    with pytest.raises(RunError, match="wall_clock_ceiling_s must be positive"):
+        config_for(["t-1"], wall_clock_ceiling_s=0)
+
+
 def test_the_fingerprint_covers_the_declaration_and_not_the_identity():
     one = config_for(["t-1", "t-2"], run_id="a")
     two = config_for(["t-1", "t-2"], run_id="b")
@@ -321,6 +334,10 @@ def test_the_fingerprint_covers_the_declaration_and_not_the_identity():
     assert (
         config_for(["t-1", "t-2"], run_id="a", params={"turns": 6}).fingerprint()
         != one.fingerprint()
+    )
+    # The ceilings are inside it on purpose: raising a budget mid-run must not be quiet.
+    assert (
+        config_for(["t-1", "t-2"], run_id="a", token_ceiling=99).fingerprint() != one.fingerprint()
     )
 
 
@@ -410,27 +427,32 @@ async def test_a_run_killed_halfway_resumes_without_repeating_or_skipping_a_task
     assert second.calls == tasks[3:]  # none repeated
     assert sorted(first.calls + second.calls) == sorted(tasks)  # none skipped
     assert report.tasks_complete == 6 and report.tasks_remaining == 0
-    assert report.resumed and report.after_unclean_shutdown
+    assert report.resumed and report.complete
 
     done = [row["task_id"] for row in rows_of(ledger.path, "task") if row["status"] == COMPLETE]
     assert sorted(done) == sorted(tasks) and len(done) == len(set(done))
 
 
-async def test_a_kill_leaves_no_run_end_and_the_resume_says_so(tmp_path):
+async def test_an_interrupt_this_process_can_catch_is_recorded_rather_than_inferred(tmp_path):
+    """An interrupt is catchable, so the run still writes why it stopped.
+
+    Only a kill the process cannot catch leaves a segment without a ``run_end``, and the
+    SIGKILL test below is where that claim is actually made.
+    """
     ledger = ledger_for(tmp_path)
     config = config_for(["t-1", "t-2"])
     with ledger, pytest.raises(OperatorKill):
         await Run(config, ledger).execute(CountingExecutor(stop_after=1))
 
     state = read_ledger(ledger.path)
-    assert state.unclean and not state.segments[-1].clean
+    assert not state.unclean
+    assert state.segments[-1].status == "incomplete"
+    assert state.segments[-1].incomplete_reason == "operator"
 
     with ledger:
         await Run(config, ledger).execute(CountingExecutor())
-    starts = rows_of(ledger.path, "run_start")
-    assert starts[0]["after_unclean_shutdown"] is False
-    assert starts[1]["after_unclean_shutdown"] is True
-    assert read_ledger(ledger.path).unclean is False
+    assert rows_of(ledger.path, "run_start")[1]["resumed"] is True
+    assert read_ledger(ledger.path).segments[-1].status == "complete"
 
 
 async def test_a_task_cut_off_mid_attempt_is_run_again_and_recorded_once(tmp_path):
@@ -555,7 +577,8 @@ CHILD = textwrap.dedent(
 
     async def main():
         ledger = RunLedger(run_id, root=root)
-        config = RunConfig.start("A0", tasks, run_id=run_id, concurrency=1)
+        config = RunConfig.start("A0", tasks, run_id=run_id, concurrency=1,
+                                 token_ceiling=10_000_000, wall_clock_ceiling_s=86_400.0)
         with ledger:
             await Run(config, ledger).execute(executor)
 
@@ -601,7 +624,7 @@ def test_a_process_killed_with_sigkill_leaves_a_ledger_that_resumes(tmp_path):
     assert {r["task_id"] for r in rows_of(ledger.path, "attempt")} == {"t-0", "t-1", "t-2", "t-3"}
 
     resumed = CountingExecutor()
-    config = RunConfig.start("A0", [f"t-{i}" for i in range(6)], run_id="r-kill", concurrency=1)
+    config = config_for([f"t-{i}" for i in range(6)], run_id="r-kill")
     with ledger:
         report = asyncio.run(Run(config, ledger).execute(resumed))
 

@@ -5,7 +5,9 @@ AGENT-ROADMAP.md
 data/
 
 # Run output: ledgers and transcripts. Only derived summaries are committed.
-runs/
+# Anchored with a leading slash: an unanchored `runs/` also matches `config/runs/`, where
+# the committed run declarations live, and would have made them silently untracked.
+/runs/
 
 # Secrets.
 .env

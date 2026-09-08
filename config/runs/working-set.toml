@@ -1,0 +1,59 @@
+# A 150-task run over the working set, and the ceilings it is held to.
+#
+# Every run declares a token ceiling and a wall-clock ceiling before it starts, and this
+# file is where they are declared and reviewed. A ceiling is a POLICY CHOICE rather than a
+# measurement, which is the one place this project writes a number it did not obtain by
+# running a command — so each one says below what it was derived from. A ceiling that
+# cannot be traced back to docs/PROVIDERS.md is a guess wearing a number's clothes.
+#
+# The task IDs are deliberately NOT here. They live in splits/working.json, which is the
+# single committed source of who is in the working set; a second copy is how the two drift
+# apart without either file admitting it.
+
+[run]
+agent = "A0"
+
+# 1,500,000 tokens, cumulative across every resume of one run ID.
+#
+# Derivation: docs/PROVIDERS.md's run-budget cliff table, the 10,000-tokens-a-task row —
+# one 150-task run costs 1,500,000 tokens, which is 2.5 Groq-days against the 600,000
+# tokens a day that document records as this project's stated Groq capacity.
+#
+# What that derivation rests on, said plainly rather than left to be discovered:
+#   - 600,000 a day is three usable models x Groq's PUBLISHED 200,000 TPD. It is
+#     documented arithmetic. This project has never reached a Groq token ceiling and
+#     docs/PROVIDERS.md records that TPD column as TBD for exactly that reason.
+#   - 10,000 tokens a task is a HYPOTHETICAL in that table, not a measurement. Tokens per
+#     task is not measured until 2.4.
+#
+# So this number is a placeholder that happens to be arithmetic rather than a guess, and
+# 2.4 is expected to LOWER it once the real per-task cost is known. Raising it is a
+# deliberate act: the ceiling is inside the run's fingerprint, so a raised ceiling makes a
+# resume refuse until the change is acknowledged and recorded in the ledger.
+token_ceiling = 1500000
+
+# Four hours, per session rather than per run.
+#
+# Derivation: 150 tasks against Groq's OBSERVED 30 requests per minute is a floor of 300
+# seconds of pure rate-limited request time (docs/PROVIDERS.md, refused-at evidence, a 429
+# body naming the ceiling). Four hours is far above that floor on purpose. The multiplier
+# is the policy half and is not derived from anything: the ceiling exists to stop a run
+# that is STUCK, not one that is slow, and a run that has not finished inside a working
+# session needs a person to look at it rather than more time.
+#
+# Per session, not per run, because a run spanning a quota reset is the normal case here
+# and not the failure case — docs/PROVIDERS.md says the plan needs roughly 22 Groq-days
+# against three calendar weeks. A wall clock counting the hours a run was not running
+# would abort it for waiting. The token ceiling is the one that is inherited.
+wall_clock_ceiling_s = 14400
+
+# Matches max_concurrency in config/providers.toml, where the number is justified. It is
+# also the overshoot bound: a ceiling can be crossed by at most concurrency - 1 tasks
+# beyond the one that crossed it, because a token count does not exist until the answer
+# arrives and in-flight work is drained rather than abandoned.
+concurrency = 8
+
+# Free-form, inside the fingerprint, and never inspected by the run machinery. A run that
+# changed any of this between sessions is not the same run.
+[run.params]
+split = "working"

@@ -22,6 +22,11 @@ The resume rule, decided here rather than left to 2.4:
 What this guarantees is therefore precise: **no task is recorded complete twice, and no
 task is left without a terminal outcome when the run reports it finished.** A task cut off
 mid-attempt is executed again, and that is the correct behaviour rather than a hole in it.
+
+A run stops for one of six reasons and the ledger keeps them apart; see
+:mod:`query_pilot.run.guard`. Five of them are written here. The sixth, ``killed``, is
+what a reader infers from a segment with no ``run_end``, because a process that has been
+``SIGKILL``ed does not get to record its own death.
 """
 
 from __future__ import annotations
@@ -36,6 +41,7 @@ from query_pilot.client.clock import Clock, SystemClock
 from query_pilot.client.errors import ClientError
 from query_pilot.client.types import Completion
 from query_pilot.run.config import RunConfig, RunConfigChanged, RunError
+from query_pilot.run.guard import BudgetGuard, IncompleteReason, fatal_reason
 from query_pilot.run.ledger import (
     COMPLETE,
     EXECUTOR_ERROR,
@@ -186,6 +192,11 @@ class Run:
         self.config = config
         self.ledger = ledger
         self.clock = clock or SystemClock()
+        self.guard = BudgetGuard(
+            token_ceiling=config.token_ceiling,
+            wall_clock_ceiling_s=config.wall_clock_ceiling_s,
+            clock=self.clock,
+        )
         self.attempts = 0
         self.prompt_tokens = 0
         self.completion_tokens = 0
@@ -197,6 +208,10 @@ class Run:
         self.attempts += 1
         self.prompt_tokens += row.prompt_tokens or 0
         self.completion_tokens += row.completion_tokens or 0
+        # Charged whatever the outcome. A refused request reports no tokens and costs
+        # nothing; a malformed 200 and a wrong answer both report tokens and both count,
+        # because the guard enforces spend and Phase 5 pays for failed attempts too.
+        self.guard.spend(row.total_tokens)
         self.ledger.record_attempt(row)
 
     def _write_task(
@@ -239,6 +254,9 @@ class Run:
         self.attempts = state.attempts
         self.prompt_tokens = state.prompt_tokens
         self.completion_tokens = state.completion_tokens
+        # Inherited, not refreshed. A ceiling that started again every session would let a
+        # run spanning three days spend three times what it declared.
+        self.guard.tokens_spent = state.total_tokens
         return tuple(t for t in self.config.task_ids if t not in self._complete)
 
     async def execute(
@@ -251,6 +269,7 @@ class Run:
         state = self.ledger.read()
         remaining = self.plan(state, allow_config_change=allow_config_change)
         started = self.clock.monotonic()
+        self.guard.start_session()
 
         self.ledger.record_start(
             RunStartRow(
@@ -267,10 +286,27 @@ class Run:
             )
         )
 
-        await self._drive(executor, remaining)
+        try:
+            await self._drive(executor, remaining)
+        except BaseException as error:
+            if isinstance(error, Exception):
+                # A real fault in this machinery, not a stopping condition. No `run_end`
+                # is written, and the ledger reads as cut off, which is the truth.
+                raise
+            # An interrupt or a cancellation: still catchable, so still recordable. A run
+            # an operator stopped is a decision and reads differently from a crash.
+            self.guard.stop(IncompleteReason.OPERATOR)
+            self._finish(state, self.clock.monotonic() - started)
+            raise
 
         elapsed = self.clock.monotonic() - started
-        report = self._report(STATUS_COMPLETE, None, elapsed, state)
+        return self._finish(state, elapsed)
+
+    def _finish(self, state: LedgerState, elapsed: float) -> RunReport:
+        """Write ``run_end`` and report. The only place a run says how it ended."""
+        reason = self.guard.stopped
+        status = STATUS_INCOMPLETE if reason is not None else STATUS_COMPLETE
+        report = self._report(status, reason.value if reason else None, elapsed, state)
         self.ledger.record_end(
             RunEndRow(
                 run_id=self.config.run_id,
@@ -332,6 +368,13 @@ class Run:
         # `next` on a shared iterator has no await in it, so two workers cannot take the
         # same task: an asyncio task only yields at an await point.
         while True:
+            # Checked before dispatch, never mid-task. A worker that finds the ceiling
+            # crossed stops taking work; the others finish what they are holding and stop
+            # too, which is what "drains rather than abandons" means in code.
+            reason = self.guard.check()
+            if reason is not None:
+                self.guard.stop(reason)
+                return
             try:
                 task_id = next(pending)
             except StopIteration:
@@ -355,6 +398,12 @@ class Run:
                 context.last_error_class = classify(error).reason
             elif context.last_error_class is None:
                 context.last_error_class = EXECUTOR_ERROR
+            # Some failures are about the run rather than the task. Every remaining task
+            # would fail identically against a retired model or a shut set of pools, so
+            # the run stops instead of burning the list proving it.
+            ends_run = fatal_reason(error)
+            if ends_run is not None:
+                self.guard.stop(ends_run)
             self._write_task(
                 context,
                 FAILED,

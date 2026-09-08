@@ -208,10 +208,14 @@ tasks":
 
 1. **Google's unknown daily capacity is now the most valuable unknown in the project.** It
    is measured for free by Phase 2's first full run and should be recorded the moment it is.
+   Phase 1.3 made that automatic: a refusal naming a quota is written into the run's own
+   ledger as it happens, so the run that walks into the wall is the run that measures it.
 2. **The smoke set is load-bearing.** Fifteen tasks for iteration instead of 150 is the
    difference between an afternoon of debugging costing 2% of a Groq-day and 20% of one.
 3. **The budget guard (1.4) and the resumable ledger (1.3) stop being nice-to-haves.** A
-   run that must span a quota reset is the normal case here, not the failure case.
+   run that must span a quota reset is the normal case here, not the failure case. Both
+   shipped: a run resumes by run ID skipping tasks already answered, and carries its token
+   ceiling across every resume while its wall clock starts fresh each session.
 4. **If it still does not fit, runs get cut, not tasks** — in the roadmap's stated order,
    which takes the cascade's two runs out before it touches anything measured.
 
@@ -280,6 +284,11 @@ does not have to open the client to learn which of them turned into behaviour.
 | A transient 503 | Retryable, with exponential backoff and jitter |
 | Groq's RPD reset advancing 86.4 s per request | Modelled as continuous refill, with **no** daily reset boundary — unlike Google, which resets at midnight Pacific |
 | Cloudflare answers Python's default agent | The client sends a real User-Agent on every request |
+| Google's daily allowance is still unmeasured | 1.2's quota-wall sink now folds into the run ledger as a `wall` row (1.3), so the first run to reach that ceiling records it whole and **in order beside the attempts around it** — which is what makes the number reconstructable rather than merely stored |
+| Groq's per-model daily counters, and two Google pools | Every ledger attempt row records `pool` and `model_returned` beside `model`, because a run spanning two projects must be able to say which served what, and Google answers a pinned request with its own build string |
+| **600,000 tokens a day** of stated Groq capacity (3 models × a published 200,000 TPD) | What the committed run token ceiling traces to: `config/runs/working-set.toml` declares **1,500,000**, one 150-task run at the cliff table's 10,000-tokens-a-task row, which is 2.5 Groq-days. Both halves of that derivation are documented arithmetic rather than measurement, and the file says so |
+| Groq's **observed** 30 RPM | The floor the wall-clock ceiling is set above: 150 tasks at 30 RPM is 300 s of pure request time, and the committed ceiling of 14,400 s sits far above it because it exists to stop a run that is stuck, not one that is slow |
+| A run must span a quota reset, and that is the normal case | The token ceiling is **inherited** across resumes and the wall-clock ceiling is **per session** (1.4). Tokens are a stock; time is a rate, and a clock counting the hours a run was not running would abort it for waiting |
 
 ## Reproducing this
 
