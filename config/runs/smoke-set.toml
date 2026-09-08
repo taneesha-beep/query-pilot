@@ -1,0 +1,43 @@
+# A ten-task acceptance run over the smoke set, and the ceilings it is held to.
+#
+# 2.3's acceptance is that A0 runs end to end on ten tasks. This is the declaration that
+# run is made under, and it exists for the same reason config/runs/working-set.toml does:
+# there is no way to construct a run without both ceilings, and a ceiling that cannot be
+# traced back to a measured figure is a guess wearing a number's clothes.
+#
+# The smoke set is drawn from WITHIN the working set (splits/smoke.json, 15 tasks), so a
+# run over its first ten is a run over ten working-set tasks. No number taken here is ever
+# reported: this set exists so that debugging an agent costs 15 tasks of a day's quota
+# instead of 150.
+
+[run]
+agent = "A0"
+
+# 100,000 tokens for ten tasks.
+#
+# Derivation: the same 10,000-tokens-a-task row of docs/PROVIDERS.md's run-budget cliff
+# table that config/runs/working-set.toml is derived from, scaled to ten tasks. That row is
+# a HYPOTHETICAL rather than a measurement and that file says so; tokens per task is not
+# measured until 2.4, which is the item that replaces both numbers with real ones.
+#
+# It is half a Groq day for one model against the 200,000 TPD that config/providers.toml
+# records as declared, which is deliberately generous for an acceptance run: this ceiling
+# exists to stop a runaway loop, and A0 makes exactly one request per task.
+token_ceiling = 100000
+
+# Ten minutes, per session.
+#
+# Derivation: ten tasks at Groq's OBSERVED 30 requests per minute is a floor of 20 seconds
+# of pure rate-limited request time. Ten minutes sits far above that floor on purpose — the
+# multiplier is the policy half, and the ceiling is here to stop a run that is STUCK rather
+# than one that is slow.
+wall_clock_ceiling_s = 600
+
+# One at a time. Not for capacity — the buckets bind long before concurrency does — but
+# because an acceptance run is read by a person, and interleaved output from eight workers
+# is harder to read than it is worth.
+concurrency = 1
+
+[run.params]
+split = "smoke"
+limit = 10

@@ -26,6 +26,7 @@ from typing import Any, Final
 
 __all__ = [
     "ABSOLUTE_TOLERANCE",
+    "NO_SQL",
     "RELATIVE_TOLERANCE",
     "Comparison",
     "ResultSet",
@@ -54,6 +55,21 @@ RELATIVE_TOLERANCE: Final = 1e-9
 ResultSet = Sequence[Sequence[Any]]
 
 SOLVED: Final = "solved"
+
+#: The model answered, and the answer contained no SQL statement to run.
+#:
+#: **Added in 2.3, before this project's first result existed** — which is the only safe
+#: time to add a slug, since the set may be extended but never renamed underneath a
+#: committed number. It is deliberately not `candidate_error`: "the SQL raised" and "there
+#: was no SQL" are different failures, 2.5 reads thirty of them by hand, and folding one
+#: into the other would hide a broken prompt inside a model's SQL mistakes. It is
+#: deliberately not `executor_error` either — 1.3 reserves that for this project's own bugs
+#: — and deliberately not a failed task, because a task that fails is retried on resume and
+#: a model that answered has already been paid for.
+#:
+#: Nothing in this module produces it. :func:`compare` compares rows, and a response with no
+#: SQL never reaches a row; the agent constructs the :class:`Comparison` directly.
+NO_SQL: Final = "no_sql"
 ROW_COUNT: Final = "row_count"
 COLUMN_COUNT: Final = "column_count"
 VALUE_MISMATCH: Final = "value_mismatch"

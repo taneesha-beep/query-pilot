@@ -268,7 +268,19 @@ The reasons are a fixed set of slugs, counted in 2.5's taxonomy and Phase 4's fi
 they may be added to but **must not be renamed underneath a committed result**:
 
 `solved` · `row_count` · `column_count` · `value_mismatch` · `candidate_error` ·
-`reference_error` · `truncated`
+`reference_error` · `truncated` · `no_sql`
+
+`no_sql` was **added in 2.3, before this project's first result existed** — which is the only
+safe moment to add one. It means the model answered and the answer contained no SQL
+statement to run. It is deliberately not `candidate_error`: "the SQL raised" and "there was
+no SQL" are different failures, 2.5 reads thirty of them by hand, and folding one into the
+other would hide a broken prompt inside a model's SQL mistakes. It is deliberately not
+`executor_error` either, which 1.3 reserves for this project's own bugs, and deliberately
+not a failed task, because a failed task is retried on resume and a model that answered has
+already been paid for.
+
+`compare()` never produces it. The rule compares rows and a response with no SQL never
+reaches a row, so the agent constructs that `Comparison` directly.
 
 `Comparison.as_detail()` is shaped to drop straight into a ledger task row's free-form
 `detail` mapping, which nothing in `run/` looks inside. That is the seam that keeps the run
