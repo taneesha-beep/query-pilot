@@ -18,15 +18,22 @@ it does not appear in this table.
 
 | Agent | Execution accuracy | Tokens per solved task | Provider | Model | Date | Ledger |
 |---|---|---|---|---|---|---|
-| A0 single-shot | TBD | TBD | TBD | TBD | TBD | TBD |
+| A0 single-shot | **124 / 150 — 82.6667%** | 860.8 | Groq | `openai/gpt-oss-120b` | 2026-09-08 | `runs/20260908-133316-faecd5/ledger.jsonl` |
 | A1 agent | TBD | TBD | TBD | TBD | TBD | TBD |
 | A2 cascade | TBD | TBD | TBD | TBD | TBD | TBD |
+
+**A query returning nothing scores 7 of 150 — 4.6667% — of this working set for free**,
+because that many of its reference queries return no rows. That floor belongs beside the
+accuracy figure above it rather than in a footnote. Total cost of the A0 run: 106,740
+tokens and **$0.00** — both providers are free tiers, so the cost that matters is quota.
+Full write-up in [docs/RESULTS.md](docs/RESULTS.md), machine-readable in
+[results/a0-working.json](results/a0-working.json).
 
 ### Execution accuracy by difficulty
 
 | Agent | easy | medium | hard | extra | Denominators |
 |---|---|---|---|---|---|
-| A0 single-shot | TBD | TBD | TBD | TBD | TBD |
+| A0 single-shot | 91.6667% | 81.5385% | 76.0000% | 79.1667% | 36 / 65 / 25 / 24 |
 | A1 agent | TBD | TBD | TBD | TBD | TBD |
 
 ### Trajectory
@@ -61,10 +68,18 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phase 1 is complete; Phase 2 is open.** No agent exists yet, and **no table above will
-have a number in it until Phase 2 has one to put there.**
+**Phases 1 and 2 are complete; Phase 3 is open.** A0 exists, has been measured over the
+whole working set, and every one of its failures has been read by hand. A1 — the agent with
+tools, a loop and repair — does not exist yet, and no row above that names it will carry a
+number until it does.
 
-What exists is the infrastructure those measurements will run on: an async client over two
+**A0 is a deliberately strong baseline**, because a weak one manufactures a result in A1's
+favour. It gets the whole schema, read live from the database rather than from a dataset
+annotation, in one prompt; it runs on the **same model A1 will**, so that the comparison
+between them is about the agent loop and not about the model underneath it. What it does
+not get is a second chance: one call, no tools, no repair.
+
+The infrastructure those measurements ran on: an async client over two
 providers and their quota pools, with token buckets keyed per pool per model, classified
 retry that distinguishes a limit clearing in seconds from one clearing at midnight, and
 spillover to another pool rather than waiting. On top of it, an append-only run ledger a
@@ -87,6 +102,15 @@ Two things it establishes that qualify every accuracy figure this project will r
 **4.7389%** by doing nothing at all. And every known limit of the rule — ties in an ordered
 reference, positional column matching, multiset duplicates, no text-to-number coercion —
 pushes the number **down**, which makes execution accuracy here a **lower bound**.
+
+**And that lower bound has now been measured rather than asserted.** All 26 non-solves of
+the A0 run were read by hand under a protocol fixed before the run started, in
+[docs/FAILURES.md](docs/FAILURES.md). **Nine of the 26 are the reference query rather than
+the model** — five of them returning demonstrably wrong data, each verified by running a
+query, including two that compare a `TEXT` horsepower column against `150` and so count a
+90-horsepower car as over 150. Nine more are the rule's own documented costs. Eight are the
+model getting the data wrong, and none of the 26 was a malformed query or a wrong join.
+**Nothing was re-scored**: 124 of 150 stands as taken, and what changes is how it is read.
 
 Provider limits, and which of them were measured against which were merely stated, are in
 [docs/PROVIDERS.md](docs/PROVIDERS.md).

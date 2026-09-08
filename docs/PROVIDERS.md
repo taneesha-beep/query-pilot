@@ -94,6 +94,14 @@ day's tokens, which costs the day. These fill in opportunistically from Phase 2'
 ledgers, where a full working-set run consumes real quota and the ledger records what
 happened when it ran out. Deliberate, not an oversight.
 
+**Phase 2's full run has now happened, and it did not reach the ceiling — so TPD stays
+TBD.** What it establishes instead is a floor under Groq's real daily allowance for
+`openai/gpt-oss-120b`: **106,740 tokens across 150 requests in one 12.3-minute session, with
+zero 429s and zero quota walls**, on 2026-09-08, run `20260908-133316-faecd5`, ledger
+`runs/20260908-133316-faecd5/ledger.jsonl`. That is roughly half the published 200,000 and
+the published figure survived contact with it. A0 is the cheapest agent this project will
+run; A1's loop is what may yet find the ceiling.
+
 ## Credential pools
 
 Google's quota is enforced **per Cloud project, not per key**, so a second key issued
@@ -288,6 +296,8 @@ does not have to open the client to learn which of them turned into behaviour.
 | Google's daily allowance is still unmeasured | 1.2's quota-wall sink now folds into the run ledger as a `wall` row (1.3), so the first run to reach that ceiling records it whole and **in order beside the attempts around it** — which is what makes the number reconstructable rather than merely stored |
 | Groq's per-model daily counters, and two Google pools | Every ledger attempt row records `pool` and `model_returned` beside `model`, because a run spanning two projects must be able to say which served what, and Google answers a pinned request with its own build string |
 | **600,000 tokens a day** of stated Groq capacity (3 models × a published 200,000 TPD) | What the committed run token ceiling traces to: `config/runs/working-set.toml` declares **1,500,000**, one 150-task run at the cliff table's 10,000-tokens-a-task row, which is 2.5 Groq-days. Both halves of that derivation are documented arithmetic rather than measurement, and the file says so |
+| **711.6 tokens a task**, measured over 150 (2.4, run `20260908-133316-faecd5`) | What supersedes the 10,000-a-task **hypothetical** above as the basis for any *future* run declaration. The committed ceiling was deliberately left at 1,500,000 for 2.4 itself — the only evidence to lower it beforehand was ten smoke tasks, and 2.4 is the run that produced the real figure. The consequence is stated rather than hidden: the guard never bound, so that path is unit-tested rather than exercised live |
+| The strong endpoint's **8,000 TPM**, against `wait_ceiling_s` of **60 s** | The condition every run declaration must satisfy: **`concurrency × tokens-per-attempt < tpm`**. Tokens are charged when answers arrive, so `concurrency` requests burst before any is paid for; charged together they put the per-minute token bucket into that deficit, and a deficit deeper than 60 s of refill makes the client raise `AllPoolsExhausted` — which the run treats as fatal and ends as `pools_exhausted` **with no provider having refused anything.** Measured at A0's sizes, concurrency 8 ended a simulated 150-task run at task 91, so `config/runs/working-set.toml` declares **1**. `docs/a0-prompt-sizes.json` holds the sizes and `tests/test_run_budget.py` holds the arithmetic. **This binds Phase 3 harder than Phase 2**: A1's loop costs multiples of 711.6 a task, so even concurrency 2 may be unsafe |
 | Groq's **observed** 30 RPM | The floor the wall-clock ceiling is set above: 150 tasks at 30 RPM is 300 s of pure request time, and the committed ceiling of 14,400 s sits far above it because it exists to stop a run that is stuck, not one that is slow |
 | A run must span a quota reset, and that is the normal case | The token ceiling is **inherited** across resumes and the wall-clock ceiling is **per session** (1.4). Tokens are a stock; time is a rate, and a clock counting the hours a run was not running would abort it for waiting |
 

@@ -270,6 +270,13 @@ they may be added to but **must not be renamed underneath a committed result**:
 `solved` · `row_count` · `column_count` · `value_mismatch` · `candidate_error` ·
 `reference_error` · `truncated` · `no_sql`
 
+**Eight, and the module defines a ninth that nothing produces.** `equivalence.ROW_ORDER`
+exists in the code and is not in this list: an ordered comparison that disagrees reports
+`value_mismatch` or `row_count` like any other, because a row in the wrong place is a row
+that does not match. It is named here so a future session does not read it as a slug the
+rule emits — and **it must not be started now**, because a committed result exists and a
+ninth slug appearing underneath it would change what an already-published number counted.
+
 `no_sql` was **added in 2.3, before this project's first result existed** — which is the only
 safe moment to add one. It means the model answered and the answer contained no SQL
 statement to run. It is deliberately not `candidate_error`: "the SQL raised" and "there was
@@ -312,3 +319,20 @@ avoids this; see above.
 Every one of these pushes the reported number **down**. Taken together with 2.5's finding
 about ambiguous reference queries, execution accuracy in this project is a **lower bound**,
 and every figure derived from it should be read as one.
+
+**2.5 has now made that finding, and it is larger than this section anticipated.** All 26
+non-solves of the first measured run were read by hand under a protocol fixed before the run
+started — [`docs/FAILURES.md`](FAILURES.md), run `20260908-133316-faecd5`. **Nine of the 26
+are the reference query rather than the model.** Five of those return demonstrably wrong
+data, each verified by executing a query rather than argued: two compare a `TEXT` horsepower
+column against `150`, so SQLite applies text affinity and a 90-horsepower car counts as over
+150; one orders a `TEXT` mpg column and returns the top of a lexicographic sort; one groups
+by country and returns every Spanish-speaking country for a question asking which speak it
+most; one orders by treatment *count* for a question asking who *spent* the most. Four more
+are questions that admit two readings.
+
+A further **nine of the 26 are the costs listed above** — positional columns and ordered
+rows — working exactly as documented. So of 26 failures, **eight are the model getting the
+data wrong.** None of this re-scores anything and none of it may: the rule is what it was
+when it was committed, and the figure stands as taken. What it establishes is how much room
+sits between the reported number and the true one.

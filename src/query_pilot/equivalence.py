@@ -73,6 +73,13 @@ NO_SQL: Final = "no_sql"
 ROW_COUNT: Final = "row_count"
 COLUMN_COUNT: Final = "column_count"
 VALUE_MISMATCH: Final = "value_mismatch"
+#: **Defined and never produced.** An ordered comparison that disagrees reports
+#: ``value_mismatch`` or ``row_count`` like any other, because the rule compares rows and a
+#: row that is in the wrong place is a row that does not match. This constant is not in
+#: `docs/EQUIVALENCE.md`'s slug list and must not be started now: a committed result exists
+#: (`results/a0-working.json`), and a ninth slug appearing underneath it would change what
+#: an already-published number counted. Left rather than deleted so that a future session
+#: finding it knows it was looked at.
 ROW_ORDER: Final = "row_order"
 CANDIDATE_ERROR: Final = "candidate_error"
 REFERENCE_ERROR: Final = "reference_error"
