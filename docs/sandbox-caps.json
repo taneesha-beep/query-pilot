@@ -1,0 +1,30 @@
+{
+  "note": "Uncapped execution of every reference query in splits/frame.json. The caps in src/query_pilot/sandbox.py are set above the maxima here, so that no reference result in this frame is decided by a cap.",
+  "frame_size": 1034,
+  "rows": {
+    "max": 20662,
+    "max_task": "dev-0456",
+    "max_db": "wta_1",
+    "p99": 1504,
+    "p95": 33,
+    "median": 1
+  },
+  "bytes": {
+    "max": 289104,
+    "max_task": "dev-0456",
+    "max_db": "wta_1",
+    "p99": 15883,
+    "p95": 528,
+    "median": 16,
+    "definition": "sandbox.encoded_size: UTF-8 length for TEXT, length for BLOB, 8 for INTEGER and REAL, 0 for NULL"
+  },
+  "seconds": {
+    "max": 0.282771,
+    "max_task": "dev-0472",
+    "max_db": "wta_1",
+    "p99": 0.003881,
+    "p95": 0.000292,
+    "median": 1.5e-05,
+    "total": 1.629737
+  }
+}

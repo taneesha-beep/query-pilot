@@ -217,9 +217,9 @@ substrate and must not be charged to the model.
 
 ### Truncation is its own reason, never a wrong answer
 
-2.2 adds a row cap and a byte cap to the sandbox. A capped candidate compared against an
-uncapped reference is a **false non-solve**, so the rule refuses to compare rather than
-guess:
+[`src/query_pilot/sandbox.py`](../src/query_pilot/sandbox.py) caps a result at **50,000
+rows** and **1,048,576 bytes**. A capped candidate compared against an uncapped reference is
+a **false non-solve**, so the rule refuses to compare rather than guess:
 
 ```
 Reference   [(0,), (1,), (2,), (3,), (4,)]
@@ -232,6 +232,20 @@ Even when the rows happen to agree, a capped result is not evidence that they do
 this into `row_count` would quietly attribute a cap's effect to the model. Named separately,
 **2.4 can count how many tasks the cap decided** — and if that count is not zero, the answer
 is to raise the cap, not to accept a lower accuracy figure.
+
+Both caps are set above the largest thing this substrate legitimately returns, measured over
+the whole frame by [`scripts/sandbox_caps.py`](../scripts/sandbox_caps.py) and recorded in
+[`docs/sandbox-caps.json`](sandbox-caps.json): the biggest reference result is **20,662 rows**
+and **289,104 bytes**, so **no reference query in this frame is truncated by either cap**.
+That is the requirement rather than a happy accident — a cap that can decide a legitimate
+answer is a cap that silently moves the accuracy figure, and a test asserts it still holds.
+
+**What the sandbox's statement timeout costs, and it is a cost the rule cannot see.** A
+query stopped at 30 seconds arrives here as `candidate_error`. A semantically *correct*
+reformulation can be pathologically slow — a correlated-subquery form of `dev-0471`'s
+question was measured at over 60 seconds against that reference's 0.289 — so the timeout
+necessarily rejects some right answers. It belongs in the list of known limits below for the
+same reason as the others: it pushes the number **down**.
 
 ### The decode fault belongs to the connection, not to the rule
 
@@ -279,6 +293,9 @@ comment, but it does not understand the query.
 
 **Column order is positional**, so a correct answer with its columns transposed is a
 non-solve. See decision 2.
+
+**The sandbox's statement timeout rejects correct-but-slow queries.** No timeout value
+avoids this; see above.
 
 Every one of these pushes the reported number **down**. Taken together with 2.5's finding
 about ambiguous reference queries, execution accuracy in this project is a **lower bound**,
