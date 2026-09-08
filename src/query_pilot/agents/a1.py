@@ -40,6 +40,15 @@ error about whether this project could ask the model at all does not.*
 **A turn's tool calls run sequentially, in the order the provider returned them.** The
 tools are sqlite against a local copy; running them concurrently buys nothing measurable and
 costs the one ordering guarantee 3.4, 4.3 and 7.2 all read the transcript for.
+
+**One repair, and only for a reply the model committed to.** 3.3's rule, decided with the
+author on 2026-09-08 before the code: a trajectory that ended at ``turn_limit``,
+``tool_call_limit`` or ``prompt_ceiling`` is **not** given a repair turn. It scores whatever
+its final text was worth and that is the honest reading. A repair for those would be the
+forced-answer turn 3.2 deliberately declined, it would hide every trajectory that ran out of
+room behind one extra request, and A0 has no equivalent — A0 gets one response and lives
+with it. Repair answers *"you replied, and the reply was not a single valid statement"*, and
+``answer`` is the only path on which the model replied.
 """
 
 from __future__ import annotations
@@ -53,9 +62,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from query_pilot.agents.a0 import ANSWER_RULES, MAX_OUTPUT_TOKENS, ROLE
-from query_pilot.agents.sql import extract_sql
 from query_pilot.agents.tools import TOOL_SCHEMAS, call_tool
 from query_pilot.agents.transcript import TranscriptWriter
+from query_pilot.agents.validate import Validation, repair_request, validate_answer
 from query_pilot.client.client import Client
 from query_pilot.client.types import Completion, Message, ToolCall
 from query_pilot.equivalence import NO_SQL, Comparison, compare, orders_rows
@@ -71,6 +80,7 @@ __all__ = [
     "MAX_OUTPUT_TOKENS",
     "PROMPT_CEILING",
     "PROMPT_CEILING_CHARS",
+    "REPAIR_LIMIT",
     "ROLE",
     "SYSTEM_PROMPT",
     "TERMINATIONS",
@@ -145,6 +155,24 @@ TOOL_CALL_LIMIT: Final = 12
 #: cycle 3.4 measures, or the result backstop falls below the largest legitimate tool result,
 #: which cuts real answers. Both are worse than measuring the conversation, which is free.
 PROMPT_CEILING_CHARS: Final = 22_776
+
+#: How many repair attempts one trajectory may make. **One, and the roadmap fixes it.**
+#:
+#: A constant rather than a literal because 3.4 counts repairs out of the transcript and 3.6
+#: publishes the count, so a reader has to be able to see the ceiling those were taken
+#: against without reading the loop.
+#:
+#: **Where a repair sits in the accounting, answered here because 3.4 counts turns out of the
+#: same file.** A repair *is* a turn: it increments :attr:`_State.turns`, it is recorded
+#: through `TaskContext.record` so it gets an `AttemptRow` joined on `(run_id, task_id,
+#: turn)` like every other request, and its two messages go into the **same** transcript
+#: bracket, before ``end``. It is deliberately **not** charged against :data:`TURN_LIMIT`:
+#: that limit bounds the discovery loop, and denying a repair to a reply that arrived on turn
+#: 14 would refuse it for a reason that has nothing to do with the reply. So a trajectory
+#: makes at most ``TURN_LIMIT + REPAIR_LIMIT`` = 15 requests, which is bounded and stated
+#: rather than open-ended. It **is** charged against :data:`PROMPT_CEILING_CHARS`, because
+#: that is constraint 46 and a repair request is a request like any other.
+REPAIR_LIMIT: Final = 1
 
 # --- how a trajectory ends --------------------------------------------------------------------
 
@@ -244,6 +272,20 @@ class Trajectory:
     tool_calls: int = 0
     tool_calls_by_name: Mapping[str, int] = field(default_factory=dict)
     transcript: str | None = None
+    #: 3.3's two counters, per task, so 3.6 can sum them rather than re-read every
+    #: transcript. ``repair_succeeded`` is whether the *repaired* reply passed validation —
+    #: **not** whether the task went on to solve, which is a different question the ledger
+    #: already answers and which putting here would let disagree with itself.
+    repair_attempts: int = 0
+    repair_succeeded: bool = False
+    #: Why a repair that was owed was not made: ``prompt_ceiling`` or ``budget``. ``None``
+    #: when none was owed or when one was made. Without it a run reports "0 repairs" for two
+    #: very different reasons and 3.6 cannot tell them apart.
+    repair_blocked: str | None = None
+    #: Which of `validate.RULES` rejected the final reply, or ``None`` if it passed. Carried
+    #: beside the ``no_sql`` reason rather than folded into it, so that the three rejections
+    #: are countable without a ninth equivalence slug and without parsing prose.
+    validation_rule: str | None = None
     dropped_statements: int = 0
     fenced: bool = False
     finish_reason: str | None = None
@@ -286,6 +328,11 @@ class Trajectory:
                 "tool_calls_by_name": dict(self.tool_calls_by_name),
                 "turn_limit": TURN_LIMIT,
                 "tool_call_limit": TOOL_CALL_LIMIT,
+                # 3.3's counters, and which rule fired.
+                "repair_attempts": self.repair_attempts,
+                "repair_succeeded": self.repair_succeeded,
+                "repair_blocked": self.repair_blocked,
+                "validation_rule": self.validation_rule,
                 # Relative to the run directory, so a run directory stays movable.
                 "transcript": self.transcript,
             }
@@ -372,10 +419,17 @@ class A1:
                 for message in messages:
                     writer.message(message, turn=0)
                 await self._drive(context, writer, database, messages, state)
+                # 3.3, and inside the bracket rather than after it: a repair is part of
+                # this trajectory, not a second one, and a reader counting turns out of the
+                # file must see the same number `end` reports.
+                validation = await self._repair(context, writer, messages, state)
                 writer.end(
                     outcome=state.termination,
                     turns=state.turns,
                     tool_calls=state.tool_calls,
+                    repair_attempts=state.repair_attempts,
+                    repair_succeeded=state.repair_succeeded,
+                    repair_blocked=state.repair_blocked,
                     ended_at=context.run.ledger.now(),
                 )
             except BaseException as error:
@@ -386,12 +440,15 @@ class A1:
                     outcome=BUDGET if isinstance(error, BudgetStopped) else "error",
                     turns=state.turns,
                     tool_calls=state.tool_calls,
+                    repair_attempts=state.repair_attempts,
+                    repair_succeeded=state.repair_succeeded,
+                    repair_blocked=state.repair_blocked,
                     ended_at=context.run.ledger.now(),
                 )
                 raise
             finally:
                 writer.close()
-            return await self._score(task, state, database, writer)
+            return await self._score(task, state, validation, database, writer)
 
     async def _drive(
         self,
@@ -478,10 +535,79 @@ class A1:
             elapsed_s=result.elapsed_s,
         )
 
+    # -- 3.3: validate the reply, and one chance to fix it -------------------------------------
+
+    async def _repair(
+        self,
+        context: TaskContext,
+        writer: TranscriptWriter,
+        messages: list[Message],
+        state: _State,
+    ) -> Validation:
+        """Validate the final reply and, if it failed, ask **once** more with the error.
+
+        Returns the validation that scoring should use — the repaired reply's when a repair
+        was made, the original's otherwise. **A repaired reply replaces the original**, and
+        that can only help: a reply that fails validation is never executed, so its verdict
+        is already a non-solve and the second one cannot be worth less.
+
+        Three reasons no repair is made, and each is recorded rather than left to look like
+        "the reply was fine":
+
+        - **The trajectory did not end on ``answer``.** The decided rule, and the whole of
+          it — see the module docstring.
+        - **The budget guard has stopped the run.** Skipped rather than raised: the
+          trajectory already terminated on ``answer`` and the run paid for every turn of it,
+          and constraint 25 says a task that got an answer is complete. Failing it here
+          would throw away a paid trajectory over a request that was never made.
+        - **The repair request would cross the prompt ceiling.** Constraint 46, which binds
+          a repair exactly as it binds a turn. This is the case that is *most* likely of the
+          three in a real run, because the repair sits at the end of the longest
+          conversation the trajectory ever had.
+        """
+        validation = validate_answer(state.text)
+        if validation.ok or state.termination != ANSWER:
+            return validation
+        if context.budget_stop() is not None:
+            state.repair_blocked = BUDGET
+            return validation
+
+        request = Message(role="user", content=repair_request(validation))
+        if conversation_chars([*messages, request]) > self.prompt_ceiling_chars:
+            state.repair_blocked = PROMPT_CEILING
+            return validation
+
+        messages.append(request)
+        state.turns += 1
+        writer.message(request, turn=state.turns, repair=True)
+        # **No tools offered on this turn.** The request is "give me one statement", and a
+        # model that answered it with a tool call would need a turn to feed the result back
+        # into -- which is the multi-turn loop this trajectory has already terminated. It
+        # also keeps `TOOL_CALL_LIMIT` meaning what it says.
+        completion = await self.client.complete(
+            self.role, messages, max_output_tokens=self.max_output_tokens
+        )
+        context.record(completion, turn=state.turns)
+        state.observe(completion)
+        answer = Message(role="assistant", content=completion.text)
+        messages.append(answer)
+        writer.message(answer, turn=state.turns, repair=True)
+
+        state.repair_attempts += 1
+        state.text = completion.text
+        repaired = validate_answer(completion.text)
+        state.repair_succeeded = repaired.ok
+        return repaired
+
     # -- scoring, which is A0's, unchanged -----------------------------------------------------
 
     async def _score(
-        self, task: Task, state: _State, database: Path, writer: TranscriptWriter
+        self,
+        task: Task,
+        state: _State,
+        validation: Validation,
+        database: Path,
+        writer: TranscriptWriter,
     ) -> Trajectory:
         """Execute the final SQL and compare it, **exactly as A0 does**.
 
@@ -489,16 +615,24 @@ class A1:
         statement is run again through the same sandbox and put through the same equivalence
         rule, which is what makes the two agents' numbers the same kind of number and what
         keeps every rendering cap in `tools.py` on the prompt side of the run.
+
+        **What 3.3 changed here is which replies get that far.** A reply that failed
+        validation is not executed at all, and reports ``no_sql`` with the rule's own
+        sentence as the detail — see `validate`'s docstring for why that slug and not a new
+        one. The rule itself rides in ``validation_rule``.
         """
-        extraction = extract_sql(state.text)
         shared: dict[str, Any] = {
             "termination": state.termination,
             "turns": state.turns,
             "tool_calls": state.tool_calls,
             "tool_calls_by_name": dict(state.by_name),
             "transcript": str(writer.path.relative_to(self.run_directory)),
-            "fenced": extraction.fenced,
-            "dropped_statements": extraction.dropped,
+            "repair_attempts": state.repair_attempts,
+            "repair_succeeded": state.repair_succeeded,
+            "repair_blocked": state.repair_blocked,
+            "validation_rule": validation.rule,
+            "fenced": validation.fenced,
+            "dropped_statements": validation.dropped,
             "finish_reason": state.finish_reason,
             "prompt_tokens": state.prompt_tokens,
             "completion_tokens": state.completion_tokens,
@@ -506,15 +640,15 @@ class A1:
             "model": state.model,
             "latency_s": state.latency_s,
         }
-        if extraction.sql is None:
+        if validation.sql is None:
             return Trajectory(
                 task=task,
-                comparison=Comparison(False, NO_SQL, extraction.reason or ""),
+                comparison=Comparison(False, NO_SQL, validation.reason or ""),
                 sql=None,
                 **shared,
             )
 
-        candidate = await asyncio.to_thread(self.sandbox.execute, database, extraction.sql)
+        candidate = await asyncio.to_thread(self.sandbox.execute, database, validation.sql)
         reference = await asyncio.to_thread(self.sandbox.execute, database, task.reference_sql)
         comparison = compare(
             reference.rows if reference.ok else None,
@@ -528,7 +662,7 @@ class A1:
         return Trajectory(
             task=task,
             comparison=comparison,
-            sql=extraction.sql,
+            sql=validation.sql,
             candidate_seconds=candidate.elapsed_s,
             candidate_rows=len(candidate.rows) if candidate.ok else None,
             candidate_truncated_by=candidate.truncated_by,
@@ -551,6 +685,9 @@ class _State:
     by_name: dict[str, int] = field(default_factory=dict)
     text: str = ""
     termination: str = ANSWER
+    repair_attempts: int = 0
+    repair_succeeded: bool = False
+    repair_blocked: str | None = None
     prompt_tokens: int = 0
     completion_tokens: int = 0
     provider: str | None = None

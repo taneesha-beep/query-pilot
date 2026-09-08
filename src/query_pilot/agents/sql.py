@@ -35,7 +35,14 @@ from dataclasses import dataclass
 
 from query_pilot.sandbox import has_statement
 
-__all__ = ["NO_SQL_FOUND", "Extraction", "extract_sql", "split_statements", "strip_fences"]
+__all__ = [
+    "NO_SQL_FOUND",
+    "Extraction",
+    "blank_literals",
+    "extract_sql",
+    "split_statements",
+    "strip_fences",
+]
 
 #: Why nothing came back. Carried into the task's `detail` so 2.5 can read it.
 NO_SQL_FOUND = "the response contained no SQL statement"
@@ -90,7 +97,7 @@ def strip_fences(text: str) -> tuple[str, bool]:
     """
     blocks = [block for _, block in _FENCE.findall(text)]
     for block in reversed(blocks):
-        if has_statement(block) and _OPENING.search(_blank(block)):
+        if has_statement(block) and _OPENING.search(blank_literals(block)):
             return block, True
     return text, False
 
@@ -102,7 +109,7 @@ def split_statements(sql: str) -> list[str]:
     separator — but both are cheap to track in one pass and getting either wrong truncates
     a valid query into an invalid one.
     """
-    blanked = _blank(sql)
+    blanked = blank_literals(sql)
     statements = []
     depth = 0
     start = 0
@@ -128,7 +135,7 @@ def extract_sql(text: str) -> Extraction:
         # Unfenced, so the statement is somewhere in prose. Start it at the first SELECT or
         # WITH and let the statement splitter end it: anything before that word is a
         # preamble, and a preamble left attached is a syntax error rather than an answer.
-        opening = _OPENING.search(_blank(region))
+        opening = _OPENING.search(blank_literals(region))
         if opening is None:
             return Extraction(None, reason=NO_SQL_FOUND)
         region = region[opening.start() :]
@@ -148,12 +155,19 @@ def extract_sql(text: str) -> Extraction:
     return Extraction(first, dropped=len(statements) - 1, fenced=fenced)
 
 
-def _blank(sql: str) -> str:
+def blank_literals(sql: str) -> str:
     """Replace literals, quoted identifiers and comments with spaces, keeping length.
 
     Length is preserved so an offset into the blanked text indexes the original. This is a
     lexer and not a parser: it cannot be fooled by a `;`, a `(` or the word `SELECT` inside
     a string or a comment, and it does not understand anything else.
+
+    **Public rather than private, and renamed in 3.3 without changing a character of what it
+    does.** Two more callers need exactly this guarantee: `validate` reads the keyword a
+    statement opens with, and 3.4's metrics ask whether a table name appears in the final
+    query. Both would be wrong for the same reason if they read the raw text — a name matched
+    inside a string literal is a match that is not there — and a second copy of this scanner
+    is a second thing that can drift.
     """
     out = list(sql)
     index = 0

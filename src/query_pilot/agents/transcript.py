@@ -204,14 +204,21 @@ class TranscriptWriter:
             },
         )
 
-    def message(self, message: Message, *, turn: int) -> None:
+    def message(self, message: Message, *, turn: int, repair: bool = False) -> None:
         """One entry of the conversation, recorded as it is appended to it.
 
         Recorded on the way in rather than at the end of the turn, so that the order on
         disk is the order the conversation was built in and a trajectory killed mid-turn
         still shows what the model had said.
+
+        ``repair`` marks the two messages of 3.3's repair turn. **Added in 3.3, which is
+        before 3.6 and therefore while adding a field is still free.** It exists so that the
+        repair counts on the ``end`` event stay what every other number there is — a
+        checksum over facts the events already carry — rather than becoming the only place a
+        reader could learn a repair happened. Identifying the turn by the wording of its
+        request instead would tie every reader to a prompt string.
         """
-        self._append(MESSAGE, {"turn": turn, **_message_row(message)})
+        self._append(MESSAGE, {"turn": turn, "repair": repair, **_message_row(message)})
 
     def tool_result(
         self,
@@ -245,12 +252,30 @@ class TranscriptWriter:
             },
         )
 
-    def end(self, *, outcome: str, turns: int, tool_calls: int, ended_at: str) -> None:
+    def end(
+        self,
+        *,
+        outcome: str,
+        turns: int,
+        tool_calls: int,
+        ended_at: str,
+        repair_attempts: int = 0,
+        repair_succeeded: bool = False,
+        repair_blocked: str | None = None,
+    ) -> None:
         """Close a trajectory, naming which termination path ended it.
 
         The counts are derivable from the events above and are written anyway, as a
         checksum a reader can use to tell a complete file from a truncated one — the same
         job `run_end`'s totals do for the ledger.
+
+        **The three repair fields are 3.3's, and they hold to the same rule.**
+        ``repair_attempts`` is the number of messages flagged ``repair`` divided by two, and
+        ``repair_succeeded`` is whether the reply that followed passed validation — both
+        checkable against the events rather than believed. ``repair_blocked`` is the one
+        thing here that is *not* derivable, and it is the reason the trio is worth writing:
+        without it a trajectory that was owed a repair and did not get one is
+        indistinguishable from one that never needed a repair at all.
         """
         self._append(
             END,
@@ -258,6 +283,9 @@ class TranscriptWriter:
                 "outcome": outcome,
                 "turns": turns,
                 "tool_calls": tool_calls,
+                "repair_attempts": repair_attempts,
+                "repair_succeeded": repair_succeeded,
+                "repair_blocked": repair_blocked,
                 "ended_at": ended_at,
             },
         )

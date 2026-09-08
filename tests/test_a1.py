@@ -38,6 +38,7 @@ from query_pilot.agents.a1 import (
     build_prompt,
     conversation_chars,
 )
+from query_pilot.agents.sql import extract_sql
 from query_pilot.agents.tools import TOOL_NAMES
 from query_pilot.agents.transcript import (
     END,
@@ -49,6 +50,7 @@ from query_pilot.agents.transcript import (
     replay,
     transcript_path,
 )
+from query_pilot.agents.validate import MULTIPLE_STATEMENTS
 from query_pilot.client.errors import ProviderHTTPError
 from query_pilot.client.types import Completion, Message, ToolCall
 from query_pilot.equivalence import NO_SQL
@@ -630,3 +632,280 @@ def test_conversation_chars_counts_the_tool_call_arguments() -> None:
     ]
     assert conversation_chars(plain) == 0
     assert conversation_chars(with_call) > 500
+
+
+# --- 3.3: output validation and one repair -------------------------------------------------
+#
+# **The rule, decided with the author on 2026-09-08 before this code was written:** repair
+# fires on a reply the model *committed to* and found wanting -- a trajectory that ended at
+# `turn_limit`, `tool_call_limit` or `prompt_ceiling` is not given a repair turn. Rescuing
+# those would be the forced-answer turn 3.2 deliberately declined, would hide every
+# trajectory that ran out of room behind one extra request, and has no A0 equivalent.
+#
+# The other half is the accounting, and it is settled here rather than after 3.4 counts turns
+# out of the same file: a repair **is** a turn, it gets its own `AttemptRow`, it lives inside
+# the same transcript bracket, it is **not** charged against `TURN_LIMIT`, and it **is**
+# charged against `PROMPT_CEILING_CHARS`.
+
+MULTI = "SELECT name FROM singer; SELECT age FROM singer"
+
+
+@pytest.mark.asyncio
+async def test_a_malformed_reply_triggers_exactly_one_repair_and_is_counted(
+    task, database_root, tmp_path
+) -> None:
+    """**3.3's acceptance, stated in its own words.**"""
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+
+    assert row["detail"]["repair_attempts"] == 1
+    assert row["detail"]["repair_succeeded"] is True
+    assert row["detail"]["repair_blocked"] is None
+    assert row["detail"]["validation_rule"] is None
+    assert row["detail"]["solved"] is True
+    # Three requests: the tool turn, the malformed reply, the repair. Not four.
+    assert len(client.handed) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_repair_that_is_also_malformed_is_not_repaired_again(
+    task, database_root, tmp_path
+) -> None:
+    """One. The word in the roadmap is *one*, and a loop that repaired a repair would spend
+    an unbounded number of requests on a model that cannot follow the instruction.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, MULTI, ANSWER_SQL)
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+
+    assert row["detail"]["repair_attempts"] == 1
+    assert row["detail"]["repair_succeeded"] is False
+    assert row["detail"]["validation_rule"] == MULTIPLE_STATEMENTS
+    assert row["detail"]["solved"] is False
+    assert row["detail"]["reason"] == NO_SQL
+    assert len(client.handed) == 3
+
+
+@pytest.mark.asyncio
+async def test_multi_statement_output_is_rejected_rather_than_executed(
+    task, database_root, tmp_path
+) -> None:
+    """The first of the two layers 3.3 owes, and the visible half of the change.
+
+    `extract_sql` would have kept `SELECT name FROM singer` and run it -- which is what A0
+    does and is not touched. For A1 the reply is refused, so `sql` is absent rather than
+    being a statement the model did not commit to alone.
+    """
+    client = StubClient(MULTI, MULTI)
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+
+    assert row["detail"]["sql"] is None
+    assert row["detail"]["dropped_statements"] == 1
+    assert "2 SQL statements" in row["detail"]["detail"]
+
+
+@pytest.mark.asyncio
+async def test_a_reply_with_no_sql_at_all_is_repaired_when_the_model_committed_to_it(
+    task, database_root, tmp_path
+) -> None:
+    """The `answer` path is the one on which the model replied, whatever the reply held."""
+    client = StubClient("I would need more information to answer that.", ANSWER_SQL)
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+
+    assert row["detail"]["repair_attempts"] == 1
+    assert row["detail"]["solved"] is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("responses", "limits", "termination"),
+    [
+        ([("", [call("list_tables")])] * 3, {"turn_limit": 2}, TURN_LIMIT_REACHED),
+        ([("", [call("list_tables")])] * 3, {"tool_call_limit": 1}, TOOL_CALL_LIMIT_REACHED),
+    ],
+)
+async def test_a_trajectory_that_ran_out_of_room_gets_no_repair(
+    task, database_root, tmp_path, responses, limits, termination
+) -> None:
+    """**The decided rule.** These end with no SQL and score `no_sql`, which is the honest
+    reading: they never answered, and repair answers "you answered badly".
+    """
+    client = StubClient(*responses)
+    _, row, _ = await run_one(client, task, database_root, tmp_path, **limits)
+
+    assert row["detail"]["termination"] == termination
+    assert row["detail"]["repair_attempts"] == 0
+    assert row["detail"]["repair_blocked"] is None
+    assert row["detail"]["solved"] is False
+    assert row["detail"]["reason"] == NO_SQL
+
+
+@pytest.mark.asyncio
+async def test_a_prompt_ceiling_trajectory_gets_no_repair(task, database_root, tmp_path) -> None:
+    """The third of the three, and the one that would be most tempting to rescue: the
+    trajectory was stopped by this project's own enforcement rather than by the model.
+
+    It still gets nothing. Constraint 46 stops a request because the *run* cannot afford it,
+    and a repair is another request of exactly the same kind.
+    """
+    client = StubClient(*[("x" * 4_000, [call("list_tables")])] * 4)
+    _, row, _ = await run_one(
+        client, task, database_root, tmp_path, prompt_ceiling_chars=len(SYSTEM_PROMPT) + 5_000
+    )
+
+    assert row["detail"]["termination"] == PROMPT_CEILING
+    assert row["detail"]["repair_attempts"] == 0
+
+
+@pytest.mark.asyncio
+async def test_the_repair_is_a_turn_beyond_the_turn_limit_rather_than_inside_it(
+    task, database_root, tmp_path
+) -> None:
+    """A reply that arrives on the last permitted turn is still a reply the model committed
+    to, and denying it a repair would refuse it for a reason that has nothing to do with it.
+
+    So a trajectory makes at most `turn_limit + 1` requests. Bounded, and stated.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, row, _ = await run_one(client, task, database_root, tmp_path, turn_limit=2)
+
+    assert row["detail"]["turns"] == 3
+    assert row["detail"]["turn_limit"] == TURN_LIMIT
+    assert row["detail"]["repair_attempts"] == 1
+    assert row["detail"]["solved"] is True
+
+
+@pytest.mark.asyncio
+async def test_the_repair_gets_its_own_attempt_row_joined_on_its_turn(
+    task, database_root, tmp_path
+) -> None:
+    """Constraint 51's join key is `(run_id, task_id, turn)`, and a request with no attempt
+    row would be tokens this run spent and never accounted for.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, _, directory = await run_one(client, task, database_root, tmp_path)
+
+    attempts = [r for r in read_rows(directory / "ledger.jsonl") if r["kind"] == "attempt"]
+    assert [r["turn"] for r in attempts] == [1, 2, 3]
+    assert all(r["task_id"] == task.task_id for r in attempts)
+
+
+@pytest.mark.asyncio
+async def test_the_repair_turn_offers_no_tools(task, database_root, tmp_path) -> None:
+    """The request is "give me one statement". A model that answered it with a tool call
+    would need a turn to feed the result back into, and that loop has already terminated.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    await run_one(client, task, database_root, tmp_path)
+
+    assert client.tools_offered == [TOOL_NAMES, TOOL_NAMES, ()]
+
+
+@pytest.mark.asyncio
+async def test_the_repair_request_feeds_the_validation_error_back(
+    task, database_root, tmp_path
+) -> None:
+    """3.3's requirement in one line. A model told only "that was wrong" repeats itself."""
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    await run_one(client, task, database_root, tmp_path)
+
+    request = client.handed[-1][-1]
+    assert request.role == "user"
+    assert "2 SQL statements" in request.content
+
+
+@pytest.mark.asyncio
+async def test_the_repair_lives_inside_the_same_transcript_bracket_and_is_flagged(
+    task, database_root, tmp_path
+) -> None:
+    """A repair is part of this trajectory, not a second one. A reader counting turns out of
+    the file must see the number `end` reports, and 3.4 does exactly that.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, _, directory = await run_one(client, task, database_root, tmp_path)
+
+    (trajectory,) = read_trajectories(transcript_path(directory, task.task_id))
+    assert trajectory.end["outcome"] == ANSWER
+    assert trajectory.end["turns"] == 3
+    assert trajectory.end["repair_attempts"] == 1
+    assert trajectory.end["repair_succeeded"] is True
+    assert trajectory.end["repair_blocked"] is None
+
+    flagged = [m for m in trajectory.messages if m["repair"]]
+    assert [m["role"] for m in flagged] == ["user", "assistant"]
+    assert {m["turn"] for m in flagged} == {3}
+    # The checksum the `end` counts are: derivable from the events, written anyway.
+    assert len(flagged) == 2 * trajectory.end["repair_attempts"]
+
+
+@pytest.mark.asyncio
+async def test_replay_still_rebuilds_what_the_client_was_handed_through_the_repair(
+    task, database_root, tmp_path
+) -> None:
+    """The replay guarantee is the one thing the transcript format promises, and a new event
+    field is exactly the kind of change that breaks it quietly.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, _, directory = await run_one(client, task, database_root, tmp_path)
+
+    events = read_transcript(transcript_path(directory, task.task_id))
+    for turn, handed in enumerate(client.handed, start=1):
+        assert replay(events, turn=turn) == handed
+
+
+@pytest.mark.asyncio
+async def test_a_repair_that_would_cross_the_prompt_ceiling_is_not_made(
+    task, database_root, tmp_path
+) -> None:
+    """Constraint 46 binds a repair exactly as it binds a turn, and this is the case most
+    likely to happen in a real run: the repair sits at the end of the longest conversation
+    the trajectory ever had.
+
+    Recorded rather than silent. Without `repair_blocked`, a trajectory owed a repair and
+    denied one is indistinguishable from one that never needed a repair at all.
+    """
+    client = StubClient(MULTI, ANSWER_SQL)
+    _, row, _ = await run_one(
+        client,
+        task,
+        database_root,
+        tmp_path,
+        prompt_ceiling_chars=len(SYSTEM_PROMPT) + len(MULTI) + 100,
+    )
+
+    assert row["detail"]["termination"] == ANSWER
+    assert row["detail"]["repair_attempts"] == 0
+    assert row["detail"]["repair_blocked"] == PROMPT_CEILING
+    assert row["detail"]["validation_rule"] == MULTIPLE_STATEMENTS
+
+
+@pytest.mark.asyncio
+async def test_a_budget_stop_at_the_repair_boundary_skips_it_without_failing_the_task(
+    task, database_root, tmp_path
+) -> None:
+    """The trajectory already terminated on `answer` and the run paid for every turn of it.
+
+    Constraint 25 says a task that got an answer is complete, so failing it here would throw
+    away a paid trajectory over a request that was never made. Contrast
+    `test_the_budget_guard_fails_the_task_so_a_resume_retries_it`, where the guard crossed
+    *mid*-trajectory and the task genuinely never answered.
+    """
+    client = StubClient(("", [call("list_tables")]), MULTI, ANSWER_SQL)
+    _, row, _ = await run_one(client, task, database_root, tmp_path, token_ceiling=500)
+
+    assert row["status"] == COMPLETE
+    assert row["detail"]["termination"] == ANSWER
+    assert row["detail"]["repair_attempts"] == 0
+    assert row["detail"]["repair_blocked"] == BUDGET
+    assert row["detail"]["solved"] is False
+
+
+def test_a0_still_drops_extra_statements_rather_than_rejecting_them() -> None:
+    """**Constraint 48 checked rather than asserted.** 124 of 150 was taken with an extractor
+    that counts extra statements and keeps the first, and validation is A1's alone. A0 gaining
+    it would silently re-score a published result.
+    """
+    import query_pilot.agents.a0 as a0
+
+    assert "validate" not in a0.__dict__
+    assert extract_sql(MULTI).sql == "SELECT name FROM singer"
+    assert extract_sql(MULTI).dropped == 1
