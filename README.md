@@ -61,7 +61,20 @@ Read once, after everything else is finished.
 
 ## Status
 
-Phase 0 of 7. Nothing is measured yet.
+Phase 1 of 7. **Nothing is measured yet and no table above will have a number in it until
+Phase 2.**
+
+What exists is the infrastructure those measurements will run on: an async client over two
+providers and their quota pools, with token buckets keyed per pool per model, classified
+retry that distinguishes a limit clearing in seconds from one clearing at midnight, and
+spillover to another pool rather than waiting. On top of it, an append-only run ledger a
+killed run resumes from without repeating or skipping a task, and a budget guard that stops
+a run at a declared token or wall-clock ceiling and marks it incomplete — a summary derived
+from an incomplete run carries no derived number at all, only the word `TBD` and the reason
+it stopped.
+
+Provider limits, and which of them were measured against which were merely stated, are in
+[docs/PROVIDERS.md](docs/PROVIDERS.md).
 
 ## Development
 
