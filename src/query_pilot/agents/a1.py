@@ -55,14 +55,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-import threading
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
 from query_pilot.agents.a0 import ANSWER_RULES, MAX_OUTPUT_TOKENS, ROLE
-from query_pilot.agents.tools import TOOL_SCHEMAS, call_tool
+from query_pilot.agents.toolcaller import LocalTools, ToolCaller
+from query_pilot.agents.tools import TOOL_SCHEMAS
 from query_pilot.agents.transcript import TranscriptWriter
 from query_pilot.agents.validate import Validation, repair_request, validate_answer
 from query_pilot.client.client import Client
@@ -363,6 +363,7 @@ class A1:
         turn_limit: int = TURN_LIMIT,
         tool_call_limit: int = TOOL_CALL_LIMIT,
         prompt_ceiling_chars: int = PROMPT_CEILING_CHARS,
+        tools: ToolCaller | None = None,
     ) -> None:
         if turn_limit < 2:
             # One turn cannot both call a tool and answer, so a trajectory with fewer than
@@ -385,10 +386,25 @@ class A1:
         self.turn_limit = turn_limit
         self.tool_call_limit = tool_call_limit
         self.prompt_ceiling_chars = prompt_ceiling_chars
-        self._lock = threading.Lock()
+        # **3.5's seam, and the default side of it.** `LocalTools` calls the four functions
+        # in this process; `agents.mcp_tools.McpTools` speaks to the MCP server that wraps
+        # the same four. 3.6 runs the local one, and `agents/toolcaller.py` says why in full:
+        # the wire does not carry a tool result's execution record, and 3.4's recovery rate
+        # is computed out of exactly those fields.
+        self.tools = tools or LocalTools(self.sandbox)
 
     def close(self) -> None:
         """Remove the copies. A run that ends without this leaves a temporary directory."""
+        self.copies.close()
+
+    async def aclose(self) -> None:
+        """Remove the copies **and** release the tool caller, which may hold subprocesses.
+
+        Separate from :meth:`close` rather than replacing it, because a `ToolCaller` can only
+        be released from inside the event loop and a run's `finally` is not always in one.
+        `LocalTools` holds nothing, so the existing synchronous path stays correct for 3.6.
+        """
+        await self.tools.aclose()
         self.copies.close()
 
     async def __call__(self, context: TaskContext) -> TaskResult:
@@ -502,9 +518,9 @@ class A1:
             for call in completion.tool_calls:
                 if state.tool_calls >= self.tool_call_limit:
                     return state.stop(TOOL_CALL_LIMIT_REACHED)
-                self._run_tool(writer, database, messages, call, state)
+                await self._run_tool(writer, database, messages, call, state)
 
-    def _run_tool(
+    async def _run_tool(
         self,
         writer: TranscriptWriter,
         database: Path,
@@ -512,14 +528,15 @@ class A1:
         call: ToolCall,
         state: _State,
     ) -> None:
-        """One call, executed and answered. **Every error here goes back to the model.**"""
+        """One call, executed and answered. **Every error here goes back to the model.**
+
+        Where it is executed is :attr:`tools`' business and not this loop's — in-process by
+        default, over MCP when A1 was built with `McpTools`. What the loop needs is the same
+        either way: a :class:`ToolResult` it can append to the conversation and record.
+        """
         state.tool_calls += 1
         state.by_name[call.name] = state.by_name.get(call.name, 0) + 1
-        with self._lock:
-            # sqlite3 objects are not shared across threads here — the sandbox opens a
-            # connection per call — but the run may drive several tasks at once and the
-            # copies are shared under CopyScope.RUN.
-            result = call_tool(self.sandbox, database, call)
+        result = await self.tools.call(database, call)
         answer = Message(role="tool", content=result.content, tool_call_id=call.id, name=call.name)
         messages.append(answer)
         writer.message(answer, turn=state.turns)

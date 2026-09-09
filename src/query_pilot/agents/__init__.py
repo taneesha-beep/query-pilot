@@ -63,6 +63,7 @@ from query_pilot.agents.sql import (
     extract_sql,
     split_statements,
 )
+from query_pilot.agents.toolcaller import LocalTools, ToolCaller
 from query_pilot.agents.tools import (
     RESULT_ROWS,
     SAMPLE_ROWS_DEFAULT,
@@ -131,9 +132,11 @@ __all__ = [
     "Column",
     "Extraction",
     "ForeignKey",
+    "LocalTools",
     "Schema",
     "Table",
     "TaskMetrics",
+    "ToolCaller",
     "ToolResult",
     "Trajectory",
     "TranscriptWriter",
