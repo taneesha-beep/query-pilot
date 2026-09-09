@@ -1,0 +1,23 @@
+{"kind": "start", "seq": 1, "run_id": "20260101-000000-builtx", "task_id": "t-wasteful", "agent": "A1", "db_id": "db", "question": "q?", "limits": {"turn_limit": 14, "tool_call_limit": 12, "prompt_ceiling_chars": 22776}, "started_at": "2026-01-01T00:00:00+00:00"}
+{"kind": "message", "seq": 2, "turn": 0, "repair": false, "role": "system", "content": "sys", "tool_calls": [], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 3, "turn": 0, "repair": false, "role": "user", "content": "q?", "tool_calls": [], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 4, "turn": 1, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c1", "name": "list_tables", "arguments": {}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 5, "turn": 1, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c1", "name": "list_tables"}
+{"kind": "tool_result", "seq": 6, "turn": 1, "call_id": "c1", "name": "list_tables", "ok": true, "error": null, "rows_returned": null, "rows_shown": null, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 7, "turn": 2, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c2", "name": "describe_table", "arguments": {"table": "singer"}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 8, "turn": 2, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c2", "name": "describe_table"}
+{"kind": "tool_result", "seq": 9, "turn": 2, "call_id": "c2", "name": "describe_table", "ok": true, "error": null, "rows_returned": null, "rows_shown": null, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 10, "turn": 3, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c3", "name": "execute_sql", "arguments": {"sql": "SELECT name FROM singer"}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 11, "turn": 3, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c3", "name": "execute_sql"}
+{"kind": "tool_result", "seq": 12, "turn": 3, "call_id": "c3", "name": "execute_sql", "ok": true, "error": null, "rows_returned": 2, "rows_shown": 2, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 13, "turn": 4, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c4", "name": "describe_table", "arguments": {"table": "stadium"}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 14, "turn": 4, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c4", "name": "describe_table"}
+{"kind": "tool_result", "seq": 15, "turn": 4, "call_id": "c4", "name": "describe_table", "ok": true, "error": null, "rows_returned": null, "rows_shown": null, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 16, "turn": 5, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c5", "name": "sample_rows", "arguments": {"table": "stadium", "limit": 5}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 17, "turn": 5, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c5", "name": "sample_rows"}
+{"kind": "tool_result", "seq": 18, "turn": 5, "call_id": "c5", "name": "sample_rows", "ok": true, "error": null, "rows_returned": 5, "rows_shown": 5, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 19, "turn": 6, "repair": false, "role": "assistant", "content": "", "tool_calls": [{"id": "c6", "name": "execute_sql", "arguments": {"sql": "SELECT COUNT(*) FROM stadium"}}], "tool_call_id": null, "name": null}
+{"kind": "message", "seq": 20, "turn": 6, "repair": false, "role": "tool", "content": "r", "tool_calls": [], "tool_call_id": "c6", "name": "execute_sql"}
+{"kind": "tool_result", "seq": 21, "turn": 6, "call_id": "c6", "name": "execute_sql", "ok": true, "error": null, "rows_returned": 1, "rows_shown": 1, "truncated_by": null, "elapsed_s": 0.01}
+{"kind": "message", "seq": 22, "turn": 7, "repair": false, "role": "assistant", "content": "SELECT name FROM singer", "tool_calls": [], "tool_call_id": null, "name": null}
+{"kind": "end", "seq": 23, "outcome": "answer", "turns": 7, "tool_calls": 6, "repair_attempts": 0, "repair_succeeded": false, "repair_blocked": null, "ended_at": "2026-01-01T00:00:00+00:00"}

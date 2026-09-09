@@ -37,6 +37,13 @@ from query_pilot.agents.a1 import (
     Trajectory,
     conversation_chars,
 )
+from query_pilot.agents.metrics import (
+    METRICS_NAME,
+    TaskMetrics,
+    compute,
+    read_task_metrics,
+    write_metrics,
+)
 from query_pilot.agents.results import RESULTS_NAME, project, write_results
 from query_pilot.agents.schema import (
     Column,
@@ -93,6 +100,7 @@ __all__ = [
     "ANSWER_RULES",
     "BUDGET",
     "MAX_OUTPUT_TOKENS",
+    "METRICS_NAME",
     "MULTIPLE_STATEMENTS",
     "NOT_A_QUERY",
     "NO_SQL_FOUND",
@@ -125,6 +133,7 @@ __all__ = [
     "ForeignKey",
     "Schema",
     "Table",
+    "TaskMetrics",
     "ToolResult",
     "Trajectory",
     "TranscriptWriter",
@@ -132,12 +141,14 @@ __all__ = [
     "blank_literals",
     "build_prompt",
     "call_tool",
+    "compute",
     "conversation_chars",
     "extract_sql",
     "project",
     "read_schema",
     "read_table",
     "read_table_names",
+    "read_task_metrics",
     "read_trajectories",
     "read_transcript",
     "render_schema",
@@ -147,5 +158,6 @@ __all__ = [
     "split_statements",
     "transcript_path",
     "validate_answer",
+    "write_metrics",
     "write_results",
 ]
