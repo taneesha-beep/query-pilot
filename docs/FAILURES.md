@@ -150,10 +150,28 @@ be read, and every figure derived from it: as a floor, with 26 failures of which
 `wrong table or column`, `wrong value literal` and `wrong aggregation` — are the model
 getting the data wrong.
 
-**The consequence for Phase 3.** A1 will be measured against A0 on this same working set,
-and both are scored by the same rule against the same references. A defect in a reference
-costs both agents the same task, so the A0-against-A1 *difference* is unaffected by all
-nine. It is the absolute figures that are floors.
+**The consequence for Phase 3 — and this paragraph was wrong, corrected 2026-09-10 after
+3.6 measured A1.** It said: *a defect in a reference costs both agents the same task, so the
+A0-against-A1 difference is unaffected by all nine.* **The first half does not hold in
+general, and A1's run produced the counter-example.**
+
+A defect costs both agents the same task only where both agents answer the same way. Where
+the defect makes the **reference return no rows**, an agent that can inspect the data may
+decline to return nothing — and then the same defect costs one agent and rewards the other.
+Measured on `dev-0186`, `flight_2`: the stored city is `'Anthony '` with a trailing space, so
+`City = "Anthony"` returns nothing. **A0 wrote that query, returned nothing, matched the
+reference's nothing and scored a solve. A1 found the trailing space, disbelieved the empty
+result, and ran out of tool calls before committing to an answer — `no_sql`, task lost.**
+Across the split: 7 of these 150 reference queries return no rows, **A0 solved 7 of 7 and A1
+solved 2 of 7**, which is five of the eight tasks separating them.
+
+**What still holds** is the part that matters for the absolute figures: the nine references
+identified above are defects, execution accuracy in this project is a lower bound, and no
+task's verdict was moved on any of it. What does **not** hold is the claim that a defective
+reference is neutral between two agents. It is neutral only between agents with the same
+visibility into the data, and giving A1 tools is precisely the difference in visibility.
+[`docs/RESULTS.md`](RESULTS.md) reads the whole comparison. It is the absolute figures that
+are floors, and the *difference* between them carries this correction with it.
 
 ---
 

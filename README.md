@@ -19,31 +19,48 @@ it does not appear in this table.
 | Agent | Execution accuracy | Tokens per solved task | Provider | Model | Date | Ledger |
 |---|---|---|---|---|---|---|
 | A0 single-shot | **124 / 150 — 82.6667%** | 860.8 | Groq | `openai/gpt-oss-120b` | 2026-09-08 | `runs/20260908-133316-faecd5/ledger.jsonl` |
-| A1 agent | TBD | TBD | TBD | TBD | TBD | TBD |
+| A1 agent | **116 / 150 — 77.3333%** | 6,646.8 | Groq | `openai/gpt-oss-120b` | 2026-09-10 | `runs/20260910-024454-1f69bc/ledger.jsonl` |
 | A2 cascade | TBD | TBD | TBD | TBD | TBD | TBD |
 
 **A query returning nothing scores 7 of 150 — 4.6667% — of this working set for free**,
 because that many of its reference queries return no rows. That floor belongs beside the
-accuracy figure above it rather than in a footnote. Total cost of the A0 run: 106,740
-tokens and **$0.00** — both providers are free tiers, so the cost that matters is quota.
-Full write-up in [docs/RESULTS.md](docs/RESULTS.md), machine-readable in
-[results/a0-working.json](results/a0-working.json).
+accuracy figure above it rather than in a footnote, and here it does real work: **A0
+collected all 7 of those tasks and A1 collected 2**, which is five of the eight tasks
+between them.
+
+**The loop lost, and it is reported that way.** A1 solved 8 fewer tasks than A0 and spent
+**664,288 more tokens — 7.22×** — to do it, so there is no cost per additional solved task
+because there are no additional solved tasks. The likeliest reason is the one this project
+wrote down before measuring: **Spider's schemas fit in a prompt** — 4.5 tables and about
+1,048 characters of DDL for the average working-set task — so discovery buys little and
+costs a great deal. Excluding the seven free tasks the gap is three rather than eight.
+**The two tasks A1 won are exactly the two [docs/FAILURES.md](docs/FAILURES.md) predicted
+tools would win**, both of them A0 writing a literal that does not match the stored
+spelling. Total cost: A0 106,740 tokens, A1 771,028, **$0.00 each** — both providers are
+free tiers, so the cost that matters is quota.
+
+Full write-up and the comparison table in [docs/RESULTS.md](docs/RESULTS.md),
+machine-readable in [results/a0-working.json](results/a0-working.json),
+[results/a1-working.json](results/a1-working.json) and
+[results/a1-trajectory-metrics.json](results/a1-trajectory-metrics.json).
 
 ### Execution accuracy by difficulty
 
 | Agent | easy | medium | hard | extra | Denominators |
 |---|---|---|---|---|---|
 | A0 single-shot | 91.6667% | 81.5385% | 76.0000% | 79.1667% | 36 / 65 / 25 / 24 |
-| A1 agent | TBD | TBD | TBD | TBD | TBD |
+| A1 agent | 83.3333% | 75.3846% | 76.0000% | 75.0000% | 36 / 65 / 25 / 24 |
 
 ### Trajectory
 
 | Measure | A1 |
 |---|---|
-| Tool calls per task (mean / median / p90) | TBD |
-| Turns to solve | TBD |
-| Recovery rate | TBD |
-| Wasted-call rate | TBD |
+| Tool calls per task (mean / median / p90) | 4.3467 / 4 / 7, over 150 |
+| Turns to solve (mean / median / p90) | 4.819 / 5 / 6, over the 116 solved |
+| **Recovery rate — first `execute_sql` errored** | **TBD over a denominator of 0** |
+| Recovery rate — first `execute_sql` empty | 1 of 6 — 16.6667% |
+| Wasted-call rate | 17 of 556 — 3.0576%, over 142 trajectories |
+| Repairs attempted / succeeded | 1 / 1 |
 
 A0 has no row here. A single-shot agent has no tool calls, no turns and no recovery, which
 is the point of measuring them.
@@ -68,18 +85,16 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1 and 2 are complete; Phase 3 is one item from finished.** A0 exists, has been
-measured over the whole working set, and every one of its failures has been read by hand.
-**A1 now exists in full — four tools, the agent loop, output validation with one repair, the
-four trajectory metrics and an MCP server — but it has not been measured**, so every row
-above that names it still reads `TBD` and will until 3.6 runs it over the same 150 tasks. No
-number in this README comes from anything but a committed ledger.
+**Phases 1, 2 and 3 are complete.** Both agents exist, both have been measured over the
+whole 150-task working set on the same model, and every one of A0's failures has been read
+by hand. Phase 4 — the five controls, the attack corpus, and compliance and containment — is
+next. No number in this README comes from anything but a committed ledger.
 
-A1 has been driven end to end against a real provider once, as an acceptance run on the
-15-task smoke set: five tasks, 28 requests, five complete and none failed. **No figure from
-it is a result and none is reported here** — it is recorded in
-[docs/PROVIDERS.md](docs/PROVIDERS.md) as behaviour, and its transcripts are committed as
-test fixtures.
+**A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
+sessions and one Groq daily quota wall. That is reported here the way it landed rather than
+defended: the roadmap named the likely reason in advance and it is the right one, and what
+A1 demonstrably has that A0 cannot — the ability to read the data before answering — is
+worth two tasks on this substrate and is the thing Phase 4 measures under attack.
 
 **What A1 is, and what is deliberately held constant.** It is given no schema: it discovers
 one with `list_tables`, `describe_table`, `sample_rows` and `execute_sql`, each with an

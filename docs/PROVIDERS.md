@@ -50,7 +50,7 @@ does not stretch. See the pair section below.
 | Provider | Model | RPM documented | RPM observed | RPD documented | RPD observed | TPM documented | TPM observed | TPD documented | TPD observed |
 |---|---|---|---|---|---|---|---|---|---|
 | groq | `openai/gpt-oss-20b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
-| groq | `openai/gpt-oss-120b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
+| groq | `openai/gpt-oss-120b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | **200,000** |
 | groq | `qwen/qwen3.8-27b` | 30 | not probed | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
 | google-ai-studio | `gemini-3.5-flash-lite` | not published | **15** | not published | TBD | not published | TBD | not published | TBD |
 | google-ai-studio | `gemini-3.8-flash` | not published | **5** | not published | **20** | not published | TBD | not published | TBD |
@@ -96,13 +96,34 @@ day's tokens, which costs the day. These fill in opportunistically from Phase 2'
 ledgers, where a full working-set run consumes real quota and the ledger records what
 happened when it ran out. Deliberate, not an oversight.
 
-**Phase 2's full run has now happened, and it did not reach the ceiling — so TPD stays
-TBD.** What it establishes instead is a floor under Groq's real daily allowance for
-`openai/gpt-oss-120b`: **106,740 tokens across 150 requests in one 12.3-minute session, with
-zero 429s and zero quota walls**, on 2026-09-08, run `20260908-133316-faecd5`, ledger
-`runs/20260908-133316-faecd5/ledger.jsonl`. That is roughly half the published 200,000 and
-the published figure survived contact with it. A0 is the cheapest agent this project will
-run; A1's loop is what may yet find the ceiling.
+**Phase 2's full run did not reach the ceiling.** It established a floor instead:
+**106,740 tokens across 150 requests in one 12.3-minute session, with zero 429s and zero
+quota walls**, on 2026-09-08, run `20260908-133316-faecd5`.
+
+**Phase 3.6's run found it, and the TPD column is no longer TBD.** A1's measured run spent
+**771,028 tokens across 827 requests** on 2026-09-10, run `20260910-024454-1f69bc`, ledger
+`runs/20260910-024454-1f69bc/ledger.jsonl` — and Groq refused, naming the quota itself:
+
+> `on tokens per day (TPD): Limit 200000, Used 199125, Requested 1314`
+
+Recorded at `2026-09-10T03:54:20Z` in `runs/quota-walls.jsonl`, `scope: day`, which shut the
+pool. **The published 200,000 is the enforced figure**, and the observed column now says so
+on the strength of the provider's own 429 body rather than of a document.
+
+**What the run did NOT establish is the window that counter runs over, and that is written
+`TBD` rather than guessed.** By the time Groq said `Used 199125`, the run had spent 399,757
+tokens in total — so its counter is plainly not cumulative from the start of a run, and the
+retry hints on those refusals were 3m9s and 46s rather than hours, which is the shape of a
+bucket that refills continuously rather than resetting on a boundary. This project's own
+`TokenBucket` already models Groq that way, on the requests-per-day evidence recorded above.
+Determining the exact window would cost another day of capacity and buys nothing yet.
+
+**One caution for anyone reading a resumed run's spend.** The client's quota buckets are
+**per process**: a new session starts them full, so the modelled daily ceiling bounds a
+session rather than a day, and a chained run can spend past it before the provider's own
+counter objects. That is safe because the bucket is only a guess and the 429 is the
+authority — which is exactly what happened here, twice — but it is why 3.6's six sessions
+spent 771,028 tokens against a modelled 200,000 a day.
 
 ## Credential pools
 
@@ -128,6 +149,24 @@ The convention, which Phase 1's registry implements: `<PROVIDER>_API_KEY` plus o
 `_2`, `_3`, … and **each suffixed credential is its own quota pool with its own token
 bucket**, never a fallback credential for the same pool. Two Google projects means two
 buckets of 15 RPM, not one bucket of 30.
+
+**Groq has two pools as of 2026-09-10**, `GROQ_API_KEY` and `GROQ_API_KEY_2`, the second from
+a separate Groq account. Its independence was established by the same probe shape and with
+the same control step, because pool two answering means nothing without proof that pool one
+was refusing at that moment:
+
+| Step | Result |
+|---|---|
+| 40 concurrent requests on `GROQ_API_KEY` | **30 × 200, 10 × 429** — saturated at the observed 30 RPM |
+| 1 control request on `GROQ_API_KEY`, immediately after | **429 — still refusing**, org `org_01knx5npqkfc19q5jefzfvdfv5` |
+| 1 request on `GROQ_API_KEY_2`, inside that window | **200** |
+
+**Independent.** And Groq's own refusals name the **organization** as the unit they enforce
+against — every 429 body above and every quota wall in `runs/quota-walls.jsonl` carries it —
+so a pool answering while another organization is refusing is a different organization, and
+therefore a different daily token counter as well as a different per-minute one. 3.6's run
+used both: **439 attempts on `groq#1`, 388 on `groq#2`**, one pinned model string throughout,
+and every ledger attempt row records which pool served it.
 
 ## The pair
 
@@ -172,10 +211,16 @@ of the work moves to Google and Groq becomes the spillover.
 ## The run budget
 
 **Daily capacity, with each figure's evidence named.** Groq: three usable models × 1,000
-requests and 200,000 tokens each — **3,000 requests and 600,000 tokens per day**. The 1,000
-is header-stated and the per-model split is evidenced by the two counters above; **the
-200,000 is Groq's published figure and has never been reached here**, so the token half of
-that total is documented arithmetic rather than a measurement.
+requests and 200,000 tokens each — **3,000 requests and 600,000 tokens per day**, per
+account. The 1,000 is header-stated and the per-model split is evidenced by the two counters
+above; **the 200,000 was Groq's published figure and is now observed** — 3.6's run was
+refused with `TPD: Limit 200000` on 2026-09-10, recorded above.
+
+**Two cautions on that 600,000, both of which bit in 3.6.** It is three models *added
+together*, so **a run that uses one role uses one model and has 200,000, not 600,000** — A1
+uses `strong` only. And it is **per account**: since 2026-09-10 this project has two
+independent Groq pools, so the figure doubles across pools while each pool's own ceiling
+stays where it is.
 
 Google: two independent project pools. Pool one serves `gemini-3.5-flash-lite` at 15 RPM,
 observed. **"30 RPM combined" is an inference, not a measurement** — pool two was never
@@ -312,10 +357,12 @@ recovery behaviour a first-call rule cannot see was already visible at five task
 `agents/metrics.py` reports `trajectories_with_any_execute_sql_error` and `..._empty` as
 counts beside the rates for exactly this reason.
 
-**5,284 tokens a task against A0's 712 is 7.4x**, which projects a 150-task A1 run at roughly
-**790,000 tokens** — inside `config/runs/working-set.toml`'s declared ceiling of 1,500,000,
-with room. That projection is arithmetic over five tasks and is **not a measurement**; 3.6
-replaces it. What it does settle is that the run is affordable at concurrency 1, which
+**5,284 tokens a task against A0's 712 is 7.4x**, which projected a 150-task A1 run at
+roughly **790,000 tokens**. That projection was arithmetic over five tasks and not a
+measurement. **3.6 has now replaced it: 771,028 tokens over 150 tasks — 5,140.2 a task, 7.22x
+A0's — run `20260910-024454-1f69bc`, 2026-09-10.** The five-task projection was within 2.5%
+of the measured total, which is luck rather than method and is recorded because the next
+projection of this kind should not be trusted any further for it. What it does settle is that the run is affordable at concurrency 1, which
 constraint 46 requires anyway: A1's worst single attempt is 8,000 tokens, the strong
 endpoint's entire per-minute budget.
 
