@@ -35,6 +35,7 @@ from query_pilot.sandbox import (
     database_path,
     encoded_size,
     result_size,
+    single_read_only_statement,
 )
 
 CAPS_REPORT = Path(__file__).resolve().parent.parent / "docs" / "sandbox-caps.json"
@@ -191,6 +192,114 @@ def test_a_read_still_works(singer: Path) -> None:
     assert result.rows == (("Tribal King", 25), ("Joe", 30), ("Rose", 41))
     assert not result.truncated
     assert result.result_bytes == result_size(result.rows)
+
+
+# --- the five controls of 4.1, one named test each ---------------------------------------
+#
+# These five are the acceptance tests Phase 4.1 owes: one per control, named after the
+# control it proves. The finer-grained tests around them (the `mode=ro`/`query_only` split,
+# the two forms of runaway, the cap arithmetic) stay because they prove *why* each control is
+# shaped the way it is; these five prove *that* each one fires.
+
+
+def test_control_read_only_connection_rejects_a_write(singer: Path) -> None:
+    """#1 — a write is refused at the connection, and the database is left unchanged."""
+    before = singer.read_bytes()
+    result = Sandbox().execute(singer, "DELETE FROM singer")
+
+    assert not result.ok
+    assert "readonly" in (result.error or "")
+    assert singer.read_bytes() == before
+
+
+def test_control_statement_timeout_interrupts_a_slow_query(wide: Path) -> None:
+    """#2 — a query that will not finish is stopped by the deadline, not left to run."""
+    result = Sandbox(timeout_s=0.25).execute(wide, INFINITE_CTE)
+
+    assert not result.ok
+    assert result.timed_out
+    assert result.error == "statement timed out"
+
+
+def test_control_caps_truncate_and_flag_a_large_result(wide: Path) -> None:
+    """#3 — a result past the cap comes back truncated and says so, never silently short."""
+    result = Sandbox(row_cap=10).execute(wide, "SELECT n FROM wide")
+
+    assert result.ok
+    assert result.truncated
+    assert result.truncated_by == TRUNCATED_BY_ROWS
+    assert len(result.rows) == 10
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "DROP TABLE singer",
+        "DELETE FROM singer",
+        "UPDATE singer SET age = 0",
+        "INSERT INTO singer VALUES ('x', 1, 'y')",
+        "ALTER TABLE singer ADD COLUMN planted TEXT",
+        "ATTACH DATABASE 'elsewhere.db' AS other",
+        "PRAGMA writable_schema = ON",
+    ],
+)
+def test_control_ddl_dml_is_rejected_before_execution(statement: str) -> None:
+    """#4 — DDL, DML, PRAGMA and ATTACH are refused before a connection is opened.
+
+    Proven "before execution" by pointing the guard at a database that does not exist: a
+    statement that reached execution would fail on the missing file with "unable to open
+    database file", and the guard's own reason is what comes back instead.
+    """
+    missing = Path("/nonexistent/does-not-exist.sqlite")
+    result = Sandbox().execute_guarded(missing, statement)
+
+    assert not result.ok
+    assert "not a read-only query" in (result.error or "")
+    assert "unable to open" not in (result.error or "")
+
+
+def test_control_multi_statement_is_rejected(singer: Path) -> None:
+    """#5 — a `;`-separated batch is refused as one unit, before execution.
+
+    The same missing-database proof of timing: the guard answers before the file is touched,
+    and its message names the one-statement rule rather than the driver's own mid-batch
+    error. `execute` alone would also refuse this (SQLite raises "one statement at a time"),
+    but only after opening the connection and only for a caller that reached `execute`.
+    """
+    missing = Path("/nonexistent/does-not-exist.sqlite")
+    result = Sandbox().execute_guarded(missing, "SELECT 1; DROP TABLE singer")
+
+    assert not result.ok
+    assert "one statement" in (result.error or "")
+    assert "unable to open" not in (result.error or "")
+
+
+def test_the_guard_admits_the_reads_the_tools_actually_make(singer: Path) -> None:
+    """The guard's whitelist must not refuse a legitimate query, or it moves the number.
+
+    A plain SELECT, a compound query behind parentheses, and a CTE all open a read-only
+    query and must be admitted; a semicolon inside a literal is a value, not a separator.
+    This is the false-rejection direction of controls 4 and 5 — the one that would silently
+    cost A1 a solved task if it were wrong.
+
+    **Admitting a statement is not the same as SQLite running it.** The guard's job is the
+    shape; `(SELECT ...) UNION (SELECT ...)` is a shape SQLite's own grammar happens to
+    reject, and `agents.validate` admits it for the same reason — the sandbox then reports a
+    `candidate_error`, which is the honest outcome and not the guard's to pre-empt. So the
+    whitelist is checked on every form, and execution only on the forms SQLite parses.
+    """
+    admitted = [
+        "SELECT name FROM singer",
+        "(SELECT name FROM singer) UNION (SELECT country FROM singer)",
+        "WITH ages AS (SELECT age FROM singer) SELECT max(age) FROM ages",
+        "SELECT 'a; b' AS literal",
+    ]
+    for sql in admitted:
+        assert single_read_only_statement(sql) is None, sql
+
+    runnable = [sql for sql in admitted if "UNION" not in sql]
+    for sql in runnable:
+        assert Sandbox().execute_guarded(singer, sql).ok, sql
 
 
 # --- the statement deadline -----------------------------------------------------------------

@@ -12,23 +12,41 @@ which are general infrastructure with no knowledge of SQL, and it does not impor
 the measurement instrument to the executor would give the rule an opinion about execution,
 which is the thing 2.1 was written before 2.2 to avoid.
 
-**This is not the statement filter.** Phase 4.1's five controls include rejecting DDL, DML
-and multi-statement input *before* execution. Those sit above this module and are a
-different layer: what is here is what the connection itself enforces, which holds even
-against a statement no filter anticipated.
+**The five controls of Phase 4.1 live here**, and they fall into two groups that reach a
+statement at different moments.
 
-Four controls, and the fourth is not in the roadmap's list because it was found by
-measuring rather than by reading:
+*What the connection enforces, against any statement that runs:*
 
-1. **Read-only** — `file:...?mode=ro`. A write raises rather than happening.
-2. **`PRAGMA query_only = ON`** — because `mode=ro` binds the *main* database and nothing
-   else. A `mode=ro` connection will happily `ATTACH` a second file and write into it;
-   measured on SQLite 3.53.1, 2026-09-08. `query_only` is what closes that, and the copy
-   does not.
-3. **A statement deadline**, checked from a progress handler.
-4. **A row cap and a byte cap**, applied as rows arrive.
+1. **Read-only** — `file:...?mode=ro`, so a write to the main database raises rather than
+   happening, **and `PRAGMA query_only = ON`**, because `mode=ro` binds the *main* database
+   and nothing else. A `mode=ro` connection will happily `ATTACH` a second file and write
+   into it; measured on SQLite 3.53.1, 2026-09-08, and `query_only` is what closes that. The
+   roadmap counts these as one control — "a write is refused" — with two mechanisms.
+2. **A statement deadline**, checked from a progress handler.
+3. **A row cap and a byte cap**, applied as rows arrive.
 
-And the copy underneath all four, so that a bug in any of them still cannot reach
+*What :func:`single_read_only_statement` refuses before a connection is even opened:*
+
+4. **DDL, DML, PRAGMA and ATTACH** — anything whose one statement does not open with
+   `SELECT` or `WITH`. Read-only refuses a *write*, but `ATTACH` is not a write and neither
+   is `PRAGMA`: through a read-only connection `ATTACH DATABASE '<new file>'` succeeds and
+   creates the file, and `PRAGMA writable_schema = ON` returns cleanly — both measured on
+   SQLite 3.53.1, 2026-09-10. A whitelist opening — the direction `agents.validate` already
+   takes for A1's answer — is what closes those before they run.
+5. **Multi-statement input** — a `;`-separated batch is refused as one unit rather than
+   left to the driver to raise part-way through.
+
+Controls 4 and 5 are applied through :meth:`Sandbox.execute_guarded`, and **only to the
+untrusted execution surface**: A1's ``execute_sql`` tool and the MCP server route through
+it, while this project's own schema introspection — which legitimately issues
+``PRAGMA table_info`` through :meth:`Sandbox.execute` — does not. Which caller is trusted is
+a question only the agent layer can answer, so the *rule* lives here (standard library only,
+no knowledge of `agents` or `equivalence`, so the layering the rest of this module keeps is
+intact) and the *wiring* lives in `agents.tools`. This is the second of the two layers 4.1
+tests: `agents.validate` refuses A1's *final answer* with a repair, and this refuses *every*
+statement the tool surface runs — the one that holds when the caller is not A1.
+
+And the copy underneath all five, so that a bug in any of them still cannot reach
 `data/spider`.
 """
 
@@ -62,6 +80,7 @@ __all__ = [
     "encoded_size",
     "has_statement",
     "result_size",
+    "single_read_only_statement",
 ]
 
 #: The most rows a query may return before the rest are dropped and the result is marked
@@ -148,6 +167,82 @@ def has_statement(sql: str) -> bool:
     statement are permitted, and this only answers whether there is one at all.
     """
     return bool(_LITERAL_OR_COMMENT.sub(lambda m: "" if m.group(1) else " ", sql).strip())
+
+
+#: The only keywords a guarded statement may open with. A whitelist, which is the one
+#: defensible direction: a blocklist of forbidden openings is a list with a hole in it, and
+#: the hole is found by the thing it was guarding against. The same two `agents.validate`
+#: admits for A1's final answer, kept as a separate literal here rather than imported —
+#: `agents` imports `sandbox`, so the reverse would be a cycle, and this module holds its own
+#: small scanners for its own questions by long-standing choice.
+_READ_ONLY_OPENINGS: Final = ("SELECT", "WITH")
+
+#: The first bare word of a statement, once literals and comments are blanked and any opening
+#: parentheses of a compound query are stepped over.
+_FIRST_WORD = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
+
+
+def _blank_out(sql: str) -> str:
+    """Literals, quoted identifiers and comments replaced by **equal-length** runs of spaces.
+
+    Length is preserved so that an offset into the result indexes the original, which is what
+    lets :func:`single_read_only_statement` cut the original text at a separator it located in
+    the blanked text. :func:`has_statement` blanks the same regions for a different question
+    and does not need the offsets, so it keeps its own shorter transform.
+    """
+    return _LITERAL_OR_COMMENT.sub(lambda m: " " * (m.end() - m.start()), sql)
+
+
+def _opening_keyword(sql: str) -> str:
+    """The keyword a statement opens with, or ``""`` if it opens with nothing word-shaped."""
+    blanked = _blank_out(sql).lstrip().lstrip("(").lstrip()
+    match = _FIRST_WORD.match(blanked)
+    return match.group(0).upper() if match else ""
+
+
+def single_read_only_statement(sql: str) -> str | None:
+    """Why this is not one read-only statement, or ``None`` if it is.
+
+    Controls 4 and 5 of Phase 4.1, decided before a connection is opened. Semicolons are
+    counted at parenthesis depth zero and outside literals, so a `;` inside `'a;b'` or inside
+    `(SELECT ...; )` — there is no such thing, but the scanner does not assume it — is not a
+    separator; the opening keyword is read after literals and comments are blanked, so a
+    statement led by a comment is judged by what follows it.
+
+    **Empty or comment-only input returns ``None``, not a reason**, leaving
+    :meth:`Sandbox.execute` to report "no statement to execute" (the behaviour 49 of the
+    frame's references depend on not being a silent empty result). This function's job is the
+    two shape controls; it does not duplicate that one.
+    """
+    blanked = _blank_out(sql)
+    depth = 0
+    start = 0
+    bounds: list[tuple[int, int]] = []
+    for index, char in enumerate(blanked):
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth = max(depth - 1, 0)
+        elif char == ";" and depth <= 0:
+            bounds.append((start, index))
+            start = index + 1
+    bounds.append((start, len(blanked)))
+
+    statements = [sql[begin:end] for begin, end in bounds if has_statement(sql[begin:end])]
+    if not statements:
+        return None
+    if len(statements) > 1:
+        return (
+            f"the input holds {len(statements)} statements, and only one statement "
+            "may run at a time"
+        )
+    opening = _opening_keyword(statements[0])
+    if opening not in _READ_ONLY_OPENINGS:
+        return (
+            f"a statement opening with {opening or '(no keyword)'} is not a read-only query; "
+            f"only {' and '.join(_READ_ONLY_OPENINGS)} may run"
+        )
+    return None
 
 
 def encoded_size(value: Any) -> int:
@@ -316,6 +411,23 @@ class Sandbox:
             result_bytes=total,
             elapsed_s=time.perf_counter() - started,
         )
+
+    def execute_guarded(self, database: Path | str, sql: str) -> SandboxResult:
+        """:meth:`execute`, with controls 4 and 5 applied first.
+
+        The route the **untrusted** surface takes — A1's ``execute_sql`` tool and the MCP
+        server — while trusted schema introspection stays on :meth:`execute`. A rejection
+        returns a :class:`SandboxResult` with ``error`` set and **no connection opened at
+        all**, which is exactly what "before execution" means: the statement never reaches
+        the read-only connection that would otherwise refuse a write part-way through, and
+        never reaches SQLite's own multi-statement error. A test proves the timing by
+        pointing this at a database that does not exist — a refused statement comes back with
+        the guard's reason, where one that reached execution would fail on the missing file.
+        """
+        reason = single_read_only_statement(sql)
+        if reason is not None:
+            return SandboxResult(error=reason)
+        return self.execute(database, sql)
 
 
 # --- the copy underneath -------------------------------------------------------------------

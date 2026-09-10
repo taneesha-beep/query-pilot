@@ -383,6 +383,14 @@ def execute_sql(sandbox: Sandbox, database: Path | str, arguments: Mapping[str, 
     a query that runs here runs identically when A1's final answer is scored, and a query
     the sandbox refuses is refused for both agents for the same reason.
 
+    **This is the untrusted surface, so it goes through the sandbox's guarded path**,
+    :meth:`~query_pilot.sandbox.Sandbox.execute_guarded`. Phase 4.1's controls 4 and 5 — no
+    DDL, DML, PRAGMA or ATTACH, and no `;`-separated batch —
+    fire here before a connection is opened, which is what stops a planted `DROP TABLE` or
+    `ATTACH` before it runs rather than relying on the read-only connection to refuse the
+    write. Trusted introspection (`schema.py`, ``list_tables``'s row counts) legitimately
+    issues ``PRAGMA`` and stays on the unguarded :meth:`~query_pilot.sandbox.Sandbox.execute`.
+
     An error is returned rather than raised, which is the point of the tool: a model that
     writes ``no such column: nmae``, sees that, and fixes it is the loop doing the one
     thing A0 structurally cannot. 3.4's recovery rate is counted out of exactly these.
@@ -392,7 +400,7 @@ def execute_sql(sandbox: Sandbox, database: Path | str, arguments: Mapping[str, 
     except _BadArgument as exc:
         return ToolResult.failed(str(exc))
 
-    result = sandbox.execute(database, sql)
+    result = sandbox.execute_guarded(database, sql)
     if not result.ok:
         return ToolResult.failed(result.error or "the statement did not run")
     content = render_rows(
