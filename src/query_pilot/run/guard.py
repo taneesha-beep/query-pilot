@@ -40,6 +40,7 @@ because tokens per task is not measured until 2.4 and will not be guessed at her
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -137,3 +138,51 @@ class BudgetGuard:
         """Record the first reason the run stopped. Later ones do not overwrite it."""
         if self.stopped is None:
             self.stopped = reason
+
+
+class RequestCeiling:
+    """A client wrapper that counts requests and stops the **run** at a ceiling.
+
+    **A unit no run declaration carries, and deliberately so.** A run declares tokens and
+    wall clock because those are what a budget is spent in. Requests are what a free tier
+    *refuses* in, and for an agent whose cost is not one request a task — A1 makes anywhere
+    between one and ``TURN_LIMIT + REPAIR_LIMIT`` of them — a request count is the only
+    bound whose worst case can be stated before the run starts. Putting it in the run config
+    would make it part of the fingerprint and therefore inherited across resumes, which is
+    the opposite of what it is for: this is a **per-session** backstop, reset every time,
+    and it is how a long run is spent in reviewable stages.
+
+    **Wrapping rather than extending, and stopping the run rather than raising, are both
+    deliberate.** Raising would fail one task and let the next one start, which is the
+    opposite of a ceiling. Calling :meth:`BudgetGuard.stop` puts the run down the path it
+    already has for a person deciding to stop it: the agent sees it at the next turn
+    boundary, tasks that never started are recorded unrun rather than failed, and a resume
+    picks them up exactly where this session left off.
+
+    It counts every request it is asked to make, including the one that reaches the ceiling
+    — that request is still sent, because refusing it would leave a turn recorded in the
+    transcript with no answer beside it in the ledger.
+    """
+
+    def __init__(
+        self,
+        client: object,
+        guard: BudgetGuard,
+        ceiling: int,
+        *,
+        on_ceiling: Callable[[int], None] | None = None,
+    ) -> None:
+        self.client = client
+        self.guard = guard
+        self.ceiling = ceiling
+        self.requests = 0
+        # Saying so is a script's job, not a library's. The run report records it either way.
+        self._on_ceiling = on_ceiling
+
+    async def complete(self, *args: object, **kwargs: object) -> object:
+        self.requests += 1
+        if self.requests >= self.ceiling:
+            if self.requests == self.ceiling and self._on_ceiling is not None:
+                self._on_ceiling(self.ceiling)
+            self.guard.stop(IncompleteReason.OPERATOR)
+        return await self.client.complete(*args, **kwargs)  # type: ignore[attr-defined]

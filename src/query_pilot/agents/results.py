@@ -38,10 +38,7 @@ from typing import Any
 
 from query_pilot.run.ledger import COMPLETE, LEDGER_NAME, OK, read_rows
 
-__all__ = ["RESULTS_NAME", "project", "write_results"]
-
-#: Where 2.4's projection is written. Committed, unlike the ledger it comes from.
-RESULTS_NAME = "a0-working.json"
+__all__ = ["project", "results_name", "write_results"]
 
 #: This project's placeholder. A figure that could not be computed says so.
 TBD = "TBD"
@@ -69,6 +66,22 @@ _CARRIED = (
     "candidate_truncated_by",
     "candidate_timed_out",
     "reference_rows",
+    # A1's own. Absent from an A0 row, which is why every key here is copied only when the
+    # detail holds it: one projection serves both agents and neither is asked to carry the
+    # other's fields. `validation_rule` is here because `no_sql` means two different things
+    # for A1 -- no statement in the answer, or a reply the 3.3 validator rejected -- and a
+    # committed file that dropped it would leave nothing to group those apart by.
+    "termination",
+    "turns",
+    "tool_calls",
+    "tool_calls_by_name",
+    "turn_limit",
+    "tool_call_limit",
+    "repair_attempts",
+    "repair_succeeded",
+    "repair_blocked",
+    "validation_rule",
+    "transcript",
 )
 
 
@@ -183,6 +196,13 @@ def project(
     )
 
     reasons = Counter(str(r.get("reason")) for r in complete)
+    # Two aggregates that only an agent with a trajectory can produce. Emitted only when
+    # something produced them, so a single-shot run's projection is unchanged by their
+    # existence rather than carrying two empty mappings that mean nothing about it.
+    terminations = Counter(str(r["termination"]) for r in complete if r.get("termination"))
+    validation_rules = Counter(
+        str(r["validation_rule"]) for r in complete if r.get("validation_rule")
+    )
     document: dict[str, Any] = {
         "measurement": {
             "agent": agent,
@@ -240,6 +260,14 @@ def project(
         "tasks": ordered,
     }
 
+    if terminations:
+        document["terminations"] = dict(terminations.most_common())
+    if validation_rules:
+        # Which of 3.3's three rules rejected a reply. `no_sql` is the equivalence rule's
+        # verdict on all of them and never says which, by design: no ninth slug was added
+        # underneath a committed result. This is where the distinction lives instead.
+        document["validation_rules"] = dict(validation_rules.most_common())
+
     if difficulty is not None:
         by_difficulty: dict[str, dict[str, Any]] = {}
         for record in complete:
@@ -254,11 +282,35 @@ def project(
     return document
 
 
+def results_name(document: Mapping[str, Any]) -> str:
+    """What a projection is called, read off the projection itself.
+
+    ``a0-working.json``, ``a1-working.json``. The agent and the split are the two things
+    that make one committed result a different measurement from another, and both are
+    already inside the document because they were declared before the run started.
+
+    It is derived rather than passed in for the reason the whole module is agent-agnostic:
+    nothing here learns which agent wrote a task row's ``detail``, and a constant naming one
+    agent would be the single line that did. A document missing either field raises rather
+    than being given a plausible name, because a file called ``none-none.json`` is worse
+    than a refusal.
+    """
+    measurement = document.get("measurement") or {}
+    agent = measurement.get("agent")
+    split = measurement.get("split")
+    if not agent or not split:
+        raise ValueError(
+            "a projection is named after the agent and the split it declared, and this one "
+            f"carries agent={agent!r} split={split!r}. Pass an explicit filename instead."
+        )
+    return f"{str(agent).lower()}-{str(split).lower()}.json"
+
+
 def write_results(document: Mapping[str, Any], path: Path | str) -> Path:
-    """Write a projection. Takes the file or the directory it belongs in."""
+    """Write a projection. Takes the file, or the directory it belongs in."""
     target = Path(path)
     if target.is_dir() or not target.suffix:
-        target = target / RESULTS_NAME
+        target = target / results_name(document)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(document, indent=2) + "\n")
     return target

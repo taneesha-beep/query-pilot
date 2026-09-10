@@ -47,45 +47,13 @@ from pathlib import Path
 
 from query_pilot.agents import A1, MAX_OUTPUT_TOKENS, PROMPT_CEILING_CHARS, ROLE, TOOL_SCHEMAS
 from query_pilot.client import Client, ClientError
-from query_pilot.client.types import Completion, Message, ToolSchema
-from query_pilot.run import Run, RunConfig, RunLedger, new_run_id, read_rows
-from query_pilot.run.guard import BudgetGuard, IncompleteReason
+from query_pilot.run import RequestCeiling, Run, RunConfig, RunLedger, new_run_id, read_rows
 from query_pilot.tasks import load_tasks
 
 REPO = Path(__file__).resolve().parent.parent
 SPIDER = REPO / "data" / "spider"
 SMOKE = REPO / "splits" / "smoke.json"
 RUN_CONFIG = REPO / "config" / "runs" / "a1-smoke.toml"
-
-
-class RequestCeiling:
-    """A client that counts requests and stops the **run** when it has made too many.
-
-    Wrapping rather than extending, and stopping the run rather than raising, are both
-    deliberate. Raising would fail one task and let the next one start, which is the opposite
-    of a ceiling. Calling :meth:`BudgetGuard.stop` puts the run down the path it already has
-    for a person deciding to stop it: A1 sees it at the next turn boundary, the tasks that
-    never started are recorded unrun rather than failed, and a resume picks them up.
-    """
-
-    def __init__(self, client: Client, guard: BudgetGuard, ceiling: int) -> None:
-        self.client = client
-        self.guard = guard
-        self.ceiling = ceiling
-        self.requests = 0
-
-    async def complete(
-        self,
-        role: str,
-        messages: list[Message],
-        tools: tuple[ToolSchema, ...] | None = None,
-        **kwargs: object,
-    ) -> Completion:
-        self.requests += 1
-        if self.requests >= self.ceiling:
-            print(f"request ceiling of {self.ceiling} reached; stopping the run", file=sys.stderr)
-            self.guard.stop(IncompleteReason.OPERATOR)
-        return await self.client.complete(role, messages, tools, **kwargs)  # type: ignore[arg-type]
 
 
 async def main() -> int:
@@ -120,7 +88,14 @@ async def main() -> int:
 
     ledger = RunLedger(run_id)
     run = Run(config, ledger)
-    counted = RequestCeiling(client, run.guard, options.max_requests)
+    counted = RequestCeiling(
+        client,
+        run.guard,
+        options.max_requests,
+        on_ceiling=lambda n: print(
+            f"request ceiling of {n} reached; stopping the run", file=sys.stderr
+        ),
+    )
     a1 = A1(counted, tasks, SPIDER / "database", ledger.directory)  # type: ignore[arg-type]
 
     print(

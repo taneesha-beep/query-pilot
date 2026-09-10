@@ -44,7 +44,7 @@ from query_pilot.agents.metrics import (
     read_task_metrics,
     write_metrics,
 )
-from query_pilot.agents.results import RESULTS_NAME, project, write_results
+from query_pilot.agents.results import project, results_name, write_results
 from query_pilot.agents.schema import (
     Column,
     ForeignKey,
@@ -110,7 +110,6 @@ __all__ = [
     "PROMPT_CEILING_CHARS",
     "QUERY_OPENINGS",
     "REPAIR_LIMIT",
-    "RESULTS_NAME",
     "RESULT_ROWS",
     "ROLE",
     "RULES",
@@ -158,6 +157,7 @@ __all__ = [
     "render_table",
     "repair_request",
     "replay",
+    "results_name",
     "split_statements",
     "transcript_path",
     "validate_answer",

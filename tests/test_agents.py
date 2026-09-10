@@ -28,7 +28,9 @@ from query_pilot.agents import (
     project,
     read_schema,
     render_schema,
+    results_name,
     split_statements,
+    write_results,
 )
 from query_pilot.client.errors import ConfigError, ProviderHTTPError
 from query_pilot.client.types import Completion
@@ -775,3 +777,112 @@ async def test_the_projection_carries_what_2_5_reads_thirty_of_by_hand(tmp_path)
     assert row["detail"] == "row 0 column 1: 41 != 42"
     assert row["difficulty"] == "hard"
     assert document["by_difficulty"] == {"hard": {"solved": 0, "of": 1, "percent": 0.0}}
+
+
+# --- one projection, two agents ---------------------------------------------------------------
+
+
+async def test_the_projection_carries_a_trajectory_agents_own_fields(tmp_path):
+    """**The projection never learns which agent wrote a `detail`, and this is what that buys.**
+
+    A1's rows carry a termination, turn and tool-call counts, 3.3's repair counters and the
+    validation rule that rejected a reply. All of it rides in the same free-form `detail` A0
+    uses, and the projection copies a key when the row has one rather than knowing whose it
+    is. `validation_rule` matters most: `no_sql` means two different things for A1 -- no
+    statement in the answer, or a reply the validator rejected -- and grouping those apart
+    needs the rule, which is deliberately not a ninth equivalence slug.
+    """
+    ledger, config, executor = _ledger_with(
+        tmp_path,
+        [
+            (
+                "t-0",
+                _solved()
+                | {
+                    "termination": "answer",
+                    "turns": 4,
+                    "tool_calls": 3,
+                    "tool_calls_by_name": {"list_tables": 1, "execute_sql": 2},
+                    "repair_attempts": 1,
+                    "repair_succeeded": True,
+                    "repair_blocked": None,
+                    "validation_rule": None,
+                    "transcript": "transcripts/t-0.jsonl",
+                },
+            ),
+            (
+                "t-1",
+                _unsolved("no_sql")
+                | {
+                    "termination": "tool_call_limit",
+                    "turns": 14,
+                    "tool_calls": 12,
+                    "repair_attempts": 0,
+                    "repair_blocked": "termination",
+                    "validation_rule": "no_statement",
+                },
+            ),
+        ],
+    )
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working", empty_reference_tasks=0)
+    first, second = document["tasks"]
+
+    assert first["termination"] == "answer" and first["turns"] == 4
+    assert first["tool_calls_by_name"] == {"list_tables": 1, "execute_sql": 2}
+    assert first["repair_attempts"] == 1 and first["repair_succeeded"] is True
+    assert first["transcript"] == "transcripts/t-0.jsonl"
+    assert second["repair_blocked"] == "termination"
+    assert second["validation_rule"] == "no_statement"
+
+    # And the two aggregates only a trajectory agent can produce.
+    assert document["terminations"] == {"answer": 1, "tool_call_limit": 1}
+    assert document["validation_rules"] == {"no_statement": 1}
+
+
+async def test_a_single_shot_runs_projection_is_unchanged_by_those_fields_existing(tmp_path):
+    """**Constraint 48: nothing may re-score A0.** A0's rows carry none of A1's keys, so the
+    keys that carry them must leave a single-shot projection byte for byte what it was --
+    including not growing two empty mappings that would say nothing about it."""
+    ledger, config, executor = _ledger_with(tmp_path, [("t-0", _solved()), ("t-1", _unsolved())])
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working", empty_reference_tasks=0)
+
+    assert "terminations" not in document and "validation_rules" not in document
+    for row in document["tasks"]:
+        assert not {"termination", "turns", "tool_calls", "validation_rule"} & set(row)
+
+
+def test_a_projection_is_named_after_the_agent_and_the_split_it_declared():
+    """The filename is derived, not a constant, because one projection serves both agents and
+    a constant naming one of them would be the single line in this module that knew."""
+    assert results_name({"measurement": {"agent": "A0", "split": "working"}}) == "a0-working.json"
+    assert results_name({"measurement": {"agent": "A1", "split": "working"}}) == "a1-working.json"
+    assert results_name({"measurement": {"agent": "A1", "split": "smoke"}}) == "a1-smoke.json"
+
+
+@pytest.mark.parametrize(
+    "measurement", [{}, {"agent": "A1"}, {"split": "working"}, {"agent": None, "split": "working"}]
+)
+def test_a_projection_missing_either_half_of_its_name_is_refused_rather_than_guessed(measurement):
+    """A file called `none-none.json` is worse than a refusal."""
+    with pytest.raises(ValueError, match="agent and the split"):
+        results_name({"measurement": measurement})
+
+
+async def test_write_results_names_the_file_itself_when_given_a_directory(tmp_path):
+    ledger, config, executor = _ledger_with(tmp_path, [("t-0", _solved())])
+    with ledger:
+        await Run(config, ledger).execute(executor)
+
+    document = project(ledger.path, split="working", empty_reference_tasks=0)
+    written = write_results(document, tmp_path / "results")
+    assert written.name == "a0-working.json"
+
+    # An explicit filename still wins: the caller that names one means it.
+    named = write_results(document, tmp_path / "results" / "elsewhere.json")
+    assert named.name == "elsewhere.json"

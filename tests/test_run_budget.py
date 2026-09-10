@@ -29,8 +29,10 @@ from query_pilot.client.errors import ConfigError, ProviderHTTPError, TransportE
 from query_pilot.client.scheduler import AllPoolsExhausted
 from query_pilot.client.types import Completion
 from query_pilot.run import (
+    BudgetGuard,
     IncompleteReason,
     IncompleteRun,
+    RequestCeiling,
     Run,
     RunConfig,
     RunConfigChanged,
@@ -44,6 +46,7 @@ from query_pilot.run import (
 
 REPO = Path(__file__).resolve().parents[1]
 WORKING_SET_CONFIG = REPO / "config" / "runs" / "working-set.toml"
+A1_WORKING_CONFIG = REPO / "config" / "runs" / "a1-working.toml"
 
 
 class SteppingClock:
@@ -613,3 +616,199 @@ def test_a1_s_run_declaration_is_bound_to_concurrency_1_by_its_own_prompt_ceilin
     # Five tasks at `TURN_LIMIT + REPAIR_LIMIT` requests each is the worst case it bounds.
     assert (TURN_LIMIT + REPAIR_LIMIT) * 5 <= 80
     assert config.agent == "A1" and config.params == {"split": "smoke"}
+
+
+def test_a1_s_working_set_declaration_carries_ceilings_that_trace_to_committed_numbers():
+    """3.6's run declaration, and the arithmetic each of its three numbers came from.
+
+    **The same 150 tasks, the same endpoint and the same concurrency as A0's declaration**,
+    because a difference between the two runs' declarations is one more thing that could
+    explain a difference between the two runs' numbers. What differs is where the token
+    ceiling's derivation comes from: A0's was a hypothetical 10,000 tokens a task set before
+    any per-task cost existed, and A1's is arithmetic over a measured 5,284.2.
+    """
+    a0 = RunConfig.load(WORKING_SET_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+    config = RunConfig.load(A1_WORKING_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+
+    assert config.agent == "A1" and config.params == {"split": "working"}
+    # Same split, same size, same concurrency, same ceilings as the agent it is compared to.
+    assert config.params["split"] == a0.params["split"]
+    assert config.concurrency == a0.concurrency == 1
+    assert config.token_ceiling == a0.token_ceiling == 1_500_000
+    assert config.wall_clock_ceiling_s == a0.wall_clock_ceiling_s == 14_400
+
+    # The projection the ceiling is derived against: 5,284.2 tokens a task, measured over
+    # the five-task acceptance run and recorded in docs/PROVIDERS.md. Arithmetic over five
+    # trajectories, and NOT a measurement of a 150-task run -- which is what 3.6 replaces.
+    projected = 5_284.2 * 150
+    assert 750_000 < projected < 800_000
+    # A stop line at about 1.9x the projection: it stops a run that has roughly doubled its
+    # projected cost, which is where rule 5 says to stop and report, and does not stop one
+    # that is merely running long.
+    assert 1.8 < config.token_ceiling / projected < 2.0
+
+    # And it sits below the bounded worst case, so the ceiling can still bind. A trajectory
+    # makes at most TURN_LIMIT + REPAIR_LIMIT requests whose prompts grow rather than
+    # starting at the ceiling; `config/runs/a1-smoke.toml` derives that sum at ~15,000.
+    assert config.token_ceiling < 150 * 15_000
+
+    # The wall clock's floor is the token bucket rather than the request rate, at these sizes.
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    bucket_floor_s = projected / limits.tpm * 60
+    request_floor_s = 150 * (28 / 5) / limits.rpm * 60  # 28 requests over 5 acceptance tasks
+    assert bucket_floor_s > request_floor_s
+    assert config.wall_clock_ceiling_s > 2 * bucket_floor_s
+
+
+def test_a1_s_working_set_declaration_is_bound_to_concurrency_1_by_the_same_arithmetic():
+    """Constraint 64 redone for this declaration rather than inherited from the smoke one.
+
+    Every new A1 run declaration owes this check, because the thing that forces it -- that
+    `PROMPT_CEILING_CHARS` is derived as the endpoint's *whole* per-minute budget minus the
+    output allowance -- is a property of A1 and not of any one run.
+    """
+    sizes = json.loads((REPO / "docs" / "a1-tool-sizes.json").read_text())
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    config = RunConfig.load(A1_WORKING_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+
+    worst_case = (
+        PROMPT_CEILING_CHARS / sizes["budget"]["chars_per_prompt_token"] + MAX_OUTPUT_TOKENS
+    )
+    assert round(worst_case) == limits.tpm
+
+    survivable = limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert config.concurrency == 1
+    assert config.concurrency * worst_case <= survivable
+    # There is no margin to spare, unlike A0's 3.6x: two worst-case attempts is already over.
+    assert 2 * worst_case > survivable
+
+
+def test_the_two_agents_working_set_declarations_differ_in_nothing_but_the_agent():
+    """What the comparison in 3.6 holds constant, asserted rather than described.
+
+    If these two declarations ever diverge in the split, the ceilings or the concurrency,
+    the difference between the two runs' numbers stops being a statement about the loop.
+    """
+    ids = [f"t-{i}" for i in range(150)]
+    a0 = RunConfig.load(WORKING_SET_CONFIG, ids, run_id="r-1")
+    a1 = RunConfig.load(A1_WORKING_CONFIG, ids, run_id="r-1")
+
+    differing = {
+        field
+        for field in ("agent", "token_ceiling", "wall_clock_ceiling_s", "concurrency", "params")
+        if getattr(a0, field) != getattr(a1, field)
+    }
+    assert differing == {"agent"}
+    assert (a0.agent, a1.agent) == ("A0", "A1")
+
+
+# --- the request ceiling, a per-session backstop in a unit no run declares -------------------
+
+
+class CountingClient:
+    """A stand-in for the client. Records what it was asked, answers nothing interesting."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[tuple, dict]] = []
+
+    async def complete(self, *args, **kwargs):
+        self.calls.append((args, kwargs))
+        return completion(prompt_tokens=1, completion_tokens=1)
+
+
+def test_the_request_ceiling_stops_the_run_rather_than_failing_a_task():
+    """Why it calls `guard.stop` instead of raising, which is the whole design.
+
+    Raising would fail the one task that reached the ceiling and let the next one start,
+    which is a ceiling that does not stop anything. Stopping the run puts it down the path
+    it already has for a person deciding to stop it: tasks that never started are unrun
+    rather than failed, and a resume picks them up.
+    """
+    client = CountingClient()
+    guard = BudgetGuard(token_ceiling=10_000, wall_clock_ceiling_s=3600)
+    counted = RequestCeiling(client, guard, 3)
+
+    assert guard.check() is None
+    for _ in range(2):
+        asyncio.run(counted.complete("strong", []))
+    assert guard.check() is None and counted.requests == 2
+
+    asyncio.run(counted.complete("strong", []))
+    assert counted.requests == 3
+    assert guard.check() is IncompleteReason.OPERATOR
+    # The request that reached the ceiling is still SENT. Refusing it would leave a turn in
+    # the transcript with no answer beside it in the ledger.
+    assert len(client.calls) == 3
+
+
+def test_the_request_that_reaches_the_ceiling_announces_it_once_and_not_again():
+    """The message is a script's, passed in, because a library that prints is a library that
+    prints inside a test suite. Announcing once keeps a stage's output readable when the run
+    makes a few more requests while it winds down."""
+    announced: list[int] = []
+    counted = RequestCeiling(
+        CountingClient(),
+        BudgetGuard(token_ceiling=10_000, wall_clock_ceiling_s=3600),
+        2,
+        on_ceiling=announced.append,
+    )
+    for _ in range(4):
+        asyncio.run(counted.complete("strong", []))
+    assert announced == [2] and counted.requests == 4
+
+
+def test_the_request_ceiling_passes_everything_through_untouched():
+    """It counts and it stops. It must not become a second place arguments are shaped."""
+    client = CountingClient()
+    counted = RequestCeiling(
+        client, BudgetGuard(token_ceiling=10_000, wall_clock_ceiling_s=3600), 99
+    )
+    tools = ("a-schema",)
+    asyncio.run(counted.complete("strong", ["m"], tools, max_output_tokens=7))
+    assert client.calls == [(("strong", ["m"], tools), {"max_output_tokens": 7})]
+
+
+async def test_a_run_stopped_by_the_request_ceiling_resumes_where_it_stopped(tmp_path):
+    """**The property 3.6's staged run depends on, end to end.**
+
+    A stage stops at its request ceiling, the tasks that never started are neither complete
+    nor failed, and the next session picks them up without re-running anything already
+    recorded. This is the whole reason the ceiling calls `guard.stop` -- and the reason a
+    long run can be spent and reviewed in slices rather than in one unreviewable go.
+    """
+
+    class CountingSpender:
+        """One task, one request, through a RequestCeiling that stops the run at three."""
+
+        def __init__(self, counted: RequestCeiling) -> None:
+            self.counted = counted
+            self.calls: list[str] = []
+
+        async def __call__(self, context):
+            self.calls.append(context.task_id)
+            context.record(await self.counted.complete("strong", []))
+            return TaskResult()
+
+    ledger = ledger_for(tmp_path)
+    config = config_for([f"t-{i}" for i in range(10)])
+
+    run = Run(config, ledger)
+    first = CountingSpender(RequestCeiling(CountingClient(), run.guard, 3))
+    with ledger:
+        stopped = await run.execute(first)
+
+    assert stopped.incomplete_reason == IncompleteReason.OPERATOR
+    assert first.calls == ["t-0", "t-1", "t-2"]
+    assert stopped.tasks_complete == 3 and stopped.tasks_failed == 0
+
+    resumed_run = Run(config, ledger)
+    second = CountingSpender(RequestCeiling(CountingClient(), resumed_run.guard, 99))
+    with ledger:
+        finished = await resumed_run.execute(second)
+
+    # Nothing already recorded complete is asked for a second time.
+    assert second.calls == [f"t-{i}" for i in range(3, 10)]
+    assert finished.complete and finished.tasks_failed == 0
+    assert len({row["task_id"] for row in rows_of(ledger.path, "task")}) == 10

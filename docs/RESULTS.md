@@ -151,3 +151,269 @@ here reached the limit either.
 - It is the **baseline**, and it was built to be a good one. A1's gain in 3.6 is measured
   against this, on the same model, so that the comparison is about the agent loop and not
   about the model underneath it.
+
+---
+
+## A1 on the working set — 3.6
+
+**The agent loop: four tools, no schema in the prompt, up to fourteen turns of discovery, one
+repair attempt on a reply that fails validation.** The agent is
+[`src/query_pilot/agents/a1.py`](../src/query_pilot/agents/a1.py). It is scored by the same
+[equivalence rule](EQUIVALENCE.md), through the same sandbox, against the same 150 tasks and
+the same references as A0.
+
+| | |
+|---|---|
+| Agent | A1, `strong` role |
+| Provider | Groq |
+| Model | `openai/gpt-oss-120b` (served: `openai/gpt-oss-120b`) |
+| Date | 2026-09-10 |
+| Run | `20260910-024454-1f69bc` |
+| Ledger | `runs/20260910-024454-1f69bc/ledger.jsonl` |
+| Projection | [`results/a1-working.json`](../results/a1-working.json) |
+| Trajectory metrics | [`results/a1-trajectory-metrics.json`](../results/a1-trajectory-metrics.json) |
+| Split | `splits/working.json` — 150 tasks, 20 databases |
+| Declaration | [`config/runs/a1-working.toml`](../config/runs/a1-working.toml) |
+
+### Execution accuracy
+
+> **116 of 150 — 77.3333%.**
+>
+> **A0, on the same 150 tasks and the same model, scored 124 of 150 — 82.6667%.**
+>
+> **The loop lost 8 tasks and cost 664,288 more tokens.** It is reported here the way it
+> landed.
+
+### By difficulty
+
+| Difficulty | Solved | Of | | A0 |
+|---|---|---|---|---|
+| easy | 30 | 36 | 83.3333% | 91.6667% |
+| medium | 49 | 65 | 75.3846% | 81.5385% |
+| hard | 19 | 25 | 76.0000% | 76.0000% |
+| extra | 18 | 24 | 75.0000% | 79.1667% |
+
+### What the 34 non-solves were
+
+| Reason | Count | |
+|---|---|---|
+| `value_mismatch` | 14 | Right shape, wrong values. |
+| `row_count` | 10 | A different number of rows came back. |
+| **`no_sql`** | **8** | **The final reply held no statement. A0 produced none of these.** |
+| `column_count` | 2 | A different number of columns came back. |
+| `candidate_error` | 0 | Every statement A1 committed to executed. |
+| `truncated` | 0 | No candidate result reached either cap. |
+| `reference_error` | 0 | As the frame guarantees. |
+
+**All 8 `no_sql` are the same thing**, and `validation_rule` says so rather than leaving a
+reader to group by `reason` alone: **`no_statement` × 8**, every one of them on a trajectory
+that terminated at **`tool_call_limit`**. Not one is a malformed statement, a multi-statement
+reply, or prose. A1 did not write bad SQL in these; it wrote **none**, because it ran out of
+tool calls while still looking.
+
+### Cost
+
+| | | A0 |
+|---|---|---|
+| Prompt tokens | 692,516 | 79,099 |
+| Completion tokens | 78,512 | 27,641 |
+| **Total** | **771,028** | 106,740 |
+| Per declared task | 5,140.2 | 711.6 |
+| **Per solved task** | **6,646.8** | 860.8 |
+| **Money** | **$0.00** | $0.00 |
+
+771,028 tokens is **51.402%** of the run's declared ceiling of 1,500,000, against A0's
+7.116%. The money figure is zero for the same reason it was for A0: both providers are free
+tiers, no paid API spend is permitted anywhere in this project, and the cost that matters is
+quota.
+
+### The run itself
+
+| | |
+|---|---|
+| Tasks complete / failed | 150 / 0 |
+| Attempts | 827 — **5.51 per task**, against A0's exactly 1.00 |
+| Sessions | **6**, spanning 144.2 minutes wall clock and **90.3 minutes running** |
+| Longest session | 1,474.6 s — **10.24%** of the 14,400 s per-session ceiling |
+| Quota walls | **12** — 4 day-scope on `groq#1`, 8 minute-scope on `groq#2` |
+| Credential pools | `groq#1` 439 attempts, `groq#2` 388 |
+| Concurrency | 1 — forced, not chosen; see the declaration |
+| Provider latency | 0.222 s min, 0.984 s mean, 6.202 s max |
+| Completions stopped at the output ceiling | **0 of 827** |
+| Candidate results truncated or timed out | 0, 0 |
+
+**This run met Groq's daily token ceiling and is the first thing in this project that has.**
+It is written up in [docs/PROVIDERS.md](PROVIDERS.md). Six sessions is what a resumable run
+looks like: a task recorded `complete` was never re-run, three tasks failed at a wall and were
+retried, and the final ledger records 150 of 150 complete with 0 failed.
+
+**Two credential pools, and A0 ran on one.** `GROQ_API_KEY_2` was added mid-run from a
+separate Groq account, whose independence was established by behaviour before it was used —
+40 concurrent requests saturating pool one, a control request **confirming pool one was still
+refusing**, and pool two answering inside that window. Same provider, same pinned model
+string, so this changes which credential the same model was reached through and nothing about
+what it answered.
+
+### The four trajectory metrics
+
+Definitions are frozen and travel inside the metrics file itself. Read them there rather than
+inferring them from the names.
+
+| | mean | median | p90 | min | max | n |
+|---|---|---|---|---|---|---|
+| **Tool calls per task** | 4.3467 | 4 | 7 | 2 | 12 | 150 |
+| **Turns to solve** | 4.819 | 5 | 6 | 3 | 13 | 116 |
+
+**Wasted-call rate: 17 of 556 — 3.0576%**, over the 142 trajectories that produced a final
+statement, 0.1197 wasted calls a task. The 8 with no final statement are excluded and counted
+separately rather than folded in. **This is an upper bound on waste, not a measurement of
+it** — a `describe_table` on a table the final query never names counts as wasted even where
+it was the call that ruled that table out.
+
+**Repairs: 1 attempt, 1 success, 0 blocked**, in 150 trajectories. 3.3's repair path fired
+once in the whole measured run and worked.
+
+#### Recovery rate — three denominators, and the headline one is empty
+
+> **`error`: TBD over a denominator of 0.**
+>
+> **Not one `execute_sql` call in 150 trajectories returned an error.**
+
+| Denominator | Of | Recovered | Rate |
+|---|---|---|---|
+| First `execute_sql` **errored** | **0** | 0 | **TBD** |
+| First `execute_sql` returned **empty** | 6 | 1 | 16.6667% |
+| Either (the roadmap's literal union) | 6 | 1 | 16.6667% |
+
+Reported as counts beside them, because a first-call rule cannot see recovery that happens
+later: **`trajectories_with_any_execute_sql_error` — 0**;
+`trajectories_with_any_execute_sql_empty` — 9. And **24 of 150 trajectories ran no
+`execute_sql` at all**; they are in none of the three denominators. First calls split
+**120 rows · 6 empty · 24 none**.
+
+**`TBD` over 0 is the honest answer and it was decided before the run**, in writing, precisely
+so that a thin denominator could not be repaired afterwards by widening the definition.
+Pooling `empty` into `error` would manufacture a denominator of 6 out of a denominator of 0,
+and `empty` is reported apart for a reason this split makes concrete: an empty result **can be
+the correct answer** here, for 7 of these 150 tasks.
+
+**The zero is itself the finding.** **676 tool calls across the 150 trajectories — 156
+`list_tables`, 251 `describe_table`, 198 `execute_sql`, 71 `sample_rows` — and every one of
+those 198 statements ran**, against 20 real schemas the model had never been shown. Recovery rate is the
+number A0 structurally cannot produce, and on this substrate with this model there was almost
+nothing to recover from. That is a fact about Spider and about `openai/gpt-oss-120b`, not a
+defect in the metric — and it is why the interesting claim in this project moves to
+containment in Phase 4.
+
+---
+
+## A0 against A1 — 3.6
+
+**Same model, same 150 tasks, same rule. The loop lost.**
+
+| | A0 — single-shot | A1 — agent loop | Difference |
+|---|---|---|---|
+| **Execution accuracy** | **124 / 150 — 82.6667%** | **116 / 150 — 77.3333%** | **−8 tasks, −5.3333 points** |
+| **Total tokens** | 106,740 | 771,028 | **+664,288 — 7.22×** |
+| Tokens per declared task | 711.6 | 5,140.2 | 7.22× |
+| **Tokens per solved task** | **860.8** | **6,646.8** | **7.72×** |
+| Money | $0.00 | $0.00 | — |
+| Provider requests | 150 — 1.00 a task | 827 — 5.51 a task | 5.51× |
+| Requests per solved task | 1.21 | 7.13 | 5.89× |
+| `no_sql` non-solves | 0 | 8 | +8 |
+| Running time | 12.3 min | 90.3 min | 7.3× |
+| Sessions | 1 | 6 | — |
+
+**The token cost of the difference, stated as the item requires: 664,288 additional tokens
+bought −8 solved tasks.** There is no cost per additional solved task, because there are no
+additional solved tasks. Writing that ratio as a number would produce a negative figure
+dressed as a price, and it is not one.
+
+### What is held constant, and what is not
+
+**Held constant, deliberately:** the model (`openai/gpt-oss-120b`) and the role (`strong`);
+the output ceiling (`MAX_OUTPUT_TOKENS` 1,024); the answer rules, which are one shared string
+and not two copies; the sandbox and its four controls; the equivalence rule and its eight
+reason slugs, all committed before either run; the same 150 tasks in `splits/working.json`;
+concurrency 1; and no temperature sent by either agent, so both ran at the provider's default.
+
+**Deliberately not held constant — these are what "the loop" means:**
+
+1. **A0 is given the whole live schema in its prompt. A1 is given none and must discover it.**
+2. **A0 gets one request and lives with the answer. A1 gets up to 14 turns and 12 tool calls.**
+3. **A1 validates its final reply and repairs it once on failure. A0 does neither.**
+4. **A1 can read row values through `sample_rows` and test SQL through `execute_sql`. A0 can
+   read neither.** The prompt holds no row values by design.
+
+One further asymmetry that is **not** a design decision and is recorded rather than defended:
+A0 ran on one credential pool in one session, A1 on two pools across six. Same provider, same
+pinned model, and every attempt row records which pool served it.
+
+### Where the eight tasks went
+
+Both agents were scored on the same 150 tasks. **Both solved 114. A0 alone solved 10, A1 alone
+solved 2, and 24 defeated both.**
+
+**Seven of A1's ten losses are one database.** On `flight_2`, **A0 solved 11 of 11 and A1
+solved 4 of 11.** Every other database is within one task, in either direction.
+
+**And five of the ten losses are the tasks a query returning nothing already scores for
+free.** This split has 7 such tasks — the floor reported beside every accuracy figure in this
+document. **A0 collected all 7. A1 collected 2.**
+
+| | A0 | A1 |
+|---|---|---|
+| The 7 empty-reference tasks | **7 / 7** | **2 / 7** |
+| The other 143 tasks | 117 / 143 — 81.8182% | 114 / 143 — 79.7203% |
+
+**So the deficit decomposes: 5 of the 8 are tasks scored by returning nothing, and 3 are
+ordinary.** Excluding the free tasks entirely, A1 is behind by 3 tasks rather than 8.
+
+#### One trajectory, read in full, because it is the whole result in miniature
+
+**`dev-0186`, `flight_2`:** *"Give the airport code and airport name corresonding to the city
+Anthony."* The reference is `WHERE city = "Anthony"`.
+
+**The stored value is `'Anthony '` — with a trailing space.** Verified read-only: `City =
+'Anthony'` returns **0 rows**, `City LIKE '%Anthony%'` returns exactly one, `('ANY',
+'Anthony ')`, and `length(City)` is 8.
+
+**A0 wrote `WHERE City = 'Anthony'`, returned nothing, matched the reference's nothing, and
+scored a solve.** It could not see the trailing space and did not need to.
+
+**A1 found it.** Its twelve tool calls, in order: `list_tables`, `describe_table airports`,
+`sample_rows`, then `City = 'Anthony'` → 0 rows, `LIKE '%Anthony%'` → 1 row, the equality
+again, another sample, a three-column `LIKE`, `SELECT *` with equality, a `lower()` comparison,
+equality once more, and finally **`SELECT City, length(City) … LIKE '%Anthony%'`** — the call
+that identifies the trailing space. Then it hit `TOOL_CALL_LIMIT` and its final reply was
+**the empty string**. No statement, `no_sql`, task lost.
+
+**A1 was punished for being right.** It disbelieved an empty result, investigated, found a
+real defect in the stored data, and ran out of room to answer. A0 was rewarded for being
+unable to look. Three of the eight `no_sql` tasks are this shape.
+
+### What this figure is, and is not
+
+- **It is one draw.** Neither agent sends a temperature, so both run at the provider's default
+  and a second run of these 150 tasks would not return the same numbers. Nothing here is
+  averaged over repeats.
+- **It is not the reserve number.** `splits/reserve.json` has never been read, by this run or
+  any other.
+- **The limits were not moved after seeing the result.** `TURN_LIMIT` 14, `TOOL_CALL_LIMIT` 12,
+  `REPAIR_LIMIT` 1 and `PROMPT_CEILING_CHARS` 22,776 are exactly what the run was declared
+  with. Eight tasks were lost to `TOOL_CALL_LIMIT` and raising it afterwards would be choosing
+  the number, so the count is reported and the limit stands.
+- **The roadmap predicted the shape of this and named the reason: Spider's schemas fit in a
+  prompt.** They do — 4.5 tables and about 1,048 characters of DDL for the average working-set
+  task. When the whole world fits in one prompt, discovery buys nothing and costs 7.22× in
+  tokens and eight tasks in accuracy.
+- **The two tasks A1 won were predicted in writing before it was measured.**
+  [`docs/FAILURES.md`](FAILURES.md) categorised `dev-0404` and `dev-0549` as A0 writing a
+  literal that does not match the stored spelling — `'math'` against `Math`, `'North Carolina'`
+  against `'NorthCarolina'` — and said of the second: *the prompt holds no row values by
+  design, so the spelling of a stored literal is not something A0 can see; 3.1's tools are
+  where an agent gets to look.* A1 looked, and won exactly those two.
+- **The interesting claim moves, as the roadmap said it should.** Recovery rate came back
+  `TBD` over 0 because nothing errored. What A1 demonstrably has that A0 cannot is the ability
+  to read the data before answering — worth two tasks here, and the thing Phase 4 measures
+  under attack.

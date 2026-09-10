@@ -1,0 +1,93 @@
+# A1 over the whole 150-task working set, and the ceilings it is held to.
+#
+# The measured run of 3.6, and the second real number this project reports. It is declared
+# against the SAME 150 tasks as `working-set.toml`, on the same model and the same role, so
+# that the difference between the two figures is the agent loop and not the substrate, the
+# split or the endpoint underneath it.
+#
+# Every ceiling below is a POLICY CHOICE — the one place this project writes a number it did
+# not obtain by running a command — so each says what it was derived from. A ceiling that
+# cannot be traced back to a committed measurement is a guess wearing a number's clothes.
+#
+# The task IDs are deliberately NOT here. They live in splits/working.json, which is the
+# single committed source of who is in the working set. A second copy is how the two drift
+# apart without either file admitting it.
+
+[run]
+agent = "A1"
+
+# 1,500,000 tokens, cumulative across every resume of one run ID. The same figure
+# `working-set.toml` declares for A0, and deliberately so — a different ceiling on the two
+# runs would be one more thing that could explain a difference between their numbers — but
+# derived from different arithmetic, because A1's per-task cost is measured and A0's was not
+# when its ceiling was set.
+#
+# The derivation, over committed numbers:
+#
+#   - A1's acceptance run measured 5,284.2 tokens a task over five smoke tasks
+#     (run 20260908-155422-c28177, docs/PROVIDERS.md). At 150 tasks that PROJECTS about
+#     790,000 tokens. It is arithmetic over five trajectories and is NOT a measurement; this
+#     run is the measurement and replaces it.
+#   - The absolute worst case is bounded and much higher. A trajectory makes at most
+#     TURN_LIMIT + REPAIR_LIMIT = 15 requests, and its prompts grow rather than starting at
+#     the ceiling: docs/a1-tool-probe.json measured +50 to +107 tokens a turn from a
+#     466-token opening, which `a1-smoke.toml` sums to roughly 15,000 tokens for a full
+#     15-turn trajectory. 150 of those is 2,250,000.
+#
+# So 1,500,000 sits at about 1.9x the projection and below the worst case. That is what makes
+# it a coherent stop line rather than a round number: it stops a run that has roughly doubled
+# its projected cost — the point at which "How to execute this document" rule 5 says to stop
+# and report rather than improvise — and it does not stop one that is merely running long.
+#
+# It is inside the run's fingerprint, so raising it mid-run makes a resume refuse until the
+# change is acknowledged and recorded in the ledger. That is the intended friction.
+token_ceiling = 1500000
+
+# Four hours, per SESSION rather than per run, which is what makes a run that spans a quota
+# reset the normal case here instead of the failure case. Tokens are a stock and time is a
+# rate (constraint 24): the token ceiling above is inherited across resumes and this one is
+# not, because a wall clock counting the hours a run was not running would abort it for
+# waiting.
+#
+# Derivation, and the binding floor is the token bucket rather than the request rate:
+#
+#   - At the projected ~790,000 tokens against the strong endpoint's 8,000 tokens a minute
+#     (docs/PROVIDERS.md, TPM observed = documented = 8,000), the run cannot physically take
+#     less than about 99 minutes of bucket time.
+#   - The request floor is much softer: about 5.6 requests a task measured over the
+#     acceptance run is roughly 840 requests, and Groq's observed 30 requests a minute makes
+#     that 28 minutes.
+#
+# Four hours is about 2.4x the token-bucket floor. The multiplier is the policy half and is
+# not derived from anything: the ceiling exists to stop a run that is STUCK, not one that is
+# slow, and a run that has not finished inside a working session needs a person to look at it
+# rather than more time.
+wall_clock_ceiling_s = 14400
+
+# One, and for A1 this is FORCED rather than chosen. Constraint 64.
+#
+# Constraint 46's condition is `concurrency x tokens-per-attempt < the endpoint's TPM`, or
+# the client's own token bucket ends the run as `pools_exhausted` with no provider having
+# refused anything. A0 had room: its worst attempt was 2,236 tokens against 8,000, which is
+# 3.6x of margin at concurrency 1 and a negative margin at 4.
+#
+# A1 has none. Its worst single attempt is
+#
+#     PROMPT_CEILING_CHARS / 3.265 + MAX_OUTPUT_TOKENS  =  22,776 / 3.265 + 1,024  =  8,000
+#
+# which is the strong endpoint's WHOLE per-minute budget, because PROMPT_CEILING_CHARS is
+# derived as exactly that ceiling minus the output allowance (docs/a1-tool-sizes.json). So a
+# single pair of worst-case attempts in flight puts the bucket into a deficit deeper than
+# `wait_ceiling_s` of refill, and the run ends itself two thirds of the way through the
+# measurement.
+#
+# Raising concurrency here would mean lowering PROMPT_CEILING_CHARS first, which costs
+# trajectory length — and PROMPT_CEILING_CHARS is one of the four limits A1's measured
+# figures were taken under, so moving it after this run means re-running this run. A test in
+# tests/test_run_budget.py holds the arithmetic for this declaration.
+concurrency = 1
+
+# Free-form, inside the fingerprint, and never inspected by the run machinery. A run that
+# changed any of this between sessions is not the same run.
+[run.params]
+split = "working"

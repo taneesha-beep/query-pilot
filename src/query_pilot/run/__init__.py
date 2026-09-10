@@ -27,6 +27,7 @@ from query_pilot.run.guard import (
     FATAL_ERROR_CLASSES,
     BudgetGuard,
     IncompleteReason,
+    RequestCeiling,
     fatal_reason,
 )
 from query_pilot.run.ledger import (
@@ -83,6 +84,7 @@ __all__ = [
     "IncompleteReason",
     "IncompleteRun",
     "LedgerState",
+    "RequestCeiling",
     "Run",
     "RunConfig",
     "RunConfigChanged",
