@@ -289,6 +289,24 @@ already been paid for.
 `compare()` never produces it. The rule compares rows and a response with no SQL never
 reaches a row, so the agent constructs that `Comparison` directly.
 
+**And in 3.3 `no_sql` acquired a second meaning, for A1 only.** A1 validates its final reply
+before executing it — exactly one statement, and that statement must open a read-only query —
+and a reply that fails **is not executed at all**, so it reports `no_sql` too. That covers
+three cases, not one: no statement, more than one statement, and a statement that is not a
+query (`INSERT INTO other SELECT ...` and its relatives). **A ninth slug was deliberately not
+added**, for the reason stated two paragraphs above: a committed result exists.
+
+So which of the three fired is carried **beside** the slug rather than inside it, as
+`validation_rule` in the task row's free-form `detail` — `no_statement`,
+`multiple_statements` or `not_a_query`. Anything grouping A1's failures by `reason` alone
+conflates "wrote prose" with "wrote two statements"; **group by `validation_rule` beside it.**
+
+**A0 does not validate and its numbers are unaffected.** 124 of 150 was taken with an
+extractor that counts extra statements and keeps the first, and it still does; a test asserts
+A0 never imports the validator. The asymmetry is deliberate — repair is one of the things A1
+has and A0 does not, and rejecting a multi-statement reply without the repair that answers it
+would be a penalty rather than a capability.
+
 `Comparison.as_detail()` is shaped to drop straight into a ledger task row's free-form
 `detail` mapping, which nothing in `run/` looks inside. That is the seam that keeps the run
 package general.

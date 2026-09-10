@@ -68,11 +68,18 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1 and 2 are complete; Phase 3 is under way.** A0 exists, has been measured over
-the whole working set, and every one of its failures has been read by hand. **A1 now exists
-too — four tools and the agent loop — but it has not been measured**, so every row above
-that names it still reads `TBD` and will until 3.6 runs it over the same 150 tasks. No
+**Phases 1 and 2 are complete; Phase 3 is one item from finished.** A0 exists, has been
+measured over the whole working set, and every one of its failures has been read by hand.
+**A1 now exists in full — four tools, the agent loop, output validation with one repair, the
+four trajectory metrics and an MCP server — but it has not been measured**, so every row
+above that names it still reads `TBD` and will until 3.6 runs it over the same 150 tasks. No
 number in this README comes from anything but a committed ledger.
+
+A1 has been driven end to end against a real provider once, as an acceptance run on the
+15-task smoke set: five tasks, 28 requests, five complete and none failed. **No figure from
+it is a result and none is reported here** — it is recorded in
+[docs/PROVIDERS.md](docs/PROVIDERS.md) as behaviour, and its transcripts are committed as
+test fixtures.
 
 **What A1 is, and what is deliberately held constant.** It is given no schema: it discovers
 one with `list_tables`, `describe_table`, `sample_rows` and `execute_sql`, each with an
@@ -86,6 +93,28 @@ two rows above is a statement about the loop.
 Every turn, tool call and tool result is written to an append-only transcript, one file per
 task, from which the exact conversation sent to the provider at any turn can be rebuilt. That
 file is what the trajectory metrics, the containment measurement and the viewer all read.
+
+**Its final answer is validated before it is executed** — exactly one statement, and that
+statement must open a read-only query. A reply that fails gets **one** repair attempt with the
+validation error fed back, and repair attempts and successes are counted as their own figures.
+A trajectory that ran out of turns or tool calls gets no repair: repair answers *"you replied,
+and the reply was not a single valid statement"*, not *"you never replied"*, and rescuing the
+others would hide every trajectory that ran out of room behind an extra request.
+
+**The four trajectory measures above are defined before they are taken**, in
+`src/query_pilot/agents/metrics.py`, and every definition is written into the file the numbers
+are published in. Two of them are easy to quote dishonestly and are not. **Recovery rate is
+three numbers with three denominators** — the first query errored, the first query returned
+nothing, or either — because a query returning nothing can be the correct answer, and a task
+that never ran a query is in none of them. **The wasted-call rate is an upper bound on waste,
+not a measurement of it**: a tool call that examined a table the final query never mentions is
+counted wasted even when it was the call that ruled that table out.
+
+**The same four tools are also an MCP server over stdio** — wrapped, not reimplemented, with a
+test asserting that what crosses the wire is character for character what the in-process tool
+returns. An external client gets exactly A1's reach and no more: a write is refused, the
+timeout and caps still apply, and it reads a copy. [docs/MCP.md](docs/MCP.md) carries the
+working configuration and what the dependency costs.
 
 **A0 is a deliberately strong baseline**, because a weak one manufactures a result in A1's
 favour. It gets the whole schema, read live from the database rather than from a dataset

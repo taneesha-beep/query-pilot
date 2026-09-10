@@ -267,6 +267,63 @@ spillover list is empty, so no other endpoint could have served these calls. The
 records both per turn from now on. **No accuracy figure was taken from this run** and none
 may be — it ran on the smoke set and reports tool and turn behaviour only.
 
+## The whole loop, once, against the same model
+
+**Measured 2026-09-08 in 3.3, twenty-eight requests, run `20260908-155422-c28177`,
+`runs/20260908-155422-c28177/ledger.jsonl`.** Groq, `openai/gpt-oss-120b`, five tasks from
+`splits/smoke.json`, all four tools offered, a hard request ceiling of 80. The probe above
+drove three turns of tool calling; this drove **whole trajectories** — discovery, querying,
+answering, and 3.3's validation and repair. The transcripts and ledger are committed verbatim
+under `tests/transcripts/lifted/`.
+
+**No accuracy figure was taken from this run and none may be reported.** It ran on the smoke
+set and reports loop and provider behaviour only. 3.6 is A1's measured run.
+
+| | |
+|---|---|
+| Requests, against a ceiling of 80 | **28** |
+| Tasks complete / failed | **5 / 0** |
+| Tokens, prompt + completion | **23,880 + 2,541 = 26,421** |
+| Tokens per task | **5,284.2** |
+| Wall clock | **138.9 s** |
+| Terminations | **4 `answer`, 1 `tool_call_limit`** |
+| Turns emitting more than one tool call | **0 of 23** |
+| Tool calls by name | `execute_sql` 9, `list_tables` 5, `describe_table` 5, `sample_rows` 3 |
+| `execute_sql` calls that errored | **0 of 9** |
+| `execute_sql` calls returning no rows | **2 of 9** |
+| Repairs attempted / succeeded | **1 / 1** |
+
+**One call a turn held again, and the two runs together make it 32 of 32.** Nine turns in the
+3.1 probe and twenty-three here, and not one emitted a second call. `TURN_LIMIT` is derived
+against this and a session assuming batching would size it at less than half what it needs.
+
+**Twenty-three turns made a tool call and twenty-two calls ran.** The missing one is
+`dev-0207`'s last: it hit `TOOL_CALL_LIMIT` and the call in that assistant message was never
+executed, because there was no turn left to feed the result into. That is a real instance of
+the thing 3.4's counting rule exists for — **tool calls per task counts `tool_result` events,
+never the calls a message asked for** — and it appeared in the first five tasks.
+
+**Not one `execute_sql` errored.** The model's SQL ran every time, which is a fact about this
+model on this substrate and not a general one — and it is the risk 3.6 inherits, because
+recovery rate's headline denominator is *tasks whose first `execute_sql` errored*. Over these
+five it was **0**, and the metrics file correctly reads `TBD` rather than 0.0. Two calls did
+return no rows, both inside `dev-0207` and both after a first call that returned one, so
+recovery behaviour a first-call rule cannot see was already visible at five tasks.
+`agents/metrics.py` reports `trajectories_with_any_execute_sql_error` and `..._empty` as
+counts beside the rates for exactly this reason.
+
+**5,284 tokens a task against A0's 712 is 7.4x**, which projects a 150-task A1 run at roughly
+**790,000 tokens** — inside `config/runs/working-set.toml`'s declared ceiling of 1,500,000,
+with room. That projection is arithmetic over five tasks and is **not a measurement**; 3.6
+replaces it. What it does settle is that the run is affordable at concurrency 1, which
+constraint 46 requires anyway: A1's worst single attempt is 8,000 tokens, the strong
+endpoint's entire per-minute budget.
+
+**The repair fired once and is worth reading.** On `dev-0317` the model ran
+`SELECT COUNT(*) FROM Templates`, was shown `20`, and replied **`20`** — the count instead of
+the query. Validation rejected it, the error went back, and the second reply was the
+statement. `tests/transcripts/lifted/dev-0317.jsonl`.
+
 ---
 
 ## Findings the calls turned up
