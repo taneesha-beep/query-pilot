@@ -16,7 +16,7 @@ crosses the wire is character-for-character what the in-process tool returns, wh
 | **Transport** | stdio |
 | **Tools** | exactly four, with the descriptions and parameters the model is offered locally |
 | **Database** | one, fixed when the process starts, served as a **copy** |
-| **Reach** | read-only, `query_only`, a 30-second deadline, a 50,000-row cap and a 1 MiB cap |
+| **Reach** | read-only, `query_only`, a 30-second deadline, a 50,000-row cap, a 1 MiB cap, and — since 4.1 — no DDL, DML, PRAGMA, ATTACH or multi-statement input, refused before execution |
 | **Dependency** | `mcp==2.2.0`, an **optional extra** — `uv sync --extra mcp` |
 
 **One server, one database.** The tool schemas carry no `db_id` argument, and adding one here

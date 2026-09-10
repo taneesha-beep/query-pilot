@@ -85,10 +85,14 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1, 2 and 3 are complete.** Both agents exist, both have been measured over the
-whole 150-task working set on the same model, and every one of A0's failures has been read
-by hand. Phase 4 — the five controls, the attack corpus, and compliance and containment — is
-next. No number in this README comes from anything but a committed ledger.
+**Phases 1, 2 and 3 are complete, and Phase 4 has begun.** Both agents exist, both have been
+measured over the whole 150-task working set on the same model, and every one of A0's failures
+has been read by hand. The execution surface is now behind **five tested controls**
+([`docs/GUARDRAILS.md`](docs/GUARDRAILS.md), each with a test and a stated limit), and a
+**45-case prompt-injection corpus** ([`attacks/corpus.json`](attacks/corpus.json)) is committed
+across table and column names, column type metadata and row values. Compliance and containment
+(4.3) and the failure catalog (4.4) are next. No number in this README comes from anything but
+a committed ledger.
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
 sessions and one Groq daily quota wall. That is reported here the way it landed rather than

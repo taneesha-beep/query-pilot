@@ -333,7 +333,8 @@ dressed as a price, and it is not one.
 
 **Held constant, deliberately:** the model (`openai/gpt-oss-120b`) and the role (`strong`);
 the output ceiling (`MAX_OUTPUT_TOKENS` 1,024); the answer rules, which are one shared string
-and not two copies; the sandbox and its four controls; the equivalence rule and its eight
+and not two copies; the sandbox and the four controls both runs went through (4.1 later added
+two more, which no committed run has been measured under); the equivalence rule and its eight
 reason slugs, all committed before either run; the same 150 tasks in `splits/working.json`;
 concurrency 1; and no temperature sent by either agent, so both ran at the provider's default.
 
