@@ -89,6 +89,18 @@ class ModelBuckets:
 
     ``blocked_until`` is what a provider's own refusal sets, and it outranks every bucket
     here. A bucket says what this package believes; a 429 says what the provider enforced.
+
+    **These live as long as the process and start full, so a DAILY bucket bounds a session
+    rather than a day.** Nothing persists them across runs, and deliberately: they model a
+    provider's rolling window from evidence gathered in this process, and a stale count
+    reloaded from disk would be a worse guess than a fresh one. The consequence, stated
+    because it is not obvious and cost real debugging time in 3.6: **a run resumed several
+    times can spend well past a modelled daily ceiling before the provider objects** — A1's
+    measured run spent 771,028 tokens over six sessions against a modelled 200,000 a day, and
+    a session ended `pools_exhausted` on this bucket's deficit with *no provider having
+    refused anything*. That is safe, because the bucket is only the guess and the 429 is the
+    authority — Groq did refuse later, naming `TPD: Limit 200000` — but anything reading a
+    resumed run's spend against a daily figure must know it. See docs/PROVIDERS.md.
     """
 
     limits: Limits

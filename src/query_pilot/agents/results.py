@@ -5,13 +5,18 @@ ledger by reading the ledger, and the ledger stays the record: delete the projec
 it can be rebuilt; edit the projection by hand and it is wrong. It carries the run ID and
 the ledger path it came from so that the two can always be put back beside each other.
 
+**One projection serves every agent.** It never learns which agent wrote a task row's
+``detail``: it copies the keys a row happens to carry, and its own filename is derived from
+the agent and split the run declared rather than being a constant naming one of them. A0's
+rows and A1's differ by nine fields and this module contains no branch on either.
+
 It lives in `agents/` rather than in `run/` for the reason the whole seam exists: this
 module looks **inside** a task row's ``detail``, and `run/` never does. A run records that
 a task produced an answer; what the answer was worth is the agent's business and this is
 where that is read back out.
 
 **Nothing here decides what a solve is.** `equivalence` decided that before any result
-existed and A0 wrote the verdict into the row. This counts what is already written down,
+existed and the agent wrote the verdict into the row. This counts what is already written,
 and a projection that recomputed a verdict would be a second measurement instrument
 disagreeing quietly with the first.
 

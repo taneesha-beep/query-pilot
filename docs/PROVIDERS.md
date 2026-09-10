@@ -375,7 +375,7 @@ statement. `tests/transcripts/lifted/dev-0317.jsonl`.
 
 ## Findings the calls turned up
 
-Three things that a documentation read would not have produced.
+Four things that a documentation read would not have produced.
 
 **A model retired under us on day one.** `gemini-2.5-flash` is listed by the models
 endpoint and returns 404 on use: *"This model models/gemini-2.5-flash is no longer
@@ -393,6 +393,26 @@ body — this one is retryable-after-fixing, and neither category covers it clea
 
 **`gemini-3.8-flash` returned a 503 mid-probe** and succeeded on the next run. Free tiers
 return transient server errors, and 1.2's retryable class needs to hold 503 as well as 429.
+
+**Groq rejects the model's own malformed tool call with HTTP 400, and it is the caller's
+task that dies.** Observed once in 827 requests, on `dev-0758` during 3.6:
+
+> `400 {"error":{"message":"Failed to parse tool call arguments as JSON",`
+> `"type":"invalid_request_error","code":"tool_use_failed",`
+> `"failed_generation":"{\"name\": \"execute_sql\", \"arguments\": {\"sql\":\"SEL…`
+
+The model emitted a tool call whose `arguments` were not valid JSON and **the provider, not
+this project, refused it**. Two things follow and both are already true rather than needing a
+change. It classifies **`bad_request`**, which is deliberately outside `FATAL_ERROR_CLASSES`
+— that class can be about one task's content, so it fails the **task** and not the **run**,
+and a resume retries it, which is what happened and it then succeeded. And because the task is
+recorded `failed` rather than answered-wrongly, **it cannot move an accuracy figure**. Any
+future session tempted to make `bad_request` fatal would be ending a measured run over one bad
+generation.
+
+An agent with tools has this failure mode and a single-shot agent does not, so it is a cost of
+the loop rather than of the provider. Phase 4 drives the model harder than 3.6 did and should
+expect to see more of it.
 
 **A daily refusal asks to be retried in 32 seconds.** Found on 2026-09-07 by re-reading the
 body already recorded here, while building the client — no further quota spent. The 429 on
