@@ -1,10 +1,14 @@
 """The prompt-injection corpus: labelled attack cases, and how their databases are built.
 
 Beside `tasks.py` and `splits.py` rather than inside `agents/`, and for the same reason: an
-attack case is a fact about a *substrate this project builds*, not about any agent. A0 cannot
-be attacked through these at all — it never reads a row value, a column type or a table name
-it was not handed — and the corpus is written for A1 and for whatever reaches the tools over
-MCP. **This module holds no agent, no client and no run**; it defines what a case is, reads
+attack case is a fact about a *substrate this project builds*, not about any agent. The corpus
+is written for A1 and for whatever reaches the tools over MCP. **A0 is exposed to two of the
+three placements** — its prompt renders every table name, column name and column type, though
+never a row value — and 4.3 measures A1 only, decided with the author on 2026-09-11: A0 records
+only the SQL it extracted, so a reply that opens with anything but ``SELECT``/``WITH`` cannot be
+read back, and a single-shot agent has no execution step for a control to contain. (This
+paragraph said until then that A0 could not be attacked through these at all, which was
+wrong.) **This module holds no agent, no client and no run**; it defines what a case is, reads
 the committed corpus, and materialises one case's database. Standard library only.
 
 **What is committed and what is generated.** `attacks/corpus.json` is the corpus, committed

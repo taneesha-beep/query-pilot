@@ -1,0 +1,56 @@
+# A1 against the 45-case prompt-injection corpus, and the ceilings it is held to.
+#
+# 4.3's run. A1 exactly as 3.6 ran it — LocalTools, not MCP (constraint 65); TURN_LIMIT 14,
+# TOOL_CALL_LIMIT 12, REPAIR_LIMIT 1, PROMPT_CEILING_CHARS 22,776, unchanged (constraint 72) —
+# on the same `strong` role, so that what this run measures is what an injected instruction
+# does to the agent 3.6 measured, and not to a variant of it tuned for the occasion.
+#
+# The task IDs are deliberately NOT here. They are the case IDs of attacks/corpus.json, in
+# corpus order, which is the single committed source of what an attack case is.
+#
+# Every ceiling below is a POLICY CHOICE, and each says what it was derived from.
+
+[run]
+agent = "A1"
+
+# 450,000 tokens, cumulative across every resume of one run ID.
+#
+# The derivation, over committed numbers:
+#
+#   - A1 spent 5,140.2 tokens a declared task across 3.6's 150 working-set tasks
+#     (results/a1-working.json, run 20260910-024454-1f69bc). At 45 cases that PROJECTS
+#     231,309 tokens. It is arithmetic over a different substrate and is NOT a measurement of
+#     this run. The attack databases hold two or three tables of five rows where Spider's
+#     average working-set task has 4.5 tables, so the projection is expected to be high.
+#   - The absolute worst case is bounded: TURN_LIMIT + REPAIR_LIMIT = 15 requests a
+#     trajectory, summed by `a1-smoke.toml` to roughly 15,000 tokens. 45 of those is 675,000.
+#
+# So 450,000 sits at about 1.95x the projection and below the worst case — the same shape as
+# 3.6's 1,500,000, which sat at about 1.9x its projection. It stops a run that has roughly
+# doubled its projected cost, which is where "How to execute this document" rule 5 says to
+# stop and report, and does not stop one that is merely running long.
+token_ceiling = 450000
+
+# Four hours per SESSION, as 3.6 declared, and for 3.6's reason: tokens are a stock and time
+# is a rate (constraint 24), and this ceiling exists to stop a run that is STUCK rather than
+# one that is slow. The floor is the token bucket: 231,309 projected tokens against the strong
+# endpoint's 8,000 a minute is about 29 minutes of bucket time on one pool.
+wall_clock_ceiling_s = 14400
+
+# One, and for A1 this is FORCED rather than chosen. Constraint 64: A1's worst single attempt
+# is the strong endpoint's whole per-minute budget, so a second attempt in flight ends the run
+# as `pools_exhausted` with no provider having refused anything. A test in
+# tests/test_run_budget.py redoes the arithmetic for this declaration.
+concurrency = 1
+
+# Free-form, inside the fingerprint, and never inspected by the run machinery.
+#
+# `database_names = "neutral"`: A1's opening message says `Database: <db_id>`, and a case's
+# db_id is its case ID — `atk-0001`. The run shows the agent a neutral name instead
+# (`agents.attack_results.database_name`: `staff_1`, `shop_2`, `clinic_3`, ...), decided with
+# the author before the run, 2026-09-11, because "atk" reads as "attack". No label moves.
+[run.params]
+split = "attacks"
+corpus = "attacks/corpus.json"
+corpus_version = 1
+database_names = "neutral"

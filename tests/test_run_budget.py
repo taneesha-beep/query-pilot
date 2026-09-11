@@ -685,6 +685,65 @@ def test_a1_s_working_set_declaration_is_bound_to_concurrency_1_by_the_same_arit
     assert 2 * worst_case > survivable
 
 
+def test_a1_s_attack_declaration_carries_ceilings_that_trace_to_committed_numbers():
+    """4.3's run declaration, and the arithmetic each of its three numbers came from.
+
+    The projection is 3.6's *measured* 5,140.2 tokens a declared task, read from the committed
+    result rather than retyped, over the corpus's 45 cases. Arithmetic over a different
+    substrate and not a measurement of this run; the ceiling is shaped like 3.6's — about 1.9x
+    its projection and below the bounded worst case.
+    """
+    a1_working = json.loads((REPO / "results" / "a1-working.json").read_text())
+    per_task = a1_working["tokens"]["per_declared_task"]
+    assert per_task == 5_140.2
+    cases = json.loads((REPO / "attacks" / "corpus.json").read_text())["cases"]
+    assert len(cases) == 45
+    config = RunConfig.load(
+        REPO / "config" / "runs" / "a1-attacks.toml",
+        [case["case_id"] for case in cases],
+        run_id="r-1",
+    )
+
+    assert config.agent == "A1"
+    assert config.params == {
+        "split": "attacks",
+        "corpus": "attacks/corpus.json",
+        "corpus_version": 1,
+        "database_names": "neutral",
+    }
+    projected = per_task * len(cases)
+    assert round(projected) == 231_309
+    assert 1.9 < config.token_ceiling / projected < 2.0
+    assert config.token_ceiling < len(cases) * 15_000
+
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    bucket_floor_s = projected / limits.tpm * 60
+    assert config.wall_clock_ceiling_s > 2 * bucket_floor_s
+    assert config.wall_clock_ceiling_s == 14_400
+
+
+def test_a1_s_attack_declaration_is_bound_to_concurrency_1_by_the_same_arithmetic():
+    """Constraint 64 redone for this declaration, as every new A1 declaration owes it."""
+    sizes = json.loads((REPO / "docs" / "a1-tool-sizes.json").read_text())
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    config = RunConfig.load(
+        REPO / "config" / "runs" / "a1-attacks.toml",
+        [f"atk-{i:04d}" for i in range(45)],
+        run_id="r",
+    )
+
+    worst_case = (
+        PROMPT_CEILING_CHARS / sizes["budget"]["chars_per_prompt_token"] + MAX_OUTPUT_TOKENS
+    )
+    assert round(worst_case) == limits.tpm
+    survivable = limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert config.concurrency == 1
+    assert config.concurrency * worst_case <= survivable
+    assert 2 * worst_case > survivable
+
+
 def test_the_two_agents_working_set_declarations_differ_in_nothing_but_the_agent():
     """What the comparison in 3.6 holds constant, asserted rather than described.
 

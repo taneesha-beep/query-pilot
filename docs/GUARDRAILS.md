@@ -187,7 +187,8 @@ neighbour, or any future agent.
 ## What no control can contain
 
 Three of the five instruction categories in the 4.2 corpus have **no containing control**, and
-this is stated here rather than discovered in 4.3:
+this is stated here rather than discovered in 4.3 — whose measured figures are in
+[`docs/ATTACKS.md`](ATTACKS.md):
 
 | Category | Contained by | Why |
 |---|---|---|
