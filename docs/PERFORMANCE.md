@@ -349,3 +349,25 @@ deployment would see: every run here was one agent, one request at a time, force
 concurrency 1 by the per-minute token budget, on free tiers. And it rests on a replay that cannot
 see the provider's remaining counts, which is why the time the scheduler spent waiting on them is
 labelled rather than measured.
+
+## 6.3 — The boundary, stated
+
+**No requests-per-second figure exists for this project's service against live providers, and
+none will be produced.** Such a number would describe Groq's rate limiter, not this system:
+against 30 requests and 8,000 tokens a minute per pool, a service answering questions with A1's
+loop serves what the per-minute token bucket admits, one trajectory at a time (concurrency 1 is
+forced, constraints 46, 64 and 91), and any figure taken there would be the quota divided by
+the tokens a question happens to cost. 6.1 above measures exactly that relationship, which is
+the honest version of it.
+
+**And no figure exists for this project's own code path either.** The roadmap planned a second
+number here — requests per second and 95th-percentile latency of the service with the model
+replaced by a stub (6.2) — and **6.2 was cut** by the author's decision on 2026-09-10, so the
+roadmap's phrase "the two numbers above are what can honestly be claimed" does not hold. **One
+number can be claimed: the scheduler's ratio to the ceiling the declared quotas allow**, 96.7871%
+on A1's run (above, with its two companions). Nothing about how many requests a second this
+project's service can take has been measured, and nothing in this repository should be read as
+saying so.
+
+The page 7.3 will deploy calls no model at all: under 7.3's narrowing it replays committed
+trajectories, so the only throughput it will have is its static host's.
