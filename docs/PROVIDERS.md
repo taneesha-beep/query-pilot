@@ -176,6 +176,15 @@ and every ledger attempt row records which pool served it.
 | **strong** | groq | `openai/gpt-oss-120b` |
 | spillover, cheap | google-ai-studio | `gemini-3.5-flash-lite` (× 2 pools) |
 | ~~spillover, strong~~ | ~~google-ai-studio~~ | ~~`gemini-3.8-flash`~~ — **20 requests per day**, see below |
+| **cheap, Phase 5** — `cheap-no-spillover` | groq | `openai/gpt-oss-20b`, **no spillover** (added 2026-09-12) |
+
+**Phase 5's cheap runs do not use `cheap`, and that is deliberate.** `cheap` spills onto
+`gemini-3.5-flash-lite` on both Google pools once both Groq pools refuse — verified on
+2026-09-12 by resolving the role with every key set. For the cascade that would be a silent
+third model: a trajectory finished on Google, whose tool-calling path A1 has never exercised,
+reported under the cheap model's name. So the cascade runs on `cheap-no-spillover`, the same
+endpoint with nowhere to go — the rule `strong` already follows — and an exhausted Groq day
+stops the run for a later resume instead. `cheap` itself is unchanged.
 
 Both tiers on Groq, with Google as the second provider the client spreads onto. Reasons:
 
@@ -249,6 +258,13 @@ than repeating it, so it is not counted twice.
 the prompt-injection corpus — 196 requests and 141,267 tokens on 2026-09-11, run
 `20260911-113246-1a97c9`, split 100 / 96 across `groq#1` and `groq#2`, no quota wall. It was
 paid out of the day's quota rather than the re-run allowance, and it changes no figure above.
+
+**And two more, 5.1's preflights on the cheap model**, 2026-09-12, both over the 15 smoke tasks
+on `openai/gpt-oss-20b`: run `20260912-052224-4f8be8`, 98 requests and 77,286 recorded tokens,
+stopped at 13 of 15 and superseded; and run `20260912-054709-c34308`, 81 requests and 67,520
+recorded tokens, 15 of 15. Together 76,922 tokens on `groq#1` and 67,884 on `groq#2`, no daily
+wall. The first 20b tokens this project has spent in volume; 20b's own tokens-per-day is still
+`TBD`. The A2-cheap working-set run in the table started the same day.
 
 **What that costs is TBD**, because tokens per task is not measured until 2.4. The table
 below is arithmetic over hypothetical per-task costs, not a prediction about this system,
@@ -368,13 +384,78 @@ measurement. **3.6 has now replaced it: 771,028 tokens over 150 tasks — 5,140.
 A0's — run `20260910-024454-1f69bc`, 2026-09-10.** The five-task projection was within 2.5%
 of the measured total, which is luck rather than method and is recorded because the next
 projection of this kind should not be trusted any further for it. What it does settle is that the run is affordable at concurrency 1, which
-constraint 46 requires anyway: A1's worst single attempt is 8,000 tokens, the strong
-endpoint's entire per-minute budget.
+constraint 46 requires anyway: A1's worst single attempt ~~is 8,000 tokens~~ was derived as
+8,000 tokens, the strong endpoint's entire per-minute budget — **and measured on A1's own
+requests it is higher: about 9,777 at the prompt ceiling** (corrected 2026-09-12; see *The cheap
+model inside A1's loop* below). That only makes concurrency 1 more necessary.
 
 **The repair fired once and is worth reading.** On `dev-0317` the model ran
 `SELECT COUNT(*) FROM Templates`, was shown `20`, and replied **`20`** — the count instead of
 the query. Validation rejected it, the error went back, and the second reply was the
 statement. `tests/transcripts/lifted/dev-0317.jsonl`.
+
+---
+
+## The cheap model inside A1's loop
+
+**Measured 2026-09-12 in 5.1, two runs, both Groq, `openai/gpt-oss-20b`, the 15 tasks of
+`splits/smoke.json`**, A1's loop unchanged on the `cheap-no-spillover` role. The first, run
+`20260912-052224-4f8be8`, ran under 3.6's rule for a provider error; the second, run
+`20260912-054709-c34308`, under the rule it prompted. The second is lifted byte-for-byte to
+`tests/transcripts/a2-cheap-smoke-lifted/`. **No accuracy figure was taken from either** — the
+smoke set sits inside the working set. `docs/ESCALATION.md` is the full write-up.
+
+| | |
+|---|---|
+| Largest tool calls in one assistant message | **1** — 58 of 73 messages carried one, 15 none (second run) |
+| Trajectories Groq refused with HTTP 400 over the model's own output — first run | **6 of 19** not cut off by a request ceiling |
+| — refused again on retry | **2 of 4**; `dev-0638` identically, after the same two turns |
+| Trajectories ended `provider_rejected` — second run | **3 of 15** |
+| Repairs requested · succeeded · refused by the provider | **5 · 4 · 1** (second run) |
+| Largest request | **1,894 tokens**, 23.67% of the 8,000 TPM (second run) |
+| Day-scope quota walls | **0**; minute-scope 429s on `groq#2`, which the client moved around |
+
+**Constraint 57 holds on the cheap model: one tool call a turn**, the same as 120b, so
+`TURN_LIMIT` is derived against the right fact for both.
+
+**The new finding is that Groq refuses the cheap model's malformed tool calls itself.** It parses
+the model's output server-side and, when it cannot, answers **HTTP 400 `tool_use_failed`** and
+hands the output back as **`failed_generation`**, rather than returning a tool call the loop
+could reject and feed back. The shapes seen: arguments that are not valid JSON (`{"{"}`); a
+tool named `describe_table<|channel|>commentary`, a format token leaked into the name; output
+Groq could not parse at all; and, on a repair turn that offers no tools, a tool call anyway
+("Tool choice is none, but model called a tool"). On `openai/gpt-oss-120b` this happened once
+in 3.6's 150 trajectories (`dev-0758`); on 20b it was 6 of the first run's 19. **Under
+3.6's rule the refused task failed and was retried, so it never reached the escalation rule and
+could never finish a run.** The cheap runs therefore declare `rejected_generation =
+"score_unsolved"`: such a refusal ends the trajectory as `provider_rejected`, complete and
+unsolved. Only a 400 carrying `failed_generation` counts — any other 400 is about this
+project's request and still fails the task. The second run confirmed the field is present in
+the refusals it met. **What this confounds, stated:** another provider might return the same
+malformed call to the loop as a recoverable tool error, so the cheap model's figure is 20b *as
+Groq serves it*.
+
+**A request Groq refuses is not an attempt row.** It returned no message and no token counts,
+so the ledger records only answered requests: the second run's request counter reached 81 and
+its ledger holds 77 attempt rows, the difference being exactly its four refusals. Every
+"requests" figure in this project counts attempt rows, and no ledger records the refused
+requests' tokens.
+
+**The 8,000-token worst case, measured rather than derived.** `PROMPT_CEILING_CHARS` was sized
+with 3.265 characters per prompt token, measured on A0's prompts, which carry no tool schemas
+and no tool results. Measured on A1's own requests — each request's conversation, replayed
+from its transcript, against the prompt tokens Groq reported — the ratio is lower on both
+models, and an attempt at the ceiling would cost more than the per-minute budget:
+
+| | `openai/gpt-oss-120b`, 3.6 | `openai/gpt-oss-20b`, 5.1's second run |
+|---|---|---|
+| Characters per prompt token, min / median / max | 1.879 / 2.066 / 3.323 | 1.914 / 2.022 / 3.292 |
+| An attempt at the ceiling, by a fitted line | **9,777 tokens** | **9,582 tokens** |
+| Largest request actually made | 3,426 | 1,894 |
+
+The two models agree, as one tokenizer predicts. Nothing either run did came near the ceiling,
+no limit was moved, and concurrency 1 stays the only safe setting. `docs/escalation-a1-working.json`
+and `docs/escalation-a2-cheap-smoke.json` hold the measurement (`attempt_sizes`).
 
 ---
 

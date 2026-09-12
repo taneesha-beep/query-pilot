@@ -597,6 +597,12 @@ Runs referred to below: **A0** — Groq, `openai/gpt-oss-120b`, 2026-09-08, run
 | — row-values cases never exposed | 15 | 15 row-values cases | `results/attacks.json` |
 | Compliance among exposed cases | 8 | 30 exposed cases | `results/attacks.json` |
 | A repair was needed (all succeeded) | 6 | 45 trajectories | `runs/20260911-113246-1a97c9/ledger.jsonl`; `docs/ATTACKS.md` |
+| **Trajectories — the cheap model, `openai/gpt-oss-20b` (5.1's preflights, rows added 2026-09-12)** | | | |
+| Groq refused the model's own output with HTTP 400 — first run, under 3.6's retry rule | 6 | 19 trajectories not cut off by a request ceiling | `runs/20260912-052224-4f8be8/ledger.jsonl`; `docs/ESCALATION.md` |
+| — refused again when the task was retried | 2 | 4 tasks retried after a refusal | same |
+| Ended `provider_rejected` — second run, which scores the refusal | 3 | 15 trajectories | `docs/escalation-a2-cheap-smoke.json` |
+| Ended at `TOOL_CALL_LIMIT` — second run | 1 | 15 trajectories | `docs/escalation-a2-cheap-smoke.json` |
+| A repair was needed · it succeeded · the provider refused it | 5 · 4 · 1 | 15 trajectories | `tests/transcripts/a2-cheap-smoke-lifted/` |
 
 ## Counts with no rate available
 
@@ -608,7 +614,7 @@ empty, or it was never defined, or it was never read.
 | `execute_sql` errors on a trajectory's first call — recovery rate's headline | 0 | Its denominator is 0; the rate is `TBD` by a rule fixed before the run | `results/a1-trajectory-metrics.json` |
 | Containment of a sandbox-escape attempt | 0 attempts | 0 of 9 cases attempted one; the rate is `TBD` | `results/attacks.json` |
 | A0 solves that are wrong answers matching a wrong reference | **at least 8** | Found among 10 examined tasks; A0's other 116 solves were never read, so no rate over 124 exists | `docs/a1-failure-counts.json` |
-| Groq HTTP 400 `tool_use_failed` — tool-call arguments not valid JSON | 1 — `dev-0758` | The ledger's 827 attempt rows are the requests that were *answered*, every one `ok`; a refused request is not an attempt row, so there is no per-request denominator | `runs/20260910-024454-1f69bc/ledger.jsonl`; `docs/PROVIDERS.md` |
+| Groq HTTP 400 `tool_use_failed` — tool-call arguments not valid JSON | 1 — `dev-0758` | The ledger's 827 attempt rows are the requests that were *answered*, every one `ok`; a refused request is not an attempt row, so there is no per-request denominator. On the cheap model the same refusal is common enough to count per trajectory — see the 5.1 rows above | `runs/20260910-024454-1f69bc/ledger.jsonl`; `docs/PROVIDERS.md` |
 | Quota walls during the A1 run | 12 — 4 day-scope on `groq#1`, 8 minute-scope on `groq#2` | A wall is a refusal over a window, and the window Groq's daily counter runs over is `TBD` | `runs/quota-walls.jsonl` |
 | A session ended `pools_exhausted` with no provider refusal in its window — the client's modelled bucket, not Groq | 1 of the A1 run's 6 sessions | A per-session rate over sessions the operator staged means nothing | `runs/20260910-024454-1f69bc/ledger.jsonl` |
 | Trajectories cut off mid-task and retried on resume | 6 in the A1 run (1 operator stop, 4 `AllPoolsExhausted`, 1 HTTP 400) · 1 in the attack run (operator stop) | Staging is the operator's choice, so the count describes the staging, not the agent | the two runs' ledgers |

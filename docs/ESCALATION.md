@@ -154,3 +154,11 @@ tokenizer predicts; the 20b line is extrapolated from conversations no longer th
 ceiling. **No limit was moved** — A1's four limits are frozen underneath 3.6 (constraint 72), and
 concurrency 1 was already the only safe setting. What an overshoot would cost is a run stopped as
 `pools_exhausted` and resumed, with the task in flight retried; it cannot move a figure.
+
+## What this rule feeds
+
+5.2's always-cheap run — A1's loop on the cheap model over the 150-task working set, declared in
+`config/runs/a2-cheap-working.toml` with the same ceilings as 3.6's and committed with this rule
+— started on 2026-09-12 as run `20260912-055938-9712c8`. Its figures, and the cascade built from
+it and 3.6, belong to 5.2 and are reported there; nothing in this file will be revised to suit
+them.

@@ -92,7 +92,7 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1 to 4 are complete.** Both agents exist, both have been measured over the whole
+**Phases 1 to 4 are complete, and Phase 5's first item is.** Both agents exist, both have been measured over the whole
 150-task working set on the same model, and every failure of both has been read by hand. The
 execution surface is behind **five tested controls** ([`docs/GUARDRAILS.md`](docs/GUARDRAILS.md),
 each with a test and a stated limit), and A1 has been measured against a **45-case
@@ -102,6 +102,21 @@ the project has a number for is catalogued with its frequency, its denominator a
 it came from, apart from the ones seen but never counted, in
 [docs/FAILURES.md](docs/FAILURES.md). No number in this README comes from anything but a
 committed ledger.
+
+**Phase 5 has started: the escalation rule is frozen, and the cheap model's run is under way.**
+A2 runs A1's loop on the cheap model (`openai/gpt-oss-20b`) and hands a task to the strong one
+only when the cheap trajectory announces its own failure — it never answered, its answer failed
+validation, or its first query errored or came back empty. The rule was committed before any
+cascade run spent anything ([docs/ESCALATION.md](docs/ESCALATION.md)). Applied to A1's measured
+run it would escalate 10 of 150 tasks and catches **9 of A1's 34 failures**, so a cascade can
+only recover failures that announce themselves. Trying it on the cheap model first found what no
+strong-model run had shown: **Groq refused the cheap model's own tool calls with an HTTP 400 on
+6 of 19 trajectories** — arguments that were not JSON, a format token leaked into a tool's name
+— and under this project's retry rule those were failed tasks the rule never saw. So the cheap
+runs score such a refusal as an unsolved trajectory, `provider_rejected`, which the rule
+escalates; A1's measured run, which retried its one such refusal, is unchanged. The always-cheap
+run over the working set started on 2026-09-12 and has no figure yet, which is why A2's row
+above is still `TBD`.
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
 sessions and one Groq daily quota wall. That is reported here the way it landed rather than
