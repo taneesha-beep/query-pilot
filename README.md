@@ -94,6 +94,25 @@ can contain. And **15 of the 45 cases were never seen**: A1 never looked inside 
 carries the row-value injections. [docs/ATTACKS.md](docs/ATTACKS.md),
 [results/attacks.json](results/attacks.json).
 
+### Scheduler efficiency
+
+| Run | Running time | Ceiling from the declared quotas | Ratio |
+|---|---|---|---|
+| **A1** — Groq, `openai/gpt-oss-120b`, 2026-09-10 | 5,418.2073 s | 5,244.1274 s | **96.7871%** |
+| A0 — Groq, `openai/gpt-oss-120b`, 2026-09-08 | 737.3566 s | 734.4157 s | 99.6012% |
+| A2-cheap — Groq, `openai/gpt-oss-20b`, 2026-09-12 | 3,255.4176 s | 3,084.1555 s | 94.7392% |
+
+**A measurement of this project's scheduler, not of Groq's tiers**: the least time the declared
+per-pool limits allow for the requests each run actually made, against the time the run took,
+read from ledgers already written (`runs/20260910-024454-1f69bc/ledger.jsonl` and the other two)
+without spending a request. The quotas, not the scheduler, set the pace; most of what A1 lost
+sits in two sessions where Groq had already refused a pool for the day, and the scheduler's own
+small loss is that it shuts such a pool for an hour when Groq says minutes. How long each request
+waited is **derived, not recorded**, and the derivation cannot see the client correcting itself
+to Groq's own counts — which turns out to be most of the waiting. How it was read was committed
+before the figures existed (`d027fc7`). [docs/PERFORMANCE.md](docs/PERFORMANCE.md),
+[results/scheduler-efficiency.json](results/scheduler-efficiency.json).
+
 ### Reserve set
 
 Read once, after everything else is finished. It runs the best agent measured on the working
