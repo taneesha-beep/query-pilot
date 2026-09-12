@@ -126,7 +126,12 @@ it.
 
 ## Status
 
-**Phases 1 to 4 are complete, and Phase 5's first item is.** Both agents exist, both have been measured over the whole
+**Phases 1 to 6 are complete, and Phase 7's viewer is built.** (This line said "Phases 1 to 4
+are complete, and Phase 5's first item is" until 2026-09-12.) Phase 5 measured the cascade, which
+lost; Phase 6 measured the scheduler against the ceiling its quotas allow and stated what no
+number here claims ([docs/PERFORMANCE.md](docs/PERFORMANCE.md)), its load test having been cut;
+and the trajectory viewer replays every committed run. The API, the deployment, this README's
+last pass and the reserve run remain. Both agents exist, both have been measured over the whole
 150-task working set on the same model, and every failure of both has been read by hand. The
 execution surface is behind **five tested controls** ([`docs/GUARDRAILS.md`](docs/GUARDRAILS.md),
 each with a test and a stated limit), and A1 has been measured against a **45-case
@@ -196,8 +201,8 @@ counted wasted even when it was the call that ruled that table out.
 **The same four tools are also an MCP server over stdio** — wrapped, not reimplemented, with a
 test asserting that what crosses the wire is character for character what the in-process tool
 returns. An external client gets exactly A1's reach and no more: a write is refused, the
-timeout and caps still apply, and it reads a copy. [docs/MCP.md](docs/MCP.md) carries the
-working configuration and what the dependency costs.
+timeout and caps still apply, and it reads a copy. [docs/MCP.md](docs/MCP.md) carries a
+working client setup and what the dependency costs.
 
 **A0 is a deliberately strong baseline**, because a weak one manufactures a result in A1's
 favour. It gets the whole schema, read live from the database rather than from a dataset

@@ -97,8 +97,15 @@ ledgers, where a full working-set run consumes real quota and the ledger records
 happened when it ran out. Deliberate, not an oversight.
 
 **Phase 2's full run did not reach the ceiling.** It established a floor instead:
-**106,740 tokens across 150 requests in one 12.3-minute session, with zero 429s and zero
-quota walls**, on 2026-09-08, run `20260908-133316-faecd5`.
+**106,740 tokens across 150 requests in one 12.3-minute session**, on 2026-09-08, run
+`20260908-133316-faecd5` — with **two minute-scope 429s and no day-scope refusal**: `TPM: Limit
+8000, Used 7121, Requested 883` at 13:33:41Z and `Used 7124, Requested 877` at 13:34:02Z, both on
+`groq#1`, each shutting the pool for 1 s (`runs/quota-walls.jsonl`). *This paragraph said "with
+zero 429s and zero quota walls" until 2026-09-12. The two refusals were always in the wall log,
+which carries no run id, and the ledger records no wall row, so a count read from the ledger alone
+found none; 6.1, which places each refusal in the session it fell inside, found them.* Every
+request was answered: the scheduler moved on after each refusal and the ledger holds 150 `ok`
+attempts.
 
 **Phase 3.6's run found it, and the TPD column is no longer TBD.** A1's measured run spent
 **771,028 tokens across 827 requests** on 2026-09-10, run `20260910-024454-1f69bc`, ledger
@@ -149,6 +156,16 @@ refusal, for the same reason. **What it means for planning:** an emptied pool is
 hours later, and holds roughly 8,333 tokens for every hour it has rested — so a run that meets
 the wall resumes in part within hours and in full after a day. The client's own bucket still
 starts full in every process (below), so the 429 remains the authority.
+
+**But Groq's day counter did not follow recorded tokens on every pool, and why is `TBD`.** On
+3.6's run, `groq#2` served **363,706** recorded tokens of `openai/gpt-oss-120b` in the 2,821 s
+from its first attempt to the run's end, 2026-09-10, with no day-scope refusal — while a bucket
+of 200,000 refilling at 200,000 per 86,400 s admits at most **206,531** in that span, **1.7610×**
+fewer. Yet between two consecutive day-scope refusals on `groq#1` the same day, the `Used` its
+bodies report moved with the tokens the ledger recorded to within **69** and **5** tokens. Both
+from `runs/20260910-024454-1f69bc/ledger.jsonl` and `runs/quota-walls.jsonl`, computed
+2026-09-12 for 6.1. It is under the 2× line this project stops at, and it is why
+`docs/PERFORMANCE.md` does not anchor a ceiling on the daily horizon.
 
 **One caution for anyone reading a resumed run's spend.** The client's quota buckets are
 **per process**: a new session starts them full, so the modelled daily ceiling bounds a
@@ -533,7 +550,7 @@ Four things that a documentation read would not have produced.
 endpoint and returns 404 on use: *"This model models/gemini-2.5-flash is no longer
 available to new users."* This is exactly the risk the roadmap names — a free provider
 retiring or renaming a model mid-project — appearing before a line of client code exists.
-It is the argument for 1.1's pinned model strings in configuration, and for 1.5's test of
+It is the argument for 1.1's pinned model strings in `config/providers.toml`, and for 1.5's test of
 the terminal `model not found` path, made concrete on the first day.
 
 **Both Groq and Cerebras sit behind Cloudflare, which answers Python's default User-Agent
@@ -623,6 +640,27 @@ does not have to open the client to learn which of them turned into behaviour.
 | The strong endpoint's **8,000 TPM**, against `wait_ceiling_s` of **60 s** | The condition every run declaration must satisfy: **`concurrency × tokens-per-attempt < tpm`**. Tokens are charged when answers arrive, so `concurrency` requests burst before any is paid for; charged together they put the per-minute token bucket into that deficit, and a deficit deeper than 60 s of refill makes the client raise `AllPoolsExhausted` — which the run treats as fatal and ends as `pools_exhausted` **with no provider having refused anything.** Measured at A0's sizes, concurrency 8 ended a simulated 150-task run at task 91, so `config/runs/working-set.toml` declares **1**. `docs/a0-prompt-sizes.json` holds the sizes and `tests/test_run_budget.py` holds the arithmetic. **This binds Phase 3 harder than Phase 2**: A1's loop costs multiples of 711.6 a task, so even concurrency 2 may be unsafe |
 | Groq's **observed** 30 RPM | The floor the wall-clock ceiling is set above: 150 tasks at 30 RPM is 300 s of pure request time, and the committed ceiling of 14,400 s sits far above it because it exists to stop a run that is stuck, not one that is slow |
 | A run must span a quota reset, and that is the normal case | The token ceiling is **inherited** across resumes and the wall-clock ceiling is **per session** (1.4). Tokens are a stock; time is a rate, and a clock counting the hours a run was not running would abort it for waiting |
+
+## What 6.1 found about the client against Groq
+
+Read from the three full working-set runs' ledgers without spending a request
+(`docs/PERFORMANCE.md`, `results/scheduler-efficiency.json`, 2026-09-12). Two behaviours of the
+client that no earlier file recorded; neither is changed, because the next run to use the client
+is the reserve run and neither costs it more than seconds.
+
+- **The client runs a fixed amount behind its own declared bucket, because it takes Groq's
+  remaining count.** After each answer, `ModelBuckets.observe` lowers the per-minute bucket to
+  Groq's `x-ratelimit-remaining-tokens` when Groq's figure is the lower one. Replaying A0's run
+  through the client's buckets without those headers (the ledger does not record them), every
+  one of the 128 requests whose bucket reopened while it waited went out **2.3993 to 2.4037 s**
+  after that reopening — 320 tokens of per-minute refill, the same on every request. It cost A0's
+  run 2.4 s in all, once, not 2.4 s a request; on A1 the lag ranged from 1.1725 to 3.7807 s.
+- **A pool Groq refuses for the day is shut for an hour.** Groq sets no daily reset time here, so
+  a day-scope refusal blocks the pool for `UNKNOWN_DAILY_REPROBE_S`, 3,600 s, where the eight
+  refusals' own retry hints were 10 to 236 s. After the hint, the pool refills at about 2.3 tokens
+  a second — roughly one A1 request every seven minutes — and the client does not look again for
+  an hour. `docs/PERFORMANCE.md` counts what that left unused: 3,866 and 3,616 tokens in A1's two
+  such sessions.
 
 ## Reproducing this
 

@@ -117,7 +117,7 @@ this run is the measurement, and it came in **14 times below** that hypothetical
 |---|---|
 | Tasks complete / failed | 150 / 0 |
 | Attempts | 150 — exactly 1.00 per task |
-| Quota walls | 0 |
+| Quota walls | **2** — minute-scope, `groq#1`, 13:33:41Z and 13:34:02Z, each shutting the pool for 1 s; every request was still answered. *This row said 0 until 2026-09-12: the wall log carries no run id and the ledger no wall row; 6.1 found them* |
 | Sessions | 1 — no resume, no quota reset spanned |
 | Elapsed | 737.4 s (12.3 minutes), **5.121%** of the 14,400 s ceiling |
 | Throughput | 12.21 tasks a minute |
