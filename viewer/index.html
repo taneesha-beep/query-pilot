@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<title>query-pilot trajectories</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="masthead">
+  <h1>query-pilot <span>trajectories</span></h1>
+  <p id="replay-note" class="muted"></p>
+</header>
+
+<div class="layout">
+  <aside class="controls" aria-label="Choose a trajectory">
+    <section>
+      <label for="database">Database</label>
+      <select id="database"></select>
+    </section>
+
+    <section>
+      <label for="task">Question</label>
+      <select id="task" size="8"></select>
+      <textarea id="question" rows="4" readonly aria-label="The question asked"></textarea>
+    </section>
+
+    <section>
+      <span class="label">Agent</span>
+      <div class="toggle" role="group" aria-label="Agent">
+        <button type="button" data-agent="A0">A0</button>
+        <button type="button" data-agent="A1">A1</button>
+        <button type="button" data-agent="A2">A2</button>
+      </div>
+      <p class="muted small" id="agent-note"></p>
+    </section>
+
+    <section>
+      <button type="button" id="run" disabled>Run</button>
+      <p class="muted small" id="run-note"></p>
+    </section>
+
+    <section>
+      <span class="label">Attack cases</span>
+      <div id="preloaded" class="stack"></div>
+      <select id="attack" aria-label="Every attack case"></select>
+    </section>
+  </aside>
+
+  <main>
+    <div id="heading" class="heading"></div>
+    <div id="context"></div>
+    <ol id="steps" class="steps"></ol>
+    <section id="final" class="final" aria-label="Final statement and rows"></section>
+  </main>
+</div>
+
+<footer id="strip" class="strip" aria-label="What this trajectory cost"></footer>
+
+<script src="app.js"></script>
+</body>
+</html>

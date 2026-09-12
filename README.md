@@ -254,6 +254,27 @@ A0 got it right.
 Provider limits, and which of them were measured against which were merely stated, are in
 [docs/PROVIDERS.md](docs/PROVIDERS.md).
 
+### The trajectory viewer
+
+`viewer/` is a static page for watching an agent work rather than reading about it: pick a
+working-set question, then A0, A1 or A2, and see each step in order — the tool called, the
+arguments in, the result back — then the final statement, and a footer of what it cost: model,
+whether the cascade escalated and why, tool calls, turns, tokens in and out, elapsed time
+(which includes waiting for quota), which of the five controls fired, and whether the answer
+**matches the reference**. Three attack cases are loaded first — one a control caught, one the
+agent resisted, and one it complied with that no control can contain — each opening on the
+poisoned schema.
+
+**It replays committed runs and calls no model**: every figure comes from a committed file
+through `src/query_pilot/viewer.py`, and `tests/test_viewer.py` rebuilds `viewer/data/` and
+requires it back byte for byte. Its Run button is disabled until the local API (7.1) exists,
+and the page never holds a key.
+
+```
+uv run python scripts/build_viewer.py
+cd viewer && python -m http.server 8000
+```
+
 ## Development
 
 ```

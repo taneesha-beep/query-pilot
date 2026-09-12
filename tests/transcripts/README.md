@@ -116,6 +116,31 @@ clause fires and nothing a clause could be tuned against.
 | `dev-0207` | `tool_call_limit` at 12 calls. **Two brackets**: the first was cut off by stage 1's request ceiling (`budget`) and the task completed on resume. |
 | `dev-0126`, `dev-0317`, `dev-0675`, `dev-0710` | A live repair each, and each succeeded. |
 
+## `a1-working-lifted/` and `a2-cheap-working-lifted/` — verbatim, transcripts only
+
+**Every file is byte-for-byte what the two measured working-set runs wrote**, copied on
+2026-09-12 for 7.2's viewer and checked by comparing SHA-256 digests of all 150 files against
+the run directories:
+
+| Directory | Run | Provider and model | Date | Files |
+|---|---|---|---|---|
+| `a1-working-lifted/transcripts/` | `20260910-024454-1f69bc` — 3.6, A1 | Groq, `openai/gpt-oss-120b` | 2026-09-10 | 150 |
+| `a2-cheap-working-lifted/transcripts/` | `20260912-055938-9712c8` — 5.2, A2-cheap | Groq, `openai/gpt-oss-20b` | 2026-09-12 | 150 |
+
+**Transcripts only; the ledgers are not lifted.** A ledger is mostly the run declaration
+repeated at each of six session starts, and everything the viewer needs from it — tokens,
+elapsed time, whether a task matched its reference — is already in the committed projection
+(`results/a1-working.json`, `results/a2-cheap-working.json`), which is where every reader here
+takes it from. A task retried on resume keeps its earlier bracket in its file; **the last one
+stands** (constraint 86), and the viewer's build fails if that bracket's turns, tool calls or
+termination disagree with the projection.
+
+What they make checkable that was not before: `tests/test_viewer.py` rebuilds
+`results/a1-trajectory-metrics.json` and `results/a2-cheap-trajectory-metrics.json` from these
+files and the projections' per-task outcomes and requires both back exactly, and rebuilds every
+file under `viewer/data/`. **No figure is re-scored from them**, and every task in them is a
+working-set task; the reserve set appears nowhere.
+
 ## Regenerating
 
 Don't. These are the fixture, the way a recorded provider body is. `lifted/` cannot be
