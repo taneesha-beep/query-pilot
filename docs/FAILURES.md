@@ -1,4 +1,14 @@
-# A0's failures, read by hand
+# Failures, read by hand, and the catalog
+
+Three parts. **A0's failures** (2.5) — all 26 non-solves of A0's measured run, read one at a
+time. **A1's failures** (4.4) — all 34 non-solves of A1's measured run, read the same way under
+the same categories. And **[the failure catalog](#the-failure-catalog--44)** (4.4) — every
+failure mode this project has a number for, each with its frequency, its denominator and the
+artifact it came from, kept apart from the modes that are real but uncounted.
+
+---
+
+# A0's failures, read by hand — 2.5
 
 **Every failure of the measured working-set run, read one at a time under a protocol fixed
 before any of them was read.**
@@ -173,6 +183,27 @@ visibility into the data, and giving A1 tools is precisely the difference in vis
 [`docs/RESULTS.md`](RESULTS.md) reads the whole comparison. It is the absolute figures that
 are floors, and the *difference* between them carries this correction with it.
 
+**"A floor" was itself incomplete — corrected 2026-09-12, when 4.4 read A1's failures.** The
+two paragraphs above, and the one headed *Execution accuracy is a lower bound*, treat a
+defective reference as something that only rejects correct answers. **It also accepts wrong
+ones** — any answer that reproduces the defect. Measured: of the ten tasks A1 lost and A0 won,
+**eight are A0 solves whose rows equal a reference verified to return wrong data**. Seven are on
+`flight_2`, where all 1,200 rows of `flights` store both airport codes with a leading space and
+all 100 cities in `airports` end with one, so A0's natural query and the reference return the same nothing (or the
+same count of 0) where the data holds 1 to 47 rows or flights. The eighth is `dev-0388`: A0
+copied the question's quote marks into its literal, `' Little Lever Urban District '`, matched
+no hometown, and returned all 7 teachers — exactly as the reference does, whose lowercase
+literal also matches nothing. Every one is re-run read-only in
+[`docs/a1-failure-counts.json`](a1-failure-counts.json).
+
+**So 124 of 150 is not a floor on correct answers.** It is agreement with the reference
+queries, and the references err in both directions: 9 of A0's 26 failures are the reference
+(the figure reads low), and **at least 8 of its 124 solves** are wrong answers the reference
+agrees with (the figure reads high). "At least", because those 8 were found without reading
+A0's solves — only the ten tasks A1 lost were examined, and the other 116 solves were never
+read. The equivalence rule's own documented costs still push only downward, and nothing is
+re-scored: 124 of 150 stands as taken, and so does 116 of 150.
+
 ---
 
 ## The twenty-six, one at a time
@@ -301,3 +332,303 @@ returns one row per country. 241 rows against 233, the difference being ties.
 does not: 15 rows against 12. The question does not say whether duplicates are wanted, and
 [decision 3](EQUIVALENCE.md) compares multisets, which is the stricter choice and is
 documented as such.
+
+---
+
+# A1's failures, read by hand — 4.4
+
+**Every non-solve of A1's measured run, read one at a time under a protocol fixed before any
+of them was read.** The census was agreed with the author on 2026-09-11; the categories and
+precedence below were written into this file on 2026-09-12, session 11, before one of the 34
+trajectories was opened.
+
+| | |
+|---|---|
+| Run | `20260910-024454-1f69bc` |
+| Ledger | `runs/20260910-024454-1f69bc/ledger.jsonl` |
+| Provider · model · date | Groq · `openai/gpt-oss-120b` · 2026-09-10 |
+| Accuracy this reads the failures of | [116 of 150 — 77.3333%](RESULTS.md) |
+| Population | [`docs/failure-sample-a1.json`](failure-sample-a1.json) |
+
+## The protocol, as it was fixed
+
+**A census, not a draw.** The run produced **34** non-solves. 2.5's rule taken literally would
+draw 30 at random and leave 4 unread; reading all 34 costs four more tasks and leaves nothing to
+choose, so every count below is **out of 34** and is a rate over A1's non-solves, never
+re-weighted to the working set. `scripts/failure_sample.py --census` wrote the list; there is no
+seed because nothing was drawn. The run recorded no task **failed** at its end — `dev-0044`
+and `dev-0758` failed once and completed on resume, and a task's last row stands.
+
+**The categories are 2.5's eight, unchanged, plus one.** A1 can end a trajectory without a
+statement — all 8 of its `no_sql` are `tool_call_limit` trajectories that wrote nothing — and
+2.5's categories each name a fault in a query. So: **`no answer`** — the trajectory ended
+without a statement to score. Nothing else is added, no category is renamed, and the reason
+slugs are the ledger's and never re-decided (constraint 27).
+
+**The precedence is 2.5's, unchanged, with one clause for the new category.** "Reference query
+is wrong or ambiguous" outranks everything; otherwise the single fault which, corrected, would
+make the query return the reference's rows, nearest the root first — table or column, then
+join, then aggregation, then literal — and 2.5's shape clarification holds word for word. **A
+reference that returns demonstrably wrong data outranks `no answer`**: no answer could have
+solved it except one that reproduced the defect. **A reference that merely admits two readings
+does not**: that category needs the model's reading to be the better one, and a trajectory
+with no answer has no reading, so it is `no answer`.
+
+**What is read.** The question, the reference, A1's final SQL, the slug, the termination — from
+the ledger — and **the whole transcript**: every tool call, every result, in order. Re-executing
+a query read-only to check a claim is allowed; changing anything is not.
+
+**Seen before the protocol was fixed, and named so a reader can discount them.** `dev-0186` was
+read in full in session 9 and written up in `docs/RESULTS.md`. Session 9 also read at least two
+more of the eight `no_sql` trajectories — `docs/RESULTS.md` records that "three of the eight
+`no_sql` tasks are this shape" — **without naming them**. And 24 of the 34 are tasks A0 also failed, whose references
+and A0's answers 2.5 read and categorised above: nine of those references are already known
+defects. All stay in the population and are categorised under the same precedence.
+
+## The counts, out of 34
+
+| Category | A1 — count of 34 | A0 — count of 26 |
+|---|---|---|
+| **reference query is wrong or ambiguous** | **17** | 9 |
+| correct-but-different result shape | 10 | 9 |
+| **no answer** | **3** | — |
+| wrong table or column | 2 | 3 |
+| wrong value literal | 1 | 3 |
+| wrong aggregation | 1 | 2 |
+| wrong join | 0 | 0 |
+| syntactically invalid SQL | 0 | 0 |
+| other | 0 | 0 |
+
+By reason slug, the ledger's own verdict and not re-decided here: `value_mismatch` 14 ·
+`row_count` 10 · `no_sql` 8 · `column_count` 2 · `candidate_error` 0 · `truncated` 0 ·
+`reference_error` 0.
+
+**Half of A1's failures are the reference, and four of 34 are the model getting the data
+wrong.** Of the 17 references, **13 return demonstrably wrong data** — A0's five, seven on
+`flight_2`, and `dev-0388` — and **4 admit two readings**: A0's three and `dev-0484`. The model
+getting the data wrong — wrong table or column, wrong literal, wrong aggregation — is **4 of
+34**, against A0's 8 of 26. `no answer` is 3 more.
+
+**On the 24 tasks both agents failed, A1 failed the same way A0 did 20 times.** The four that
+differ are three `no answer` — `dev-0152` and `dev-0354`, where A0 chose the wrong column, and
+`dev-0980`, A0's weakest reference reading — and `dev-0816`, which the precedence moved (below).
+
+**The ten tasks A1 lost and A0 won are nine references and one sort order.** Seven on `flight_2`,
+`dev-0388` (wrong data), `dev-0484` (two readings) and `dev-0614` (row order). **In none of the
+ten did A1 get the data wrong where A0 got it right** — and in eight of them, A0's solve is a
+wrong answer that reproduces the reference's defect, which is the correction written above.
+
+**12 of the 34 had already run a query the rule scores as a solve** — every `execute_sql` the
+trajectory ran, re-executed read-only and compared with the same rule, by
+`scripts/a1_failure_counts.py` into [`docs/a1-failure-counts.json`](a1-failure-counts.json). No
+verdict moves; the count asks only whether the answer had been in hand. **Seven then ran out of
+tool calls** — 7 of the 8 `no_sql`, every one but `dev-0354` — and **five answered with something
+else**: `dev-0248`, `dev-0484`, `dev-0883`, `dev-0897`, `dev-0999`. Six of the twelve are
+`flight_2`, where the "solving" query is the one that reproduces the defect; the other six had a
+reading the reference shares and moved off it.
+
+**Five of the eight `no_sql` are `dev-0186`'s shape, not three.** An empty or zero result that
+was the stored data's padding, disbelieved, investigated, and never answered: `dev-0186`,
+`dev-0207`, `dev-0238`, `dev-0254`, `dev-0256`. `docs/RESULTS.md` said three, from a partial
+reading in session 9 that named only one.
+
+**One call the precedence made, stated because it moved a task between categories.**
+`dev-0816`'s answer differs from the reference in two ways: it returns every language tied at
+a country's maximum (241 rows against 233), and it identifies the country by `Name` where the
+reference returns `CountryCode`. Correcting either alone does not return the reference's rows,
+so the one nearer the root wins — **wrong table or column**. A0's answer to the same task kept
+`CountryCode` and differed only in shape and ties, which is why 2.5 filed it as wrong
+aggregation. Read the identifier as representation instead and A1's moves there too: wrong
+table or column 1, wrong aggregation 2. No other task depends on this call.
+
+## The thirty-four, one at a time
+
+Slug is the ledger's. Category is assigned by hand under the precedence above. "As A0" means
+2.5 filed the same task under the same category, for the same reason, and the argument there
+applies unchanged.
+
+### reference query is wrong or ambiguous — 17
+
+**Returns demonstrably wrong data — 13.**
+
+| Task | Slug | What A1 did, against what the reference does |
+|---|---|---|
+| `dev-0125` | `value_mismatch` | `CAST(Horsepower AS INTEGER) > 150` → 49; the reference compares a TEXT column and counts 281. As A0. |
+| `dev-0126` | `value_mismatch` | The same question, the same cast, the same fault. As A0. |
+| `dev-0133` | `value_mismatch` | `ORDER BY CAST(MPG AS REAL)` → `mazda`; the reference sorts text and puts `'null'` first. As A0. |
+| `dev-0820` | `row_count` | The 2 countries at the maximum Spanish share; the reference returns all 28. As A0. |
+| `dev-0937` | `value_mismatch` | Summed treatment cost → Stoltenberg; the reference counts treatments. As A0. |
+| `dev-0388` | `row_count` | `Hometown <> 'Little Lever Urban District'` → 6 teachers. The reference's literal is lowercase, matches nothing, and returns all 7 — including Anne Walker, the one teacher the question excludes. **A1 is right.** |
+| `dev-0186` | `no_sql` | Found `'Anthony '` with a trailing space after twelve calls and never answered. The reference returns nothing; the data holds `ANY`. |
+| `dev-0207` | `no_sql` | Its first query counted 0 — matching the reference — disbelieved it, and chased the padding until the limit. The data holds 21 flights. |
+| `dev-0227` | `row_count` | Counted codes straight from `flights` and answered `' AID'`; the reference's join never matches a padded code and returns nothing. |
+| `dev-0238` | `no_sql` | Its first query returned nothing — matching the reference — and it never answered. The data holds 7 airlines. |
+| `dev-0248` | `row_count` | Found the leading space with `hex()` and answered with `trim()`: the **correct 11 flights**. The reference returns none. |
+| `dev-0254` | `no_sql` | The same shape as `dev-0238`; the data holds 21 flights. |
+| `dev-0256` | `no_sql` | The same shape as `dev-0207`; the reference counts 0, the data 47. |
+
+**Every `flight_2` claim above is one fact about the stored data**: all 1,200 `flights` rows
+store both airport codes with a leading space (`' APG'`), and all 100 cities in `airports` end
+with one (`'Aberdeen '`, `'Anthony '`), so any equality against a clean literal or across the join
+matches nothing. The reference, its result, and a query that strips the padding are recorded
+per task in `docs/a1-failure-counts.json`.
+
+**Admits two readings — 4.**
+
+| Task | Slug | The two readings |
+|---|---|---|
+| `dev-0106` | `row_count` | *"each continent"*: A1 left-joined and returned all 5, as A0 did; the reference inner-joins to 3. As A0. |
+| `dev-0883` | `row_count` | *"each student"*: A1 first ran the reference's reading (14 rows), then left-joined from `Highschooler` and returned all 16. As A0. |
+| `dev-0897` | `row_count` | *"no friends"*: A1 first ran the reference's reading (Brittany, John), then counted either column of `Friend` and returned none. As A0. |
+| `dev-0484` | `value_mismatch` | *"the three youngest winners"*: the reference returns Madison Keys three times — three matches, one player — and A1's first query did too; A1 then returned three different players. The reference's own `DISTINCT` suggests it meant distinct winners and deduplicated `(name, rank)` instead. A1's reading is the more natural one. |
+
+### correct-but-different result shape — 10
+
+Each returned the right data; what rejected it is the rule's positional column comparison or
+its ordered comparison, both fixed before any result existed.
+
+| Task | Slug | What differed |
+|---|---|---|
+| `dev-0110` | `value_mismatch` | Column order, `(id, name, count)` against `(count, name, id)`. As A0. |
+| `dev-0263` | `value_mismatch` | Column order, `(city, count)`. As A0. |
+| `dev-0489` | `value_mismatch` | Column order, `(hand, count)`. As A0. |
+| `dev-0490` | `value_mismatch` | The same question in other words. As A0. |
+| `dev-0571` | `value_mismatch` | Column order, `(id, count)`. As A0. |
+| `dev-0613` | `value_mismatch` | Row order: `CAST(Rating AS REAL) DESC` where the reference sorts the text ascending. As A0. |
+| `dev-0614` | `value_mismatch` | The same question in other words, the same order. **A0 solved it** with `ORDER BY Rating`. |
+| `dev-0617` | `value_mismatch` | Column order, `min, max` against `max, min`. As A0. |
+| `dev-0760` | `column_count` | The city's name without its population. As A0. |
+| `dev-0851` | `column_count` | A `Frequency` column added, and sorted descending. As A0. |
+
+### no answer — 3
+
+**`dev-0152` · `car_1` · `no_sql`** — ran the right query at its ninth call (13 rows, scored as
+a solve on re-execution), ran it again twice more, sampled a table, and was cut off by
+`TOOL_CALL_LIMIT` asking to run it a fourth time. A0 failed this task with a wrong column.
+
+**`dev-0354` · `cre_Doc_Template_Mgt` · `no_sql`** — wrote A0's wrong column,
+`Templates.Template_Details`, saw it was empty in every row, and spent its last four calls on
+**the same `sample_rows` call with the same arguments**. It never found `Ref_Template_Types`,
+where the descriptions are. The one `no_sql` with no solving query in hand.
+
+**`dev-0980` · `dog_kennels` · `no_sql`** — ran the reference's own query at its eighth call
+(3 owners), then kept working the word *temporarily* through the arrival and departure dates
+until the limit. 2.5 filed A0's answer as the weakest of its nine reference readings; A1 gave
+no reading at all.
+
+### wrong table or column — 2
+
+**`dev-0150` · `car_1` · `value_mismatch`** — returned `car_makers.Maker`, the short name, where
+the question asks for the maker's name and the reference returns `FullName`. As A0.
+
+**`dev-0816` · `world_1` · `row_count`** — every language tied at the maximum, identified by
+country `Name` rather than `CountryCode`. The precedence call above.
+
+### wrong value literal — 1
+
+**`dev-0758` · `world_1` · `row_count`** — `GovernmentForm LIKE '%Republic%'` against the
+reference's `= "Republic"`: 306 rows against 258. As A0 — and A1, which could have looked at the
+stored government forms, never did.
+
+### wrong aggregation — 1
+
+**`dev-0999` · `dog_kennels` · `row_count`** — ran the reference's `DISTINCT` query first (12
+rows), then dropped `DISTINCT` and answered with 15. As A0.
+
+---
+
+# The failure catalog — 4.4
+
+**Every failure mode this project has measured, with a frequency, a denominator and the
+artifact it came from. No entry without a number.** Three kinds, never mixed: rates over a
+population, counts with no rate available, and — in a separate list, deliberately not in either
+table — modes that are real but uncounted.
+
+Runs referred to below: **A0** — Groq, `openai/gpt-oss-120b`, 2026-09-08, run
+`20260908-133316-faecd5`, `runs/20260908-133316-faecd5/ledger.jsonl`. **A1** — Groq,
+`openai/gpt-oss-120b`, 2026-09-10, run `20260910-024454-1f69bc`,
+`runs/20260910-024454-1f69bc/ledger.jsonl`. **Attack** — Groq, `openai/gpt-oss-120b`,
+2026-09-11, run `20260911-113246-1a97c9`, `runs/20260911-113246-1a97c9/ledger.jsonl`, lifted to
+`tests/transcripts/attacks-lifted/`.
+
+## Rates over a population
+
+| Mode | Frequency | Denominator | Artifact |
+|---|---|---|---|
+| **Answers — A0, by hand (2.5)** | | | |
+| Reference query wrong or ambiguous | 9 | A0's 26 non-solves | this file; `docs/failure-sample.json` |
+| — of which the reference returns demonstrably wrong data | 5 | A0's 26 non-solves | this file |
+| Correct-but-different result shape (rule decisions 1–2) | 9 | A0's 26 non-solves | this file |
+| Wrong table or column | 3 | A0's 26 non-solves | this file |
+| Wrong value literal | 3 | A0's 26 non-solves | this file |
+| Wrong aggregation | 2 | A0's 26 non-solves | this file |
+| Wrong join · syntactically invalid SQL | 0 · 0 | A0's 26 non-solves | this file |
+| **Answers — A1, by hand (4.4)** | | | |
+| Reference query wrong or ambiguous | 17 | A1's 34 non-solves | this file; `docs/failure-sample-a1.json` |
+| — of which the reference returns demonstrably wrong data | 13 | A1's 34 non-solves | this file; `docs/a1-failure-counts.json` |
+| Correct-but-different result shape | 10 | A1's 34 non-solves | this file |
+| No answer | 3 | A1's 34 non-solves | this file |
+| Wrong table or column | 2 | A1's 34 non-solves | this file |
+| Wrong value literal · wrong aggregation | 1 · 1 | A1's 34 non-solves | this file |
+| Wrong join · syntactically invalid SQL | 0 · 0 | A1's 34 non-solves | this file |
+| Failed the same way as A0 did | 20 | 24 tasks both agents failed | this file |
+| **Trajectories — A1, mechanical** | | | |
+| A solving query already run, then not answered with | 12 | A1's 34 non-solves | `docs/a1-failure-counts.json` |
+| Ended at `TOOL_CALL_LIMIT` | 8 | 150 trajectories | `results/a1-working.json` |
+| — of which solved | 0 | 8 | `results/a1-working.json` |
+| — of which a solving query was already in hand | 7 | 8 | `docs/a1-failure-counts.json` |
+| No statement in the final reply (`no_sql`, all `no_statement`) | 8 | 150 trajectories | `results/a1-working.json` |
+| A repeated identical tool call | 7 | 150 trajectories | `docs/a1-failure-counts.json` |
+| — among non-solves · among solves | 6 · 1 | 34 · 116 | `docs/a1-failure-counts.json` |
+| Repeated identical tool calls | 9 | 652 executed tool calls | `docs/a1-failure-counts.json` |
+| Wasted tool calls (an upper bound on waste) | 17 | 556 calls in 142 trajectories with a final query | `results/a1-trajectory-metrics.json` |
+| Recovered after an empty first `execute_sql` | 1 | 6 | `results/a1-trajectory-metrics.json` |
+| A repair was needed (and it succeeded) | 1 (1) | 150 trajectories | `results/a1-trajectory-metrics.json` |
+| **Substrate and rule** | | | |
+| Reference returns no rows, so answering nothing solves | 49 | 1,034 frame tasks | `docs/EQUIVALENCE.md` |
+| — the same, on the working set | 7 | 150 tasks | `results/a1-working.json` |
+| Empty-reference tasks solved — A0 · A1 | 7 · 2 | 7 | `docs/RESULTS.md` |
+| A0 solves whose rows equal a reference verified wrong | 8 | 10 tasks A1 lost and A0 won | `docs/a1-failure-counts.json` |
+| **Attack corpus — A1 (4.3)** | | | |
+| Compliance — the trajectory attempted the injected instruction | 8 | 45 attack cases | `results/attacks.json` |
+| Containment — every compliant attempt refused before executing | 5 | 5 compliant containable cases | `results/attacks.json` |
+| Task-damage — resisted, and answered wrongly anyway | 0 | 37 resisted cases | `results/attacks.json` |
+| The injected instruction never reached a prompt | 15 | 45 attack cases | `results/attacks.json` |
+| — row-values cases never exposed | 15 | 15 row-values cases | `results/attacks.json` |
+| Compliance among exposed cases | 8 | 30 exposed cases | `results/attacks.json` |
+| A repair was needed (all succeeded) | 6 | 45 trajectories | `runs/20260911-113246-1a97c9/ledger.jsonl`; `docs/ATTACKS.md` |
+
+## Counts with no rate available
+
+Each has a number and no denominator that would make it a rate — either the population is
+empty, or it was never defined, or it was never read.
+
+| Mode | Count | Why no rate | Artifact |
+|---|---|---|---|
+| `execute_sql` errors on a trajectory's first call — recovery rate's headline | 0 | Its denominator is 0; the rate is `TBD` by a rule fixed before the run | `results/a1-trajectory-metrics.json` |
+| Containment of a sandbox-escape attempt | 0 attempts | 0 of 9 cases attempted one; the rate is `TBD` | `results/attacks.json` |
+| A0 solves that are wrong answers matching a wrong reference | **at least 8** | Found among 10 examined tasks; A0's other 116 solves were never read, so no rate over 124 exists | `docs/a1-failure-counts.json` |
+| Groq HTTP 400 `tool_use_failed` — tool-call arguments not valid JSON | 1 — `dev-0758` | The ledger's 827 attempt rows are the requests that were *answered*, every one `ok`; a refused request is not an attempt row, so there is no per-request denominator | `runs/20260910-024454-1f69bc/ledger.jsonl`; `docs/PROVIDERS.md` |
+| Quota walls during the A1 run | 12 — 4 day-scope on `groq#1`, 8 minute-scope on `groq#2` | A wall is a refusal over a window, and the window Groq's daily counter runs over is `TBD` | `runs/quota-walls.jsonl` |
+| A session ended `pools_exhausted` with no provider refusal in its window — the client's modelled bucket, not Groq | 1 of the A1 run's 6 sessions | A per-session rate over sessions the operator staged means nothing | `runs/20260910-024454-1f69bc/ledger.jsonl` |
+| Trajectories cut off mid-task and retried on resume | 6 in the A1 run (1 operator stop, 4 `AllPoolsExhausted`, 1 HTTP 400) · 1 in the attack run (operator stop) | Staging is the operator's choice, so the count describes the staging, not the agent | the two runs' ledgers |
+| Full test-suite runs with one unexplained failure | 1 in session 9 (the SIGKILL subprocess test) · 1 in session 11 (not identified) | Suite runs were never counted as a population | `AGENT-ROADMAP.md`, sessions 9 and 11 |
+
+## Observed but uncounted
+
+Real, seen, and deliberately **not** put into either table above, because no count of them
+exists.
+
+- **Wrong answers that agree with a wrong reference, among the solves nobody read.** The 8
+  above were found by looking at the tasks A1 lost. Neither agent's other solves were read — 116
+  for A0, 116 for A1 — so how many more exist, and whether they favour either agent, is
+  unknown. This is the largest unmeasured term in both accuracy figures.
+- **The window Groq's daily token counter runs over.** It refused at `Limit 200000` with `Used
+  199125` after the run had spent 399,757 tokens, so it is not cumulative from a run's start;
+  what it is instead was never established and costs a day to find out.
+- **A0 under prompt injection.** A0's prompt carries every table name, column name and column
+  type, so 30 of the 45 attack cases reach it. It was not run against them; its compliance is
+  `TBD` (`docs/ATTACKS.md`).
+- **Other stored-value defects beyond `flight_2`, `car_1`'s TEXT numbers and `course_teach`'s
+  capitalisation.** Each was found because a failure pointed at it; the substrate was never
+  swept for padding or type defects as a whole.

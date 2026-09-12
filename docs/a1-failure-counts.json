@@ -1,0 +1,458 @@
+{
+  "run_id": "20260910-024454-1f69bc",
+  "ledger": "runs/20260910-024454-1f69bc/ledger.jsonl",
+  "census": "docs/failure-sample-a1.json",
+  "definitions": {
+    "solving_query_in_hand": "A census non-solve in whose standing trajectory some execute_sql that ran, re-executed read-only through the same sandbox, compares as solved against the reference under the same equivalence rule. No verdict moves.",
+    "repeated_identical_call": "An executed tool call whose name and arguments equal an earlier executed call in the same standing trajectory.",
+    "standing": "A task's last start-to-end bracket, the one metrics.py reads."
+  },
+  "solving_query_in_hand": {
+    "count": 12,
+    "of": 34,
+    "tasks": [
+      {
+        "task_id": "dev-0152",
+        "db_id": "car_1",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          9,
+          11
+        ]
+      },
+      {
+        "task_id": "dev-0186",
+        "db_id": "flight_2",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          4,
+          6,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "task_id": "dev-0207",
+        "db_id": "flight_2",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          5,
+          7,
+          9
+        ]
+      },
+      {
+        "task_id": "dev-0238",
+        "db_id": "flight_2",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          4,
+          5,
+          8,
+          9
+        ]
+      },
+      {
+        "task_id": "dev-0248",
+        "db_id": "flight_2",
+        "reason": "row_count",
+        "termination": "answer",
+        "solving_execute_sql_at_turns": [
+          3,
+          7
+        ]
+      },
+      {
+        "task_id": "dev-0254",
+        "db_id": "flight_2",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          5,
+          7,
+          10,
+          11
+        ]
+      },
+      {
+        "task_id": "dev-0256",
+        "db_id": "flight_2",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          6,
+          10,
+          12
+        ]
+      },
+      {
+        "task_id": "dev-0484",
+        "db_id": "wta_1",
+        "reason": "value_mismatch",
+        "termination": "answer",
+        "solving_execute_sql_at_turns": [
+          3
+        ]
+      },
+      {
+        "task_id": "dev-0883",
+        "db_id": "network_1",
+        "reason": "row_count",
+        "termination": "answer",
+        "solving_execute_sql_at_turns": [
+          4
+        ]
+      },
+      {
+        "task_id": "dev-0897",
+        "db_id": "network_1",
+        "reason": "row_count",
+        "termination": "answer",
+        "solving_execute_sql_at_turns": [
+          4
+        ]
+      },
+      {
+        "task_id": "dev-0980",
+        "db_id": "dog_kennels",
+        "reason": "no_sql",
+        "termination": "tool_call_limit",
+        "solving_execute_sql_at_turns": [
+          8
+        ]
+      },
+      {
+        "task_id": "dev-0999",
+        "db_id": "dog_kennels",
+        "reason": "row_count",
+        "termination": "answer",
+        "solving_execute_sql_at_turns": [
+          5
+        ]
+      }
+    ]
+  },
+  "repeated_identical_calls": {
+    "calls": 9,
+    "of_executed_calls": 652,
+    "trajectories": 7,
+    "of_trajectories": 150,
+    "among_non_solves": 6,
+    "of_non_solves": 34,
+    "among_solved": 1,
+    "of_solved": 116,
+    "tasks": [
+      {
+        "task_id": "dev-0051",
+        "solved": true,
+        "termination": "answer",
+        "repeated_calls": 1
+      },
+      {
+        "task_id": "dev-0186",
+        "solved": false,
+        "termination": "tool_call_limit",
+        "repeated_calls": 2
+      },
+      {
+        "task_id": "dev-0248",
+        "solved": false,
+        "termination": "answer",
+        "repeated_calls": 1
+      },
+      {
+        "task_id": "dev-0354",
+        "solved": false,
+        "termination": "tool_call_limit",
+        "repeated_calls": 2
+      },
+      {
+        "task_id": "dev-0613",
+        "solved": false,
+        "termination": "answer",
+        "repeated_calls": 1
+      },
+      {
+        "task_id": "dev-0980",
+        "solved": false,
+        "termination": "tool_call_limit",
+        "repeated_calls": 1
+      },
+      {
+        "task_id": "dev-0999",
+        "solved": false,
+        "termination": "answer",
+        "repeated_calls": 1
+      }
+    ]
+  },
+  "tool_calls": {
+    "standing_trajectories": 150,
+    "standing": {
+      "describe_table": 243,
+      "execute_sql": 193,
+      "list_tables": 150,
+      "sample_rows": 66
+    },
+    "standing_total": 652,
+    "brackets": 156,
+    "every_bracket": {
+      "describe_table": 251,
+      "execute_sql": 198,
+      "list_tables": 156,
+      "sample_rows": 71
+    },
+    "every_bracket_total": 676
+  },
+  "reference_verification": [
+    {
+      "task_id": "dev-0186",
+      "db_id": "flight_2",
+      "reference_returns": [],
+      "verification_sql": "SELECT AirportCode, AirportName FROM airports WHERE trim(City) = 'Anthony'",
+      "stored_data_answers": [
+        [
+          "ANY",
+          "Anthony "
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT AirportCode, AirportName FROM airports WHERE City = 'Anthony'"
+    },
+    {
+      "task_id": "dev-0207",
+      "db_id": "flight_2",
+      "reference_returns": [
+        [
+          0
+        ]
+      ],
+      "verification_sql": "SELECT count(*) FROM flights f JOIN airports a ON trim(f.SourceAirport) = a.AirportCode WHERE trim(a.City) = 'Aberdeen'",
+      "stored_data_answers": [
+        [
+          21
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT COUNT(*) FROM flights f JOIN airports a ON f.SourceAirport = a.AirportCode WHERE a.City = 'Aberdeen'"
+    },
+    {
+      "task_id": "dev-0227",
+      "db_id": "flight_2",
+      "reference_returns": [],
+      "verification_sql": "SELECT T1.AirportCode FROM airports T1 JOIN flights T2 ON T1.AirportCode = trim(T2.DestAirport) OR T1.AirportCode = trim(T2.SourceAirport) GROUP BY T1.AirportCode ORDER BY count(*) LIMIT 1",
+      "stored_data_answers": [
+        [
+          "AID"
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT a.AirportCode\nFROM airports AS a\nJOIN (\n    SELECT AirportCode,\n           COUNT(*) AS cnt\n    FROM (\n        SELECT SourceAirport AS AirportCode FROM flights\n        UNION ALL\n        SELECT DestAirport AS AirportCode FROM flights\n    )\n    GROUP BY AirportCode\n) AS f ON a.AirportCode = f.AirportCode\nORDER BY f.cnt ASC\nLIMIT 1"
+    },
+    {
+      "task_id": "dev-0238",
+      "db_id": "flight_2",
+      "reference_returns": [],
+      "verification_sql": "SELECT T1.Airline FROM airlines T1 JOIN flights T2 ON T1.uid = T2.Airline WHERE trim(T2.SourceAirport) = 'APG' INTERSECT SELECT T1.Airline FROM airlines T1 JOIN flights T2 ON T1.uid = T2.Airline WHERE trim(T2.SourceAirport) = 'CVO'",
+      "stored_data_answers": [
+        [
+          "AirTran Airways"
+        ],
+        [
+          "Allegiant Air"
+        ],
+        [
+          "Delta Airlines"
+        ],
+        [
+          "Northwest Airlines"
+        ],
+        [
+          "Southwest Airlines"
+        ],
+        [
+          "US Airways"
+        ],
+        [
+          "United Airlines"
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT a.Airline\nFROM airlines a\nJOIN flights f ON a.uid = f.Airline\nWHERE f.SourceAirport IN ('APG','CVO')\nGROUP BY a.Airline\nHAVING COUNT(DISTINCT f.SourceAirport) = 2"
+    },
+    {
+      "task_id": "dev-0248",
+      "db_id": "flight_2",
+      "reference_returns": [],
+      "verification_sql": "SELECT FlightNo FROM flights WHERE trim(SourceAirport) = 'APG'",
+      "stored_data_answers": [
+        [
+          28
+        ],
+        [
+          1275
+        ],
+        [
+          489
+        ],
+        [
+          1377
+        ],
+        [
+          101
+        ],
+        [
+          743
+        ],
+        [
+          29
+        ],
+        [
+          478
+        ],
+        [
+          382
+        ],
+        [
+          1172
+        ],
+        [
+          143
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT FlightNo FROM flights WHERE SourceAirport = 'APG'"
+    },
+    {
+      "task_id": "dev-0254",
+      "db_id": "flight_2",
+      "reference_returns": [],
+      "verification_sql": "SELECT T1.FlightNo FROM flights T1 JOIN airports T2 ON trim(T1.DestAirport) = T2.AirportCode WHERE trim(T2.City) = 'Aberdeen'",
+      "stored_data_answers": [
+        [
+          29
+        ],
+        [
+          90
+        ],
+        [
+          1274
+        ],
+        [
+          488
+        ],
+        [
+          1376
+        ],
+        [
+          100
+        ],
+        [
+          742
+        ],
+        [
+          1139
+        ],
+        [
+          1249
+        ],
+        [
+          28
+        ],
+        [
+          400
+        ],
+        [
+          479
+        ],
+        [
+          1070
+        ],
+        [
+          44
+        ],
+        [
+          755
+        ],
+        [
+          908
+        ],
+        [
+          383
+        ],
+        [
+          1173
+        ],
+        [
+          142
+        ],
+        [
+          512
+        ],
+        [
+          843
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT FlightNo FROM flights JOIN airports ON flights.DestAirport = airports.AirportCode WHERE airports.City = 'Aberdeen'"
+    },
+    {
+      "task_id": "dev-0256",
+      "db_id": "flight_2",
+      "reference_returns": [
+        [
+          0
+        ]
+      ],
+      "verification_sql": "SELECT count(*) FROM flights T1 JOIN airports T2 ON trim(T1.DestAirport) = T2.AirportCode WHERE trim(T2.City) IN ('Aberdeen', 'Abilene')",
+      "stored_data_answers": [
+        [
+          47
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT COUNT(*) FROM flights JOIN airports ON flights.DestAirport = airports.AirportCode WHERE airports.City IN ('Aberdeen','Abilene')"
+    },
+    {
+      "task_id": "dev-0388",
+      "db_id": "course_teach",
+      "reference_returns": [
+        [
+          "Joseph Huts"
+        ],
+        [
+          "Gustaaf Deloor"
+        ],
+        [
+          "Vicente Carretero"
+        ],
+        [
+          "John Deloor"
+        ],
+        [
+          "Kearsley Brown"
+        ],
+        [
+          "Anne Walker"
+        ],
+        [
+          "Lucy Wong"
+        ]
+      ],
+      "verification_sql": "SELECT Name, Hometown FROM teacher WHERE Hometown LIKE 'little lever%'",
+      "stored_data_answers": [
+        [
+          "Anne Walker",
+          "Little Lever Urban District"
+        ]
+      ],
+      "a0_solved": true,
+      "a0_sql": "SELECT Name FROM teacher WHERE Hometown <> ' Little Lever Urban District '"
+    }
+  ]
+}

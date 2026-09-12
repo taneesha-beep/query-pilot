@@ -14,6 +14,7 @@ tasks and nothing else would say so.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -288,3 +289,104 @@ def test_every_definition_travels_with_a1s_published_numbers():
     assert "tool_result events" in definitions["tool_calls_per_task"]
     assert "three denominators, never one" in definitions["recovery_rate"]
     assert "APPROXIMATE" in definitions["wasted_calls"]
+
+
+# --- 4.4: A1's failures read in full, and the mechanical counts beside them --------------------
+
+A1_CENSUS = REPO / "docs" / "failure-sample-a1.json"
+A1_COUNTS = REPO / "docs" / "a1-failure-counts.json"
+FAILURES = REPO / "docs" / "FAILURES.md"
+
+
+def a1_census() -> dict:
+    return json.loads(A1_CENSUS.read_text())
+
+
+def a1_counts() -> dict:
+    return json.loads(A1_COUNTS.read_text())
+
+
+def test_a1s_census_is_every_non_solve_of_the_run_it_names_and_nothing_was_drawn():
+    """34 non-solves, more than 2.5's thirty, so a census was chosen over a draw — decided with
+    the author before any of them was read. A census has no seed because nothing was chosen."""
+    document, census = a1(), a1_census()
+    non_solves = sorted(t["task_id"] for t in document["tasks"] if not t.get("solved"))
+
+    assert census["run"]["run_id"] == document["measurement"]["run_id"]
+    assert census["run"]["tasks_failed"] == 0 and census["run"]["failed_task_ids"] == []
+    assert sorted(row["task_id"] for row in census["drawn"]) == non_solves
+    assert len(non_solves) == 34 > SAMPLE_SIZE
+    assert census["protocol"]["seed"] is None
+    assert census["protocol"]["how_drawn"].startswith("census")
+
+    by_id = {t["task_id"]: t for t in document["tasks"]}
+    seen = set(census["protocol"]["seen_before_the_protocol_was_fixed"])
+    assert seen == {"dev-0186"}
+    for row in census["drawn"]:
+        assert row["reason"] == by_id[row["task_id"]]["reason"]
+        assert row["seen_before"] is (row["task_id"] in seen)
+
+
+def test_the_committed_category_table_accounts_for_every_non_solve_of_both_agents():
+    """Read off the table in docs/FAILURES.md, so a category moved by hand must still sum."""
+    text = FAILURES.read_text()
+    header = "| Category | A1 — count of 34 | A0 — count of 26 |"
+    lines = text[text.index(header) :].split("\n\n")[0].splitlines()[2:]
+    a1_total = a0_total = 0
+    for line in lines:
+        cells = [cell.strip().strip("*") for cell in line.strip().strip("|").split("|")]
+        a1_total += int(cells[1])
+        a0_total += 0 if cells[2] == "—" else int(cells[2])
+    assert (a1_total, a0_total) == (34, 26)
+
+
+def test_the_solving_query_count_is_over_the_census_and_matches_its_own_list():
+    counts, ids = a1_counts(), {row["task_id"] for row in a1_census()["drawn"]}
+    solving = counts["solving_query_in_hand"]
+
+    assert solving["of"] == len(ids) == 34
+    assert solving["count"] == len(solving["tasks"]) == 12
+    assert {task["task_id"] for task in solving["tasks"]} <= ids
+    # Seven of the eight trajectories that ended at the tool-call limit had the answer in hand.
+    at_limit = [task for task in solving["tasks"] if task["termination"] == "tool_call_limit"]
+    assert len(at_limit) == 7
+    assert a1()["terminations"]["tool_call_limit"] == 8
+
+
+def test_repeated_identical_calls_are_counted_over_every_standing_trajectory():
+    repeated = a1_counts()["repeated_identical_calls"]
+
+    assert repeated["trajectories"] == len(repeated["tasks"]) == 7
+    assert repeated["of_trajectories"] == 150
+    assert repeated["calls"] == sum(task["repeated_calls"] for task in repeated["tasks"]) == 9
+    assert repeated["among_non_solves"] + repeated["among_solved"] == repeated["trajectories"]
+    assert repeated["of_solved"] == a1()["execution_accuracy"]["solved"] == 116
+
+
+def test_tool_calls_over_the_standing_trajectories_are_what_the_metrics_file_says():
+    """652 over the 150 that stand, which is 3.4's reading. 676 only counts the six trajectories
+    that were cut off and retried as well — the figure docs/RESULTS.md had quoted as the first."""
+    calls = a1_counts()["tool_calls"]
+    per_task = a1_metrics()["tool_calls_per_task"]
+    by_name: Counter[str] = Counter()
+    for task in a1()["tasks"]:
+        by_name.update(task.get("tool_calls_by_name") or {})
+
+    assert calls["standing_total"] == round(per_task["mean"] * per_task["n"]) == 652
+    assert calls["standing"] == dict(sorted(by_name.items()))
+    assert (calls["brackets"], calls["every_bracket_total"]) == (156, 676)
+
+
+def test_every_verified_wrong_reference_was_an_a0_solve_and_an_a1_loss():
+    """The eight A0 solves that are wrong answers matching a wrong reference, checked against
+    both committed projections: A0 solved each, A1 lost each, and the data answers differently."""
+    a0_by_id = {t["task_id"]: t for t in results()["tasks"]}
+    a1_by_id = {t["task_id"]: t for t in a1()["tasks"]}
+    items = a1_counts()["reference_verification"]
+
+    assert len(items) == 8
+    for item in items:
+        assert item["a0_solved"] and a0_by_id[item["task_id"]]["solved"]
+        assert not a1_by_id[item["task_id"]].get("solved")
+        assert item["stored_data_answers"]
+        assert item["reference_returns"] != item["stored_data_answers"]
