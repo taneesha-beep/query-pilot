@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -283,3 +285,24 @@ def test_the_lifted_transcripts_reproduce_the_committed_trajectory_metrics(
     recomputed.pop("computed_at")
     expected.pop("computed_at")
     assert recomputed == expected
+
+
+def test_nothing_the_viewer_needs_is_hidden_from_git() -> None:
+    # An unanchored `data/` in .gitignore once matched `viewer/data/` and left all of its files
+    # untracked. The rebuild test passed here, where the files existed, and failed only in CI.
+    git = shutil.which("git")
+    if git is None or not (REPO / ".git").exists():
+        pytest.skip("not a git checkout")
+    needed = [*PAGE, *DATA.rglob("*.json"), *(p for lift in LIFTS.values() for p in lift.glob("*"))]
+    needed.append(REPO / "results" / "scheduler-efficiency.json")
+    listed = "\n".join(str(path.relative_to(REPO)) for path in needed)
+    result = subprocess.run(
+        [git, "check-ignore", "--no-index", "--stdin"],
+        cwd=REPO,
+        input=listed,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.stdout == "", f"ignored by .gitignore:\n{result.stdout}"
+    assert result.returncode == 1  # git's own answer for "none of these is ignored"

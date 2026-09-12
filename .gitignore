@@ -2,7 +2,10 @@
 AGENT-ROADMAP.md
 
 # Substrate: databases and downloaded archives are acquired, never committed.
-data/
+# Anchored for the same reason as `/runs/` below: an unanchored `data/` also matched
+# `viewer/data/`, the committed data the trajectory viewer reads, and left it silently
+# untracked until CI failed on it (2026-09-12).
+/data/
 
 # Run output: ledgers and transcripts. Only derived summaries are committed.
 # Anchored with a leading slash: an unanchored `runs/` also matches `config/runs/`, where
