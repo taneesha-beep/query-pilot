@@ -27,8 +27,12 @@ from query_pilot.agents.a1 import (
     A1,
     ANSWER,
     BUDGET,
+    FAIL_TASK,
     PROMPT_CEILING,
     PROMPT_CEILING_CHARS,
+    PROVIDER_REJECTED,
+    REJECTED_GENERATION_POLICIES,
+    SCORE_UNSOLVED,
     SYSTEM_PROMPT,
     TERMINATIONS,
     TOOL_CALL_LIMIT,
@@ -37,7 +41,9 @@ from query_pilot.agents.a1 import (
     TURN_LIMIT_REACHED,
     build_prompt,
     conversation_chars,
+    generation_rejection,
 )
+from query_pilot.agents.metrics import read_task_metrics
 from query_pilot.agents.sql import extract_sql
 from query_pilot.agents.tools import TOOL_NAMES
 from query_pilot.agents.transcript import (
@@ -50,7 +56,7 @@ from query_pilot.agents.transcript import (
     replay,
     transcript_path,
 )
-from query_pilot.agents.validate import MULTIPLE_STATEMENTS
+from query_pilot.agents.validate import MULTIPLE_STATEMENTS, NO_STATEMENT
 from query_pilot.client.errors import ProviderHTTPError
 from query_pilot.client.types import Completion, Message, ToolCall
 from query_pilot.equivalence import NO_SQL
@@ -909,3 +915,222 @@ def test_a0_still_drops_extra_statements_rather_than_rejecting_them() -> None:
     assert "validate" not in a0.__dict__
     assert extract_sql(MULTI).sql == "SELECT name FROM singer"
     assert extract_sql(MULTI).dropped == 1
+
+
+# --- a generation the provider refused: 5.2's cheap runs, decided with the author 2026-09-12 ---
+#
+# Groq parses the model's tool call on its side and answers HTTP 400 when it cannot, returning
+# the model's own output as `failed_generation`. On the strong model that happened once in 150
+# trajectories and was retried; 5.1's preflight on the cheap model saw it far more often, and
+# at least one task failed identically twice. So a run may declare that such a refusal ends the
+# trajectory as `provider_rejected` — complete, unsolved, its paid turns counted — instead of
+# failing the task. The default is unchanged, so 3.6's meaning is untouched.
+
+#: The shape Groq returned on 2026-09-12 (run 20260912-052224-4f8be8), `failed_generation`
+#: verbatim from that ledger.
+FAILED_GENERATION = '{"name": "describe_table", "arguments": {"{"}"}'
+
+
+def refusal(
+    *,
+    status: int = 400,
+    code: str | None = "tool_use_failed",
+    message: str = "Failed to parse tool call arguments as JSON",
+    failed_generation: str | None = FAILED_GENERATION,
+) -> ProviderHTTPError:
+    error: dict = {"message": message, "type": "invalid_request_error"}
+    if code is not None:
+        error["code"] = code
+    if failed_generation is not None:
+        error["failed_generation"] = failed_generation
+    return ProviderHTTPError(
+        status=status,
+        body=json.dumps({"error": error}),
+        provider="groq",
+        model="openai/gpt-oss-20b",
+        pool="GROQ_API_KEY",
+    )
+
+
+def test_a_refusal_carrying_the_models_own_output_is_a_rejected_generation() -> None:
+    assert generation_rejection(refusal()) == {
+        "status": 400,
+        "code": "tool_use_failed",
+        "message": "Failed to parse tool call arguments as JSON",
+        "failed_generation": FAILED_GENERATION,
+    }
+    # The code is recorded when present and never required: the field is the signal.
+    assert generation_rejection(refusal(code=None))["code"] is None
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        # A 400 about this project's own request is not the model's failure.
+        refusal(code="context_length_exceeded", message="too long", failed_generation=None),
+        # Naming the field in prose is not carrying it.
+        refusal(
+            code=None,
+            message="Parsing failed. See 'failed_generation' for more details.",
+            failed_generation=None,
+        ),
+        # Only a 400. A 429 carrying the field is still a quota wall.
+        refusal(status=429),
+        ProviderHTTPError(
+            status=400, body="not json", provider="groq", model="m", pool="GROQ_API_KEY"
+        ),
+        RuntimeError("not a provider error at all"),
+    ],
+)
+def test_nothing_else_is_a_rejected_generation(error) -> None:
+    assert generation_rejection(error) is None
+
+
+def test_the_policy_is_one_of_two_named_values_and_defaults_to_failing_the_task(
+    database_root, tmp_path
+) -> None:
+    assert REJECTED_GENERATION_POLICIES == (FAIL_TASK, SCORE_UNSOLVED)
+    agent = A1(StubClient(), [], database_root, tmp_path)
+    assert agent.rejected_generation == FAIL_TASK
+    with pytest.raises(ValueError, match="rejected_generation"):
+        A1(StubClient(), [], database_root, tmp_path, rejected_generation="retry")
+
+
+def test_provider_rejected_is_a_sixth_termination_and_not_budget() -> None:
+    assert PROVIDER_REJECTED == "provider_rejected"
+    assert PROVIDER_REJECTED in TERMINATIONS
+    assert len(TERMINATIONS) == 6
+
+
+@pytest.mark.asyncio
+async def test_by_default_a_rejected_generation_still_fails_the_task(
+    task, database_root, tmp_path
+) -> None:
+    """3.6's rule, unchanged: constraint 76 fails the task and a resume retries it."""
+    client = StubClient(("", [call("list_tables")]), refusal())
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+    assert row["status"] == FAILED
+    assert row["error_class"] == "bad_request"
+    assert "solved" not in row["detail"]
+
+
+@pytest.mark.asyncio
+async def test_a_rejected_generation_ends_the_trajectory_unsolved_when_the_run_says_so(
+    task, database_root, tmp_path
+) -> None:
+    """Complete, unsolved, scored ``no_sql``, no repair — and the refused request is no turn."""
+    client = StubClient(("", [call("list_tables")]), refusal())
+    report, row, directory = await run_one(
+        client, task, database_root, tmp_path, rejected_generation=SCORE_UNSOLVED
+    )
+
+    assert report.tasks_failed == 0
+    assert row["status"] == COMPLETE
+    detail = row["detail"]
+    assert detail["termination"] == PROVIDER_REJECTED
+    assert detail["solved"] is False and detail["reason"] == NO_SQL and detail["sql"] is None
+    # No reply was committed to, so no repair is owed (constraint 61), and the empty final
+    # text fails validation the way a tool_call_limit trajectory's does.
+    assert detail["validation_rule"] == NO_STATEMENT
+    assert detail["repair_attempts"] == 0 and detail["repair_blocked"] is None
+    assert len(client.handed) == 2  # both requests were made; no repair request followed
+    # The refused request returned no message and no token counts: it is not a turn and has
+    # no attempt row. The turn that was answered keeps its row.
+    assert detail["turns"] == 1 and detail["tool_calls"] == 1
+    ledger = directory / "ledger.jsonl"
+    assert [r["turn"] for r in read_rows(ledger) if r["kind"] == "attempt"] == [1]
+    # The outcome record carries what the provider said; the content record carries what the
+    # model generated. Neither holds the other's fact.
+    assert detail["provider_rejection"] == {
+        "status": 400,
+        "code": "tool_use_failed",
+        "message": "Failed to parse tool call arguments as JSON",
+    }
+    trajectory = read_trajectories(transcript_path(directory, task.task_id))[-1]
+    assert trajectory.end["outcome"] == PROVIDER_REJECTED
+    assert trajectory.end["failed_generation"] == FAILED_GENERATION
+    metrics = read_task_metrics(transcript_path(directory, task.task_id), solved=False)
+    assert metrics.termination == PROVIDER_REJECTED and metrics.counts_agree
+
+
+@pytest.mark.asyncio
+async def test_a_trajectory_that_ended_otherwise_carries_no_rejection_fields(
+    task, database_root, tmp_path
+) -> None:
+    client = StubClient(("", [call("list_tables")]), ANSWER_SQL)
+    _, row, directory = await run_one(
+        client, task, database_root, tmp_path, rejected_generation=SCORE_UNSOLVED
+    )
+    assert "provider_rejection" not in row["detail"]
+    trajectory = read_trajectories(transcript_path(directory, task.task_id))[-1]
+    assert "failed_generation" not in trajectory.end
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "error",
+    [
+        refusal(code="context_length_exceeded", message="too long", failed_generation=None),
+        ProviderHTTPError(
+            status=429, body="rate limit", provider="groq", model="m", pool="GROQ_API_KEY"
+        ),
+    ],
+)
+async def test_under_the_policy_every_other_client_error_still_fails_the_task(
+    task, database_root, tmp_path, error
+) -> None:
+    """A 400 about this project's request, or a quota wall, may never move the accuracy
+    figure (constraint 54). Only the provider's statement that it refused the model's own
+    output is scored."""
+    client = StubClient(("", [call("list_tables")]), error)
+    _, row, _ = await run_one(
+        client, task, database_root, tmp_path, rejected_generation=SCORE_UNSOLVED
+    )
+    assert row["status"] == FAILED
+    assert "solved" not in row["detail"]
+
+
+@pytest.mark.asyncio
+async def test_a_rejected_repair_blocks_the_repair_and_the_failed_reply_stands(
+    task, database_root, tmp_path
+) -> None:
+    """The trajectory ended on ``answer``; the one repair it was owed came back refused.
+
+    Seen in the preflight: a reply with no SQL, then a repair request offering no tools, and
+    the model called one anyway ("Tool choice is none, but model called a tool"). The
+    termination stays ``answer``, the original validation failure stands, and
+    ``repair_blocked`` says why no repaired reply exists.
+    """
+    client = StubClient(
+        "I think it is Joe.",
+        refusal(message="Tool choice is none, but model called a tool"),
+    )
+    _, row, directory = await run_one(
+        client, task, database_root, tmp_path, rejected_generation=SCORE_UNSOLVED
+    )
+    assert row["status"] == COMPLETE
+    detail = row["detail"]
+    assert detail["termination"] == ANSWER
+    assert detail["validation_rule"] == NO_STATEMENT
+    assert detail["reason"] == NO_SQL
+    assert detail["repair_attempts"] == 0 and detail["repair_succeeded"] is False
+    assert detail["repair_blocked"] == PROVIDER_REJECTED
+    assert detail["provider_rejection"]["message"] == "Tool choice is none, but model called a tool"
+    assert detail["turns"] == 1
+    path = transcript_path(directory, task.task_id)
+    trajectory = read_trajectories(path)[-1]
+    assert trajectory.end["outcome"] == ANSWER
+    assert trajectory.end["failed_generation"] == FAILED_GENERATION
+    # The repair request was sent and is on disk, flagged; no reply to it is.
+    repairs = [e for e in trajectory.events if e["kind"] == MESSAGE and e.get("repair")]
+    assert [e["role"] for e in repairs] == ["user"]
+    assert read_task_metrics(path, solved=False).counts_agree
+
+
+@pytest.mark.asyncio
+async def test_by_default_a_rejected_repair_still_fails_the_task(
+    task, database_root, tmp_path
+) -> None:
+    client = StubClient("I think it is Joe.", refusal())
+    _, row, _ = await run_one(client, task, database_root, tmp_path)
+    assert row["status"] == FAILED

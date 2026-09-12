@@ -1,0 +1,56 @@
+# A2-cheap over the 15-task smoke set: 5.1's preflight of the escalation rule on the cheap model.
+#
+# A2-cheap is A1's loop, unchanged — the same four limits, the same prompt, the same tools, the
+# same sandbox and the same equivalence rule — on the cheap model instead of the strong one.
+# 5.1 requires this run before the rule is frozen, because every figure the rule was written
+# against came from the strong model and the rule runs on the cheap one. It records how often
+# each clause fires (docs/escalation-a2-cheap-smoke.json). **No accuracy figure is taken from
+# it and none may be reported**: the smoke set sits inside the working set, an overlap 5.2's
+# write-up declares the way 2.4's did for its acceptance run.
+#
+# The task IDs are not here. They live in splits/smoke.json, the single committed source of who
+# is in the smoke set.
+
+[run]
+agent = "A2-cheap"
+
+# 150,000 tokens, cumulative across every resume of this run ID.
+#
+# Derivation, over committed numbers: 3.6 measured 5,140.2 tokens a declared task on the strong
+# model (results/a1-working.json), so fifteen tasks at that rate PROJECTS 77,103. The cheap
+# model's cost is unmeasured — this run is what measures it — so the ceiling sits at about
+# 1.95x the projection: a run that has roughly doubled its projected cost stops on its own,
+# which is where "How to execute this document" rule 5 says to stop and report rather than
+# improvise.
+token_ceiling = 150000
+
+# Thirty minutes, per session rather than per run.
+#
+# 77,103 projected tokens against the endpoint's 8,000 a minute is a token-bucket floor of about
+# 9.6 minutes; the request floor is softer (15 x 5.51 requests at 30 a minute is under three).
+# Thirty minutes is about 3x the bucket floor. The ceiling exists to stop a run that is stuck,
+# not one that is slow.
+wall_clock_ceiling_s = 1800
+
+# One, and forced rather than chosen — constraint 64, redone for this declaration.
+#
+# PROMPT_CEILING_CHARS was derived so that one attempt at the ceiling costs the endpoint's whole
+# per-minute budget (22,776 / 3.265 + 1,024 = 8,000), and the cheap endpoint's declared tpm is
+# the strong one's, 8,000. Measured on A1's own requests the ratio is lower and an attempt at the
+# ceiling would cost more than that (docs/escalation-a1-working.json, `attempt_sizes`), which
+# only strengthens the case: a second attempt in flight cannot be repaid inside wait_ceiling_s.
+concurrency = 1
+
+# Free-form, inside the fingerprint, never inspected by the run machinery.
+[run.params]
+split = "smoke"
+# The role the loop runs on. `cheap-no-spillover`, not `cheap`: see config/providers.toml.
+role = "cheap-no-spillover"
+# What a generation the provider refused does to the trajectory. `score_unsolved`: it ends it
+# as `provider_rejected`, complete and unsolved, and 5.1's rule escalates it. Decided with the
+# author on 2026-09-12, after the first preflight (run 20260912-052224-4f8be8, superseded)
+# found Groq refusing the cheap model's own output on 6 of 19 trajectories and one task
+# identically twice — under 3.6's `fail_task` rule the run could not finish, and its accuracy
+# would have counted only the trajectories Groq could parse. 3.6 ran under `fail_task`; this
+# is the one declared difference beside the role, and it is stated rather than hidden.
+rejected_generation = "score_unsolved"

@@ -262,6 +262,7 @@ class TranscriptWriter:
         repair_attempts: int = 0,
         repair_succeeded: bool = False,
         repair_blocked: str | None = None,
+        failed_generation: str | None = None,
     ) -> None:
         """Close a trajectory, naming which termination path ended it.
 
@@ -276,19 +277,26 @@ class TranscriptWriter:
         thing here that is *not* derivable, and it is the reason the trio is worth writing:
         without it a trajectory that was owed a repair and did not get one is
         indistinguishable from one that never needed a repair at all.
+
+        **``failed_generation`` is 5.1's, added 2026-09-12, and written only when present**, so
+        every other trajectory's ``end`` keeps the shape 3.6's transcripts have. It is what the
+        model generated on the request the provider refused: content, like every message in
+        this file, which is why it is here and the provider's code and message are in the
+        ledger's ``detail`` instead. It is never a ``message`` event, because it was never
+        appended to the conversation — :func:`replay` must still rebuild only what was sent.
         """
-        self._append(
-            END,
-            {
-                "outcome": outcome,
-                "turns": turns,
-                "tool_calls": tool_calls,
-                "repair_attempts": repair_attempts,
-                "repair_succeeded": repair_succeeded,
-                "repair_blocked": repair_blocked,
-                "ended_at": ended_at,
-            },
-        )
+        row: dict[str, Any] = {
+            "outcome": outcome,
+            "turns": turns,
+            "tool_calls": tool_calls,
+            "repair_attempts": repair_attempts,
+            "repair_succeeded": repair_succeeded,
+            "repair_blocked": repair_blocked,
+            "ended_at": ended_at,
+        }
+        if failed_generation is not None:
+            row["failed_generation"] = failed_generation
+        self._append(END, row)
 
 
 # --- reading -------------------------------------------------------------------------------

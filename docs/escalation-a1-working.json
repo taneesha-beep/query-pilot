@@ -1,0 +1,1391 @@
+{
+  "run_id": "20260910-024454-1f69bc",
+  "ledger": "runs/20260910-024454-1f69bc/ledger.jsonl",
+  "requests": {
+    "attempt_rows": 827,
+    "by_outcome": {
+      "ok": 827
+    },
+    "by_endpoint": {
+      "groq openai/gpt-oss-120b": 827
+    },
+    "by_pool": {
+      "groq#1": 439,
+      "groq#2": 388
+    },
+    "first_recorded_at": "2026-09-10T02:44:54.784554+00:00",
+    "last_recorded_at": "2026-09-10T05:09:07.628819+00:00",
+    "failed_task_rows": {
+      "bad_request": 1,
+      "executor_error": 1,
+      "unclassified": 4
+    },
+    "tasks_failed_more_than_once": [
+      "dev-0496"
+    ]
+  },
+  "definitions": {
+    "rule": "Escalate a cheap trajectory to the strong model when any of the four clauses fires. One escalation at most. The cheap trajectory's tokens count in the escalated task's cost, and an escalated task the strong model also fails has paid for both.",
+    "did_not_answer": "The trajectory terminated on turn_limit, tool_call_limit, prompt_ceiling or provider_rejected rather than answer. Read from the ledger task row's detail.termination. provider_rejected was added on 2026-09-12, before the rule was committed, by the author's decision after the cheap-model preflight; it exists only in runs that declare rejected_generation = score_unsolved.",
+    "validation_failed": "The final reply failed validation, after its one repair where one was made: detail.validation_rule is not null, whatever the termination. A trajectory that did not answer gets no repair (constraint 61), so on those this clause coincides with did_not_answer whenever the last text held no statement.",
+    "first_query_error": "The trajectory's first execute_sql came back ok=false. Read from the transcript's last bracket by metrics.read_task_metrics.",
+    "first_query_empty": "The trajectory's first execute_sql came back ok with zero rows. Read the same way.",
+    "no_execute_sql": "NOT a clause. A trajectory that ran no execute_sql at all is not escalated: on 3.6's run such trajectories solved above the average, so it is not a failure signal. Counted beside the clauses so the rejection stays visible.",
+    "decidable": "Complete trajectories only. A failed task (budget, a client error) is retried by the run, never escalated, and is listed as undecided.",
+    "frozen": "Committed before any 5.2 run. Tuning a clause after seeing 5.2's runs is the failure 5.1 exists to prevent (constraint 78)."
+  },
+  "outcomes_included": true,
+  "tasks_declared": 150,
+  "undecided": [],
+  "terminations": {
+    "answer": 142,
+    "tool_call_limit": 8
+  },
+  "table": {
+    "trajectories": 150,
+    "would_escalate": {
+      "count": 10,
+      "solved": 1,
+      "solve_rate": 0.1
+    },
+    "would_not_escalate": {
+      "count": 140,
+      "solved": 115,
+      "solve_rate": 0.821429
+    },
+    "escalation_rate": 0.066667,
+    "clauses": {
+      "did_not_answer": {
+        "count": 8,
+        "solved": 0,
+        "solve_rate": 0.0
+      },
+      "validation_failed": {
+        "count": 8,
+        "solved": 0,
+        "solve_rate": 0.0
+      },
+      "first_query_error": {
+        "count": 0,
+        "solved": 0,
+        "solve_rate": "TBD"
+      },
+      "first_query_empty": {
+        "count": 6,
+        "solved": 1,
+        "solve_rate": 0.166667
+      }
+    },
+    "fired_alone": {
+      "did_not_answer": 0,
+      "validation_failed": 0,
+      "first_query_error": 0,
+      "first_query_empty": 2
+    },
+    "not_a_clause": {
+      "no_execute_sql": {
+        "count": 24,
+        "solved": 21,
+        "solve_rate": 0.875
+      }
+    },
+    "failures": {
+      "count": 34,
+      "escalated": 9,
+      "recall": 0.264706
+    }
+  },
+  "attempt_sizes": {
+    "attempts_paired": 803,
+    "served_by": {
+      "groq openai/gpt-oss-120b": 803
+    },
+    "pools": {
+      "groq#1": 420,
+      "groq#2": 383
+    },
+    "chars_per_prompt_token": {
+      "min": 1.879,
+      "median": 2.066,
+      "max": 3.323
+    },
+    "fit": {
+      "intercept_tokens": 158.7,
+      "chars_per_token": 2.65
+    },
+    "largest_attempt": {
+      "tokens": 3426,
+      "prompt_tokens": 3184,
+      "completion_tokens": 242,
+      "chars": 8567,
+      "task_id": "dev-0549",
+      "turn": 12,
+      "share_of_tpm": 0.4283
+    },
+    "longest_conversation": {
+      "chars": 8855,
+      "task_id": "dev-0549",
+      "turn": 13,
+      "share_of_ceiling": 0.3888
+    },
+    "largest_completion_tokens": 659,
+    "attempts_over_tpm": 0,
+    "projected_attempt_at_ceiling": 9777,
+    "tpm": 8000,
+    "prompt_ceiling_chars": 22776,
+    "max_output_tokens": 1024
+  },
+  "ceiling_derivation": {
+    "chars_per_prompt_token": 3.265,
+    "source": "docs/a1-tool-sizes.json, measured in docs/a0-prompt-sizes.json on A0's prompts",
+    "worst_case_attempt_tokens": 8000,
+    "tpm": 8000
+  },
+  "loop_behaviour": {
+    "assistant_messages": 803,
+    "tool_calls_per_assistant_message": {
+      "0": 143,
+      "1": 660
+    },
+    "max_tool_calls_in_one_message": 1,
+    "messages_with_more_than_one_call": 0,
+    "finish_reasons": {
+      "stop": 143,
+      "tool_calls": 660
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "dev-0003",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0007",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0008",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0020",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0025",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0030",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0044",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0046",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0051",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0063",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0076",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0078",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0086",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0101",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0105",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0106",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0109",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0110",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0123",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0125",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0126",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0133",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0137",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0146",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0150",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0152",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "rows",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0177",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0186",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "empty",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0188",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0192",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0207",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "rows",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0227",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0237",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0238",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "empty",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0242",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0248",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "empty",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0254",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "empty",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0256",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "empty",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0261",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0263",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0272",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0276",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0278",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0292",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0299",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0301",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0313",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0317",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0322",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0327",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0331",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0354",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "rows",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0363",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0366",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0374",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0388",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0399",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0404",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0407",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0413",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0423",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0425",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0427",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0446",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0461",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0478",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0483",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0484",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0488",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0489",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0490",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0491",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0496",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0504",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0508",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0511",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0524",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0528",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0541",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0545",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0549",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0553",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0562",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0569",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0571",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0589",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0606",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0607",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0613",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0614",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0615",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0617",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0638",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0639",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0643",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0649",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0653",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0654",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0656",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0663",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0675",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0679",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0691",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0699",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0700",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0710",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0722",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0739",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0745",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0747",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0758",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0760",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0763",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0775",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0780",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0800",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0801",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0806",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0816",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0820",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0830",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0837",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0844",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0849",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0851",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0855",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0870",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0883",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0886",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0888",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0889",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0897",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0898",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0909",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "empty",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0924",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0937",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0946",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0952",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0965",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0969",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0973",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0974",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0980",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "rows",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "solved": false
+    },
+    {
+      "task_id": "dev-0991",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": null,
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-0999",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": false
+    },
+    {
+      "task_id": "dev-1001",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-1005",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-1014",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-1022",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    },
+    {
+      "task_id": "dev-1031",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": [],
+      "solved": true
+    }
+  ]
+}

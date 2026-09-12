@@ -1,0 +1,256 @@
+{
+  "run_id": "20260912-054709-c34308",
+  "ledger": "runs/20260912-054709-c34308/ledger.jsonl",
+  "requests": {
+    "attempt_rows": 77,
+    "by_outcome": {
+      "ok": 77
+    },
+    "by_endpoint": {
+      "groq openai/gpt-oss-20b": 77
+    },
+    "by_pool": {
+      "groq#1": 41,
+      "groq#2": 36
+    },
+    "first_recorded_at": "2026-09-12T05:47:10.051239+00:00",
+    "last_recorded_at": "2026-09-12T05:49:57.767603+00:00",
+    "failed_task_rows": {
+      "executor_error": 1
+    },
+    "tasks_failed_more_than_once": []
+  },
+  "definitions": {
+    "rule": "Escalate a cheap trajectory to the strong model when any of the four clauses fires. One escalation at most. The cheap trajectory's tokens count in the escalated task's cost, and an escalated task the strong model also fails has paid for both.",
+    "did_not_answer": "The trajectory terminated on turn_limit, tool_call_limit, prompt_ceiling or provider_rejected rather than answer. Read from the ledger task row's detail.termination. provider_rejected was added on 2026-09-12, before the rule was committed, by the author's decision after the cheap-model preflight; it exists only in runs that declare rejected_generation = score_unsolved.",
+    "validation_failed": "The final reply failed validation, after its one repair where one was made: detail.validation_rule is not null, whatever the termination. A trajectory that did not answer gets no repair (constraint 61), so on those this clause coincides with did_not_answer whenever the last text held no statement.",
+    "first_query_error": "The trajectory's first execute_sql came back ok=false. Read from the transcript's last bracket by metrics.read_task_metrics.",
+    "first_query_empty": "The trajectory's first execute_sql came back ok with zero rows. Read the same way.",
+    "no_execute_sql": "NOT a clause. A trajectory that ran no execute_sql at all is not escalated: on 3.6's run such trajectories solved above the average, so it is not a failure signal. Counted beside the clauses so the rejection stays visible.",
+    "decidable": "Complete trajectories only. A failed task (budget, a client error) is retried by the run, never escalated, and is listed as undecided.",
+    "frozen": "Committed before any 5.2 run. Tuning a clause after seeing 5.2's runs is the failure 5.1 exists to prevent (constraint 78)."
+  },
+  "outcomes_included": false,
+  "tasks_declared": 15,
+  "undecided": [],
+  "terminations": {
+    "answer": 11,
+    "provider_rejected": 3,
+    "tool_call_limit": 1
+  },
+  "table": {
+    "trajectories": 15,
+    "would_escalate": {
+      "count": 5
+    },
+    "would_not_escalate": {
+      "count": 10
+    },
+    "escalation_rate": 0.333333,
+    "clauses": {
+      "did_not_answer": {
+        "count": 4
+      },
+      "validation_failed": {
+        "count": 5
+      },
+      "first_query_error": {
+        "count": 0
+      },
+      "first_query_empty": {
+        "count": 0
+      }
+    },
+    "fired_alone": {
+      "did_not_answer": 0,
+      "validation_failed": 1,
+      "first_query_error": 0,
+      "first_query_empty": 0
+    },
+    "not_a_clause": {
+      "no_execute_sql": {
+        "count": 4
+      }
+    }
+  },
+  "attempt_sizes": {
+    "attempts_paired": 73,
+    "served_by": {
+      "groq openai/gpt-oss-20b": 73
+    },
+    "pools": {
+      "groq#1": 40,
+      "groq#2": 33
+    },
+    "chars_per_prompt_token": {
+      "min": 1.914,
+      "median": 2.022,
+      "max": 3.292
+    },
+    "fit": {
+      "intercept_tokens": 166.6,
+      "chars_per_token": 2.714
+    },
+    "largest_attempt": {
+      "tokens": 1894,
+      "prompt_tokens": 1575,
+      "completion_tokens": 319,
+      "chars": 3636,
+      "task_id": "dev-0207",
+      "turn": 13,
+      "share_of_tpm": 0.2367
+    },
+    "longest_conversation": {
+      "chars": 3636,
+      "task_id": "dev-0207",
+      "turn": 13,
+      "share_of_ceiling": 0.1596
+    },
+    "largest_completion_tokens": 433,
+    "attempts_over_tpm": 0,
+    "projected_attempt_at_ceiling": 9582,
+    "tpm": 8000,
+    "prompt_ceiling_chars": 22776,
+    "max_output_tokens": 1024
+  },
+  "ceiling_derivation": {
+    "chars_per_prompt_token": 3.265,
+    "source": "docs/a1-tool-sizes.json, measured in docs/a0-prompt-sizes.json on A0's prompts",
+    "worst_case_attempt_tokens": 8000,
+    "tpm": 8000
+  },
+  "loop_behaviour": {
+    "assistant_messages": 73,
+    "tool_calls_per_assistant_message": {
+      "0": 15,
+      "1": 58
+    },
+    "max_tool_calls_in_one_message": 1,
+    "messages_with_more_than_one_call": 0,
+    "finish_reasons": {
+      "stop": 15,
+      "tool_calls": 58
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "dev-0003",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0030",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0126",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0207",
+      "termination": "tool_call_limit",
+      "validation_rule": "no_statement",
+      "first_execute_sql": "rows",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ]
+    },
+    {
+      "task_id": "dev-0317",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0388",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0489",
+      "termination": "provider_rejected",
+      "validation_rule": "no_statement",
+      "first_execute_sql": null,
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ]
+    },
+    {
+      "task_id": "dev-0638",
+      "termination": "provider_rejected",
+      "validation_rule": "no_statement",
+      "first_execute_sql": null,
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ]
+    },
+    {
+      "task_id": "dev-0675",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0699",
+      "termination": "provider_rejected",
+      "validation_rule": "no_statement",
+      "first_execute_sql": null,
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ]
+    },
+    {
+      "task_id": "dev-0700",
+      "termination": "answer",
+      "validation_rule": "no_statement",
+      "first_execute_sql": null,
+      "clauses": [
+        "validation_failed"
+      ]
+    },
+    {
+      "task_id": "dev-0710",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0816",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-0870",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    },
+    {
+      "task_id": "dev-1022",
+      "termination": "answer",
+      "validation_rule": null,
+      "first_execute_sql": "rows",
+      "clauses": []
+    }
+  ]
+}

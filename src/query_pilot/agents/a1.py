@@ -1,4 +1,4 @@
-"""A1 — the agent loop: several turns, four tools, one transcript, five ways to stop.
+"""A1 — the agent loop: several turns, four tools, one transcript, six ways to stop.
 
 **A1 is A0 plus the loop, and nothing else.** Same `strong` role, same model, same output
 ceiling, same answer rules word for word (`a0.ANSWER_RULES`), same sandbox, same
@@ -27,6 +27,13 @@ answer, whatever the answer was. Re-running a turn-limit task would spend the wh
 trajectory again to hit the same wall. ``budget`` is **failed**, because the run stopped
 rather than the task answering — the same rule as a quota wall in 2.3, and for the same
 reason: a run-level stop must never put non-solves into the accuracy figure.
+
+**The sixth, ``provider_rejected``, is a declared rule and not a default** (2026-09-12, the
+author's decision after 5.1's preflight). When the provider refuses **the model's own
+generation** — an HTTP 400 that hands the output back as ``failed_generation`` — a run that
+declares ``rejected_generation = "score_unsolved"`` ends the trajectory there, complete and
+unsolved, with no repair. Every other run keeps 3.6's rule, under which that refusal is a
+``ClientError`` like any other and fails the task. See :data:`PROVIDER_REJECTED`.
 
 **Where a tool error goes, and where it does not.** An error the model can act on goes back
 to the model as a tool result and the loop continues — bad SQL, an unknown table, a wrong
@@ -66,6 +73,7 @@ from query_pilot.agents.tools import TOOL_SCHEMAS
 from query_pilot.agents.transcript import TranscriptWriter
 from query_pilot.agents.validate import Validation, repair_request, validate_answer
 from query_pilot.client.client import Client
+from query_pilot.client.errors import ProviderHTTPError
 from query_pilot.client.types import Completion, Message, ToolCall
 from query_pilot.equivalence import NO_SQL, Comparison, compare, orders_rows
 from query_pilot.run.guard import IncompleteReason
@@ -77,11 +85,15 @@ __all__ = [
     "A1",
     "ANSWER",
     "BUDGET",
+    "FAIL_TASK",
     "MAX_OUTPUT_TOKENS",
     "PROMPT_CEILING",
     "PROMPT_CEILING_CHARS",
+    "PROVIDER_REJECTED",
+    "REJECTED_GENERATION_POLICIES",
     "REPAIR_LIMIT",
     "ROLE",
+    "SCORE_UNSOLVED",
     "SYSTEM_PROMPT",
     "TERMINATIONS",
     "TOOL_CALL_LIMIT",
@@ -92,6 +104,7 @@ __all__ = [
     "Trajectory",
     "build_prompt",
     "conversation_chars",
+    "generation_rejection",
 ]
 
 # --- the limits -----------------------------------------------------------------------------
@@ -184,6 +197,16 @@ ANSWER: Final = "answer"
 TURN_LIMIT_REACHED: Final = "turn_limit"
 TOOL_CALL_LIMIT_REACHED: Final = "tool_call_limit"
 PROMPT_CEILING: Final = "prompt_ceiling"
+#: The provider refused the model's own generation — HTTP 400 with the model's output handed
+#: back as ``failed_generation`` — **and the run declared that such a refusal is scored.** A
+#: sixth path, added 2026-09-12 by the author's decision after 5.1's preflight: on the cheap
+#: model Groq refused 6 of 19 trajectories with an HTTP 400 over the model's own output, one
+#: task identically twice, so retrying (constraint 76) could neither finish a run nor let its
+#: accuracy count the cheap model's most frequent failure. **Complete, unsolved, no repair** —
+#: the model committed to no reply — and the refused request is not a turn: it returned no
+#: message and no token counts. Only under :data:`SCORE_UNSOLVED`; by default the refusal fails
+#: the task exactly as it did in 3.6.
+PROVIDER_REJECTED: Final = "provider_rejected"
 #: The run's budget guard crossed a ceiling mid-trajectory. **The only one that fails the
 #: task**, because the run stopped rather than the task answering.
 BUDGET: Final = "budget"
@@ -193,8 +216,46 @@ TERMINATIONS: Final = (
     TURN_LIMIT_REACHED,
     TOOL_CALL_LIMIT_REACHED,
     PROMPT_CEILING,
+    PROVIDER_REJECTED,
     BUDGET,
 )
+
+#: What a run does with a generation the provider refused. **Declared per run, in the run's
+#: params, so it is inside the fingerprint.** ``fail_task`` is 3.6's rule and the default —
+#: the ``ClientError`` propagates, the task fails and a resume retries it (constraint 76).
+#: ``score_unsolved`` ends the trajectory as :data:`PROVIDER_REJECTED`, which is what 5.2's
+#: cheap runs declare. A0 and every A1 run before 2026-09-12 ran under ``fail_task``.
+FAIL_TASK: Final = "fail_task"
+SCORE_UNSOLVED: Final = "score_unsolved"
+REJECTED_GENERATION_POLICIES: Final = (FAIL_TASK, SCORE_UNSOLVED)
+
+
+def generation_rejection(error: BaseException) -> dict[str, Any] | None:
+    """The provider's statement that it refused **the model's own output**, or ``None``.
+
+    Precisely: an HTTP 400 whose JSON body's ``error`` object carries ``failed_generation`` —
+    the provider handing back what the model generated. Nothing weaker counts. A 400 about
+    this project's own request carries no such field, and must never be scored as the model's
+    failure (constraint 54 is the same rule for a quota wall); a message that merely *names*
+    the field in prose is not carrying it. What is returned is what gets recorded: the status,
+    the provider's code when it gave one, its message, and the refused generation.
+    """
+    if not isinstance(error, ProviderHTTPError) or error.status != 400:
+        return None
+    try:
+        body = json.loads(error.body)
+    except (TypeError, ValueError):
+        return None
+    detail = body.get("error") if isinstance(body, dict) else None
+    if not isinstance(detail, dict) or "failed_generation" not in detail:
+        return None
+    return {
+        "status": error.status,
+        "code": detail.get("code"),
+        "message": detail.get("message"),
+        "failed_generation": detail.get("failed_generation"),
+    }
+
 
 SYSTEM_PROMPT: Final = (
     "You are an expert SQLite analyst answering one question about one SQLite database.\n"
@@ -299,6 +360,10 @@ class Trajectory:
     candidate_truncated_by: str | None = None
     candidate_timed_out: bool = False
     reference_rows: int | None = None
+    #: What the provider said when it refused the model's generation — status, code, message —
+    #: or ``None``. Present only when the run scored a refusal (:data:`SCORE_UNSOLVED`), and
+    #: written to the ledger only then, so every other trajectory's row keeps 3.6's shape.
+    provider_rejection: Mapping[str, Any] | None = None
 
     def detail(self) -> dict[str, Any]:
         """What goes into the task row's free-form ``detail``, which `run/` never opens."""
@@ -337,6 +402,8 @@ class Trajectory:
                 "transcript": self.transcript,
             }
         )
+        if self.provider_rejection is not None:
+            row["provider_rejection"] = dict(self.provider_rejection)
         return row
 
 
@@ -364,6 +431,7 @@ class A1:
         tool_call_limit: int = TOOL_CALL_LIMIT,
         prompt_ceiling_chars: int = PROMPT_CEILING_CHARS,
         tools: ToolCaller | None = None,
+        rejected_generation: str = FAIL_TASK,
     ) -> None:
         if turn_limit < 2:
             # One turn cannot both call a tool and answer, so a trajectory with fewer than
@@ -376,6 +444,11 @@ class A1:
             # already refuses to let it stop the first turn, so this would be a ceiling that
             # ends every task after one shot -- a broken declaration, not a bounded run.
             raise ValueError("a prompt ceiling below the system prompt admits no trajectory")
+        if rejected_generation not in REJECTED_GENERATION_POLICIES:
+            raise ValueError(
+                f"rejected_generation must be one of {REJECTED_GENERATION_POLICIES}, "
+                f"not {rejected_generation!r}"
+            )
         self.client = client
         self.tasks: Mapping[str, Task] = {task.task_id: task for task in tasks}
         self.run_directory = Path(run_directory)
@@ -386,6 +459,7 @@ class A1:
         self.turn_limit = turn_limit
         self.tool_call_limit = tool_call_limit
         self.prompt_ceiling_chars = prompt_ceiling_chars
+        self.rejected_generation = rejected_generation
         # **3.5's seam, and the default side of it.** `LocalTools` calls the four functions
         # in this process; `agents.mcp_tools.McpTools` speaks to the MCP server that wraps
         # the same four. 3.6 runs the local one, and `agents/toolcaller.py` says why in full:
@@ -447,6 +521,9 @@ class A1:
                     repair_succeeded=state.repair_succeeded,
                     repair_blocked=state.repair_blocked,
                     ended_at=context.run.ledger.now(),
+                    failed_generation=(
+                        state.rejection["failed_generation"] if state.rejection else None
+                    ),
                 )
             except BaseException as error:
                 # A trajectory that did not get to finish still says how it ended. The one
@@ -492,12 +569,17 @@ class A1:
                 return state.stop(PROMPT_CEILING)
 
             state.turns += 1
-            completion = await self.client.complete(
-                self.role,
-                messages,
-                TOOL_SCHEMAS,
-                max_output_tokens=self.max_output_tokens,
-            )
+            try:
+                completion = await self.client.complete(
+                    self.role,
+                    messages,
+                    TOOL_SCHEMAS,
+                    max_output_tokens=self.max_output_tokens,
+                )
+            except ProviderHTTPError as error:
+                if not self._scores(error, state):
+                    raise
+                return state.stop(PROVIDER_REJECTED)
             context.record(completion, turn=state.turns)
             state.observe(completion)
             answer = Message(
@@ -552,6 +634,24 @@ class A1:
             elapsed_s=result.elapsed_s,
         )
 
+    def _scores(self, error: ProviderHTTPError, state: _State) -> bool:
+        """Whether this run scores ``error`` as the model's refused generation.
+
+        True only under :data:`SCORE_UNSOLVED` **and** for :func:`generation_rejection`'s
+        narrow case; everything else propagates exactly as it did in 3.6. When it scores, the
+        refused request is taken back out of the turn count — it returned no message and no
+        token counts, so it has no assistant message and no attempt row, and 3.4's checksum of
+        turns against messages must still hold.
+        """
+        if self.rejected_generation != SCORE_UNSOLVED:
+            return False
+        rejection = generation_rejection(error)
+        if rejection is None:
+            return False
+        state.turns -= 1
+        state.rejection = rejection
+        return True
+
     # -- 3.3: validate the reply, and one chance to fix it -------------------------------------
 
     async def _repair(
@@ -601,9 +701,17 @@ class A1:
         # model that answered it with a tool call would need a turn to feed the result back
         # into -- which is the multi-turn loop this trajectory has already terminated. It
         # also keeps `TOOL_CALL_LIMIT` meaning what it says.
-        completion = await self.client.complete(
-            self.role, messages, max_output_tokens=self.max_output_tokens
-        )
+        try:
+            completion = await self.client.complete(
+                self.role, messages, max_output_tokens=self.max_output_tokens
+            )
+        except ProviderHTTPError as error:
+            if not self._scores(error, state):
+                raise
+            # The trajectory still ended on `answer`; the repair it was owed came back refused,
+            # so the reply that failed validation stands and this says why nothing replaced it.
+            state.repair_blocked = PROVIDER_REJECTED
+            return validation
         context.record(completion, turn=state.turns)
         state.observe(completion)
         answer = Message(role="assistant", content=completion.text)
@@ -657,6 +765,12 @@ class A1:
             "model": state.model,
             "latency_s": state.latency_s,
         }
+        if state.rejection is not None:
+            # What the provider said, in the outcome record. The refused generation itself is
+            # content and lives in the transcript's `end` event, not here as well.
+            shared["provider_rejection"] = {
+                key: state.rejection[key] for key in ("status", "code", "message")
+            }
         if validation.sql is None:
             return Trajectory(
                 task=task,
@@ -711,6 +825,8 @@ class _State:
     model: str | None = None
     finish_reason: str | None = None
     latency_s: float | None = None
+    #: :func:`generation_rejection`'s record, when this run scored one.
+    rejection: dict[str, Any] | None = None
 
     def observe(self, completion: Completion) -> None:
         """Tokens are summed over the trajectory; the rest is the last turn's."""

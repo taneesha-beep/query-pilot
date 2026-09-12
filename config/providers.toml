@@ -108,3 +108,15 @@ spillover = ["google/gemini-3.5-flash-lite"]
 [roles.strong]
 endpoint = "groq/gpt-oss-120b"
 spillover = []
+
+# The cheap model with nowhere to spill: the role Phase 5's cheap trajectories run on. Decided
+# with the author on 2026-09-12, before A1's loop had ever run on this model. Phase 5 measures
+# one step — 20b to 120b, one family, one tokenizer, A1's limits unchanged — and `cheap`'s
+# spillover would finish a trajectory on a different model and provider, whose tool-calling
+# path A1 has never exercised, under the cheap model's name. With none, exhausting both Groq
+# pools stops the run as `pools_exhausted` and it resumes on a later day: a delay rather than a
+# third model in the comparison, which is the rule `strong` already follows. `cheap` itself is
+# left as it is — it is the documented pair in docs/PROVIDERS.md.
+[roles.cheap-no-spillover]
+endpoint = "groq/gpt-oss-20b"
+spillover = []

@@ -70,9 +70,12 @@ async def test_one_config_value_moves_a_role_to_the_other_provider(tmp_path, htt
     differs is one line of the committed configuration file.
     """
     on_groq = COMMITTED
-    assert on_groq.count('endpoint = "groq/gpt-oss-20b"') == 1
+    # Anchored to the `cheap` role's own block: `cheap-no-spillover` (5.1) names the same
+    # endpoint, and the acceptance is one value changed, not every line that matches.
+    cheap_on_groq = '[roles.cheap]\nendpoint = "groq/gpt-oss-20b"'
+    assert on_groq.count(cheap_on_groq) == 1
     on_google = on_groq.replace(
-        'endpoint = "groq/gpt-oss-20b"', 'endpoint = "google/gemini-3.5-flash-lite"'
+        cheap_on_groq, '[roles.cheap]\nendpoint = "google/gemini-3.5-flash-lite"'
     )
 
     http.replies = [
@@ -169,6 +172,25 @@ def test_candidates_run_primary_pools_first_then_spillover(http):
     assert [str(c) for c in registry.candidates("strong")] == ["groq/gpt-oss-120b[groq#1]"]
 
 
+def test_the_cheap_role_with_no_spillover_reaches_only_the_cheap_model(http):
+    """Phase 5's cheap trajectories run here: every Groq pool of the cheap endpoint, and no
+    other provider's model, however many keys are set."""
+    registry = Registry(
+        ClientConfig.load(),
+        http,
+        {
+            "GROQ_API_KEY": "g1",
+            "GROQ_API_KEY_2": "g2",
+            "GEMINI_API_KEY": "a1",
+            "GEMINI_API_KEY_2": "a2",
+        },
+    )
+    assert [str(c) for c in registry.candidates("cheap-no-spillover")] == [
+        "groq/gpt-oss-20b[groq#1]",
+        "groq/gpt-oss-20b[groq#2]",
+    ]
+
+
 def test_a_candidate_is_keyed_on_provider_pool_and_model(http):
     registry = Registry(ClientConfig.load(), http, {"GROQ_API_KEY": "g1", "GEMINI_API_KEY": "a1"})
     cheap, spill = registry.candidates("cheap")[0], registry.candidates("cheap")[1]
@@ -195,7 +217,7 @@ def test_a_role_with_no_key_anywhere_names_the_variable_to_set(http):
 
 def test_an_unknown_role_lists_the_ones_that_exist(http):
     registry = Registry(ClientConfig.load(), http, BOTH_KEYS)
-    with pytest.raises(ConfigError, match="configured roles: cheap, strong"):
+    with pytest.raises(ConfigError, match="configured roles: cheap, cheap-no-spillover, strong"):
         registry.candidates("thrifty")
 
 

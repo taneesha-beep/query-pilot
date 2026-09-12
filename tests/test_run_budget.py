@@ -47,6 +47,11 @@ from query_pilot.run import (
 REPO = Path(__file__).resolve().parents[1]
 WORKING_SET_CONFIG = REPO / "config" / "runs" / "working-set.toml"
 A1_WORKING_CONFIG = REPO / "config" / "runs" / "a1-working.toml"
+A2_CHEAP_SMOKE_CONFIG = REPO / "config" / "runs" / "a2-cheap-smoke.toml"
+A2_CHEAP_WORKING_CONFIG = REPO / "config" / "runs" / "a2-cheap-working.toml"
+#: The two params every A2-cheap declaration adds to A1's, and nothing else: the role with
+#: nowhere to spill, and the rule for a generation the provider refused (5.1, 2026-09-12).
+CHEAP_PARAMS = {"role": "cheap-no-spillover", "rejected_generation": "score_unsolved"}
 
 
 class SteppingClock:
@@ -761,6 +766,79 @@ def test_the_two_agents_working_set_declarations_differ_in_nothing_but_the_agent
     }
     assert differing == {"agent"}
     assert (a0.agent, a1.agent) == ("A0", "A1")
+
+
+def _cheap_limits():
+    client_config = ClientConfig.load()
+    endpoint = client_config.roles["cheap-no-spillover"].endpoint
+    return client_config, client_config.endpoints[endpoint]
+
+
+def test_a2_cheap_runs_on_the_cheap_model_with_nowhere_to_spill():
+    """Decided with the author before the preflight: `cheap` spills to another provider's
+    model, whose tool-calling path A1 has never exercised, so A2-cheap runs on a role that
+    cannot. The per-minute budget the ceiling arithmetic uses is the strong endpoint's too."""
+    client_config, cheap = _cheap_limits()
+    role = client_config.roles["cheap-no-spillover"]
+    assert role.spillover == ()
+    assert role.endpoint == client_config.roles["cheap"].endpoint
+    assert cheap.model == "openai/gpt-oss-20b"
+    strong = client_config.endpoints[client_config.roles[ROLE].endpoint]
+    assert cheap.limits.tpm == strong.limits.tpm == 8000
+
+
+def test_a2_cheap_s_smoke_declaration_carries_ceilings_that_trace_to_committed_numbers():
+    """5.1's preflight. The projection is 3.6's measured 5,140.2 tokens a declared task, read
+    from the committed result, over the fifteen smoke tasks; the ceiling is about 1.95x it."""
+    per_task = json.loads((REPO / "results" / "a1-working.json").read_text())["tokens"][
+        "per_declared_task"
+    ]
+    smoke = json.loads((REPO / "splits" / "smoke.json").read_text())["task_ids"]
+    config = RunConfig.load(A2_CHEAP_SMOKE_CONFIG, smoke, run_id="r-1")
+
+    assert config.agent == "A2-cheap"
+    assert config.params == {"split": "smoke", **CHEAP_PARAMS}
+    projected = per_task * len(smoke)
+    assert round(projected) == 77_103
+    assert 1.9 < config.token_ceiling / projected < 2.0
+    _, cheap = _cheap_limits()
+    bucket_floor_s = projected / cheap.limits.tpm * 60
+    assert config.wall_clock_ceiling_s > 2 * bucket_floor_s
+
+
+@pytest.mark.parametrize("path", [A2_CHEAP_SMOKE_CONFIG, A2_CHEAP_WORKING_CONFIG])
+def test_a2_cheap_s_declarations_are_bound_to_concurrency_1_by_the_same_arithmetic(path):
+    """Constraint 64 redone against the cheap endpoint, as every new A1 declaration owes it."""
+    sizes = json.loads((REPO / "docs" / "a1-tool-sizes.json").read_text())
+    client_config, cheap = _cheap_limits()
+    config = RunConfig.load(path, [f"t-{i}" for i in range(15)], run_id="r")
+
+    worst_case = (
+        PROMPT_CEILING_CHARS / sizes["budget"]["chars_per_prompt_token"] + MAX_OUTPUT_TOKENS
+    )
+    assert round(worst_case) == cheap.limits.tpm
+    survivable = cheap.limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert config.concurrency == 1
+    assert config.concurrency * worst_case <= survivable
+    assert 2 * worst_case > survivable
+
+
+def test_the_always_cheap_declaration_differs_from_3_6_s_in_role_and_rejection_rule_only():
+    """What 5.2's frontier holds constant, asserted. The model moves through the role; the
+    rule for a refused generation is the one declared difference, and it is stated rather
+    than hidden: 3.6 retried its one such refusal, and A2-cheap scores them."""
+    ids = [f"t-{i}" for i in range(150)]
+    a1 = RunConfig.load(A1_WORKING_CONFIG, ids, run_id="r-1")
+    a2 = RunConfig.load(A2_CHEAP_WORKING_CONFIG, ids, run_id="r-1")
+
+    differing = {
+        field
+        for field in ("agent", "token_ceiling", "wall_clock_ceiling_s", "concurrency", "params")
+        if getattr(a1, field) != getattr(a2, field)
+    }
+    assert differing == {"agent", "params"}
+    assert (a1.agent, a2.agent) == ("A1", "A2-cheap")
+    assert a2.params == {**a1.params, **CHEAP_PARAMS}
 
 
 # --- the request ceiling, a per-session backstop in a unit no run declares -------------------

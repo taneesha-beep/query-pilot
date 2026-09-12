@@ -1,0 +1,46 @@
+# A2-cheap over the whole 150-task working set: 5.2's always-cheap run.
+#
+# A1's loop, unchanged, on the cheap model. It is declared against the SAME 150 tasks as 3.6's
+# `a1-working.toml`, with the SAME ceilings and concurrency, and A1's four limits are the ones
+# 3.6 ran under (constraint 72) — so the difference between the two runs is the model and
+# nothing else. 3.6 is the always-strong side and is not re-run (constraint 68).
+#
+# Declared and committed with 5.1, before the run starts, so the run's shape was fixed before
+# the rule it feeds was measured against it.
+#
+# The task IDs are deliberately NOT here. They live in splits/working.json.
+
+[run]
+agent = "A2-cheap"
+
+# 1,500,000 tokens, cumulative across every resume of one run ID — `a1-working.toml`'s figure,
+# held equal on purpose: a different ceiling would be one more thing that could explain a
+# difference between the two runs.
+#
+# Arithmetic over committed numbers: 3.6 measured 5,140.2 tokens a declared task on the strong
+# model (results/a1-working.json), which PROJECTS 771,030 for 150 tasks; this ceiling is about
+# 1.95x that, so a run that has roughly doubled its projected cost stops on its own. The cheap
+# model's cost is measured by this run and by 5.1's preflight, not assumed.
+token_ceiling = 1500000
+
+# Four hours, per SESSION rather than per run — `a1-working.toml`'s figure and its reasoning:
+# tokens are a stock and time is a rate (constraint 24), and a run spanning quota resets must
+# not be aborted for the hours it spent waiting.
+wall_clock_ceiling_s = 14400
+
+# One, forced — constraint 64, as in every A1 declaration. See `a2-cheap-smoke.toml`.
+concurrency = 1
+
+# Free-form, inside the fingerprint, never inspected by the run machinery.
+[run.params]
+split = "working"
+# The role the loop runs on. `cheap-no-spillover`, not `cheap`: see config/providers.toml.
+role = "cheap-no-spillover"
+# What a generation the provider refused does to the trajectory. `score_unsolved`: it ends it
+# as `provider_rejected`, complete and unsolved, and 5.1's rule escalates it. Decided with the
+# author on 2026-09-12, after the first preflight (run 20260912-052224-4f8be8, superseded)
+# found Groq refusing the cheap model's own output on 6 of 19 trajectories and one task
+# identically twice — under 3.6's `fail_task` rule the run could not finish, and its accuracy
+# would have counted only the trajectories Groq could parse. 3.6 ran under `fail_task`; this
+# is the one declared difference beside the role, and it is stated rather than hidden.
+rejected_generation = "score_unsolved"
