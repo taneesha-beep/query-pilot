@@ -162,3 +162,16 @@ concurrency 1 was already the only safe setting. What an overshoot would cost is
 — started on 2026-09-12 as run `20260912-055938-9712c8`. Its figures, and the cascade built from
 it and 3.6, belong to 5.2 and are reported there; nothing in this file will be revised to suit
 them.
+
+**What the rule did on it, untuned** (Groq, `openai/gpt-oss-20b`, 2026-09-12, run
+`20260912-055938-9712c8`, `docs/escalation-a2-cheap-working.json`, added after the run
+finished; no clause changed). It escalates **46 of 150**, and **not one of the 46 had solved** —
+the precision measured on the strong model holds on the cheap one. It catches **46 of the 61
+failures, 75.4098%**, against 26.4706% on the strong model: the cheap model's failures announce
+themselves, mostly as refusals (28 `provider_rejected`) and trajectories that ran out of tool
+calls (9). Clauses fire 37 / 42 / 0 / 8, and a first query errored on no trajectory of either
+model. **One reading changes with the model and is stated rather than acted on:** running no
+`execute_sql` solved 21 of 24 on the strong model, which is why it is not a clause — and **9 of 42
+on the cheap one**. On this model the rejected candidate would have been a signal. Adding it now
+would be tuning against 5.2's own run, which is the failure this file exists to prevent; the
+cascade's result is reported with the rule as it was frozen ([RESULTS.md](RESULTS.md)).

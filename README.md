@@ -96,7 +96,10 @@ carries the row-value injections. [docs/ATTACKS.md](docs/ATTACKS.md),
 
 ### Reserve set
 
-Read once, after everything else is finished.
+Read once, after everything else is finished. It runs the best agent measured on the working
+set, and **after Phase 5 that is still A0**: the highest agreement with the references (124 of
+150) at the fewest tokens (860.8 a solved task). Neither A1 (116) nor the cascade (117) overtook
+it.
 
 | Agent | Execution accuracy | Date | Ledger |
 |---|---|---|---|
@@ -133,7 +136,7 @@ Groq's daily token limit on both pools at 105 and continuing on a third key. **H
 would be read was committed before any of its figures existed** (`29464c1`) — composed from that
 run and A1's, cost as every recorded token, and a verdict fixed in advance. And that limit
 settled a question open since 3.6: Groq's tokens-per-day is a bucket that refills continuously,
-all six of its daily-limit refusals agreeing to the millisecond
+all eight of its daily-limit refusals agreeing to the millisecond
 ([docs/PROVIDERS.md](docs/PROVIDERS.md)).
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six

@@ -603,6 +603,15 @@ Runs referred to below: **A0** — Groq, `openai/gpt-oss-120b`, 2026-09-08, run
 | Ended `provider_rejected` — second run, which scores the refusal | 3 | 15 trajectories | `docs/escalation-a2-cheap-smoke.json` |
 | Ended at `TOOL_CALL_LIMIT` — second run | 1 | 15 trajectories | `docs/escalation-a2-cheap-smoke.json` |
 | A repair was needed · it succeeded · the provider refused it | 5 · 4 · 1 | 15 trajectories | `tests/transcripts/a2-cheap-smoke-lifted/` |
+| **Trajectories — the cheap model on the working set (5.2's always-cheap run, run `20260912-055938-9712c8`, rows added 2026-09-12)** | | | |
+| Not solved | 61 — `no_sql` 42, `row_count` 11, `value_mismatch` 7, `column_count` 1 | 150 tasks | `results/a2-cheap-working.json` |
+| Ended `provider_rejected` — Groq refused the model's own output | 28 | 150 trajectories | `results/a2-cheap-working.json` |
+| Ended at `TOOL_CALL_LIMIT` | 9 | 150 trajectories | same |
+| Answered a value, not a statement, and Groq refused the one repair | 5 | 150 trajectories | same (`repair_blocked`) |
+| A repair was needed · it succeeded · the provider refused it | 35 · 30 · 5 | 150 trajectories | `results/a2-cheap-trajectory-metrics.json` |
+| Ran no `execute_sql` · of those, solved | 42 · 9 | 150 trajectories | `docs/escalation-a2-cheap-working.json` |
+| First `execute_sql` came back empty · of those, recovered | 8 · 0 | 150 trajectories | `results/a2-cheap-trajectory-metrics.json` |
+| Failures the escalation rule catches (recall) | 46 | 61 failures | `docs/escalation-a2-cheap-working.json` |
 
 ## Counts with no rate available
 
@@ -616,9 +625,9 @@ empty, or it was never defined, or it was never read.
 | A0 solves that are wrong answers matching a wrong reference | **at least 8** | Found among 10 examined tasks; A0's other 116 solves were never read, so no rate over 124 exists | `docs/a1-failure-counts.json` |
 | Groq HTTP 400 `tool_use_failed` — tool-call arguments not valid JSON | 1 — `dev-0758` | The ledger's 827 attempt rows are the requests that were *answered*, every one `ok`; a refused request is not an attempt row, so there is no per-request denominator. On the cheap model the same refusal is common enough to count per trajectory — see the 5.1 rows above | `runs/20260910-024454-1f69bc/ledger.jsonl`; `docs/PROVIDERS.md` |
 | Quota walls during the A1 run | 12 — 4 day-scope on `groq#1`, 8 minute-scope on `groq#2` | How often a refilling bucket runs dry depends on how fast the operator spends, not on the agent. *Until 2026-09-12 this said the window Groq's daily counter runs over was `TBD`; it is a bucket that refills continuously — `docs/PROVIDERS.md`* | `runs/quota-walls.jsonl` |
-| Quota walls during the always-cheap run (5.2, `openai/gpt-oss-20b`, run `20260912-055938-9712c8`) | 2 — day-scope, `groq#2` at 06:45:00Z and `groq#1` at 06:46:55Z, 2026-09-12; none minute-scope | Same reason; they stopped the run as `pools_exhausted` at 105 of 150 | `runs/quota-walls.jsonl` |
+| Quota walls during the always-cheap run (5.2, `openai/gpt-oss-20b`, run `20260912-055938-9712c8`) | 84 — 4 day-scope (`groq#2` 06:45:00Z and `groq#1` 06:46:55Z; both again at 10:53Z) and 80 minute-scope, 2026-09-12 | Same reason. The first pair stopped the run as `pools_exhausted` at 105 of 150; after a third pool was added the second pair did not. *This row said "2, none minute-scope" at 105 of 150* | `runs/quota-walls.jsonl` |
 | A session ended `pools_exhausted` with no provider refusal in its window — the client's modelled bucket, not Groq | 1 of the A1 run's 6 sessions | A per-session rate over sessions the operator staged means nothing | `runs/20260910-024454-1f69bc/ledger.jsonl` |
-| Trajectories cut off mid-task and retried on resume | 6 in the A1 run (1 operator stop, 4 `AllPoolsExhausted`, 1 HTTP 400) · 1 in the attack run (operator stop) · 2 so far in the always-cheap run (1 operator stop, `dev-0044`, retried; 1 `AllPoolsExhausted`, `dev-0710`, retried on resume) | Staging is the operator's choice, so the count describes the staging, not the agent | the runs' ledgers |
+| Trajectories cut off mid-task and retried on resume | 6 in the A1 run (1 operator stop, 4 `AllPoolsExhausted`, 1 HTTP 400) · 1 in the attack run (operator stop) · 3 in the always-cheap run (2 request-ceiling stops, `dev-0044` and `dev-0999`; 1 `AllPoolsExhausted`, `dev-0710`), every one retried and complete | Staging is the operator's choice, so the count describes the staging, not the agent | the runs' ledgers |
 | Full test-suite runs with one intermittent failure | 1 in session 9 · 1 in session 11 (not captured) · 1 in session 13 — **identified**: `test_run_ledger.py::test_a_process_killed_with_sigkill_leaves_a_ledger_that_resumes`, the assertion that `t-3`'s attempt row survived | Suite runs were never counted as a population. **A race in the test, not a ledger defect**: it waits for three task rows before SIGKILL, and nothing guarantees `t-3`'s attempt row is written by then. *Until 2026-09-12 this row said "unexplained"* | `AGENT-ROADMAP.md`, sessions 9, 11 and 13 |
 
 ## Observed but uncounted
@@ -630,9 +639,14 @@ exists.
   above were found by looking at the tasks A1 lost. Neither agent's other solves were read — 116
   for A0, 116 for A1 — so how many more exist, and whether they favour either agent, is
   unknown. This is the largest unmeasured term in both accuracy figures.
+- **Why the cheap model's 61 non-solves failed, beyond their slugs.** 5.2's always-cheap run
+  (`results/a2-cheap-working.json`) is counted above only mechanically — 42 with no statement, 19
+  wrong results. None of its trajectories was read under this document's categories the way
+  4.4 read A1's 34, and its 89 solves were not read either, so its share of reference defects is
+  unknown in both directions.
 - ~~**The window Groq's daily token counter runs over.**~~ **Established 2026-09-12 and moved
   out of this list**: it is not a window but a bucket of 200,000 refilling continuously at
-  200,000 per 86,400 s — every one of the project's six day-scope refusals gives a retry hint
+  200,000 per 86,400 s — every one of the project's eight day-scope refusals gives a retry hint
   equal to its shortfall at that rate, to the millisecond (`docs/PROVIDERS.md`). This bullet
   said it "was never established and costs a day to find out"; the refusals already held it.
 - **A0 under prompt injection.** A0's prompt carries every table name, column name and column
