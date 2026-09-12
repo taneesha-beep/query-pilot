@@ -428,3 +428,94 @@ and A1 lost, is a wrong answer the defective reference agrees with — [docs/FAI
   `TBD` over 0 because nothing errored. What A1 demonstrably has that A0 cannot is the ability
   to read the data before answering — worth two tasks here, and the thing Phase 4 measures
   under attack.
+
+---
+
+## A2 — the cascade — 5.2
+
+**No figure yet, on purpose.** The always-cheap run — A1's loop on `openai/gpt-oss-20b`, Groq,
+run `20260912-055938-9712c8`, `runs/20260912-055938-9712c8/ledger.jsonl` — stopped at Groq's
+daily token limit on both pools on 2026-09-12 with **105 of 150 tasks complete**, and resumes on
+a later day ([PROVIDERS.md](PROVIDERS.md)). A run with tasks unanswered has no accuracy figure,
+so none is read from it and none appears here.
+
+**What follows was fixed in writing on 2026-09-12, while that run stood at 47 of 150, and is
+committed before any cascade figure exists** — so that how the cascade is read cannot be chosen
+after seeing which way it lands. The same text travels as `DEFINITIONS` in the file the figures
+will be written to, `results/a2-working.json`.
+
+### How the cascade is built: composed, not run
+
+A2 is A1's loop on the cheap model, handed to the strong model when 5.1's frozen rule fires on
+the cheap trajectory ([ESCALATION.md](ESCALATION.md), frozen at `c1f8520`). **Each task takes the
+always-cheap run's outcome when the rule is silent, and A1's measured outcome on the same task
+— 3.6, run `20260910-024454-1f69bc` — when it fires.** An escalation restarts A1 on the strong
+model from nothing, with the prompt, limits and model 3.6 ran, so 3.6's trajectory on that task
+is a draw of exactly what a live escalation would make. What composing gives up is a draw taken
+on the same day under the same rule for refused output; what it buys is **a paired comparison**
+— on an escalated task the cascade and always-strong share one strong trajectory, so every
+difference between them comes from the tasks the rule left with the cheap model — and zero
+strong-model quota.
+
+### What "cost" means
+
+**Recorded tokens: prompt plus completion of every attempt row in a run's ledger, attributed to
+its task by the row's `task_id`, retried attempts included.** That is the basis A1's committed
+**6,646.8 tokens a solved task** already stands on (771,028 over 116), so always-strong's figure
+is 3.6's, untouched. Always-cheap: every attempt row of its run. The cascade: every cheap row, all
+150 tasks, plus 3.6's rows for the escalated tasks. It is exact rather than undercounted, because
+every one of 3.6's 827 attempt rows carries its `task_id` and they sum to 771,028 — checked
+2026-09-12. The 22,017 tokens that 3.6's per-task figures (749,011 in all) do not carry are five
+retried tasks' earlier attempts: `dev-0044` 3,126, `dev-0254` 11,243, `dev-0496` 3,715,
+`dev-0758` 3,299, `dev-0816` 634.
+
+**Beside it, labelled, the standing-trajectory basis** — each task's final trajectory alone —
+for all three. **Neither basis sees a request the provider refused**: it has no attempt row and
+no ledger records its tokens (25 of them on the cheap run by the time it paused, 1 on 3.6's).
+They are counted beside every cost and never estimated.
+
+### When the cascade wins
+
+**It wins 5.2's metric if and only if its cost per solved task is strictly below
+always-strong's 6,646.8; otherwise it loses.** Compared exactly, never on rounded figures.
+
+**No threshold was set for "near strong-model accuracy".** Neither model has been run twice, so
+there is no measured spread to derive a tolerance from. The cascade's difference from
+always-strong is written as a number of tasks and a token ratio, with no adjective, and each of
+the three is marked dominated or not on solved tasks against tokens.
+
+**Two readings beside the verdict, not part of it**, fixed now because the premise is at risk:
+in this project a 20b token and a 120b token are the same unit and both cost $0.00, and a cascade
+is built on the cheap model's tokens being cheaper.
+
+- **Tokens split by model.** Each model has its own daily allowance, so strong-model tokens
+  saved is what a cascade buys on free tiers.
+- **The break-even price ratio**, r* = (S × N_cascade / N_strong − S_escalated) / C: the price
+  of a cheap token, relative to a strong one, below which the cascade's cost per solved task
+  would fall under always-strong's. C is the cascade's cheap tokens, S_escalated its strong
+  tokens, S and N_strong always-strong's tokens and solved tasks. r* ≤ 0 means no price does it.
+
+### What will be declared beside the table, whichever way it lands
+
+- **Rule for refused output.** 3.6 ran under `fail_task` and retried its one refusal
+  (`dev-0758`); the cheap run scores such a refusal as `provider_rejected`, unsolved and
+  escalated. A composed escalation of `dev-0758` would carry 3.6's retried outcome.
+- **Dates and pools.** Always-strong ran on 2026-09-10, always-cheap from 2026-09-12; both
+  used both Groq pools.
+- **The rule was calibrated inside the working set.** 5.1's preflight ran the 15 smoke tasks,
+  which are working-set tasks, and the rule's one change after a preflight — `provider_rejected`
+  in clause 1, by the author's decision before the freeze — came from them.
+- **Recall is low by construction.** On the strong model the rule catches 9 of 34 failures; the
+  cascade recovers only failures that announce themselves.
+- **Accuracy is agreement with the references**, which err both ways. The seven tasks whose
+  reference returns no rows, and the eight whose references 4.4 verified by query return wrong
+  data, are listed with all
+  three agents' outcomes — among them, a cheap first query that comes back empty on an
+  empty-reference task fires clause 4 and hands a free "solve" to the strong model. **The seven
+  are found by running each reference through the sandbox, not read from a results file**:
+  `reference_rows` in `results/a1-working.json` is blank wherever A1 wrote no SQL, because the
+  comparison never ran, so that file shows 4 empty references where the split has 7.
+- **Stopping and resuming costs tokens.** A task in flight when a run stops is retried from
+  nothing, and its first attempt stays in the run's total; both runs spanned several stops.
+- **The projection's token note** says "every attempt, answered or refused" — true of what has an
+  attempt row, not of the refused requests above.

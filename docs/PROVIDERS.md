@@ -49,7 +49,7 @@ does not stretch. See the pair section below.
 
 | Provider | Model | RPM documented | RPM observed | RPD documented | RPD observed | TPM documented | TPM observed | TPD documented | TPD observed |
 |---|---|---|---|---|---|---|---|---|---|
-| groq | `openai/gpt-oss-20b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
+| groq | `openai/gpt-oss-20b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | **200,000** |
 | groq | `openai/gpt-oss-120b` | 30 | **30** | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | **200,000** |
 | groq | `qwen/qwen3.8-27b` | 30 | not probed | 1,000 | **1,000** | 8,000 | **8,000** | 200,000 | TBD |
 | google-ai-studio | `gemini-3.5-flash-lite` | not published | **15** | not published | TBD | not published | TBD | not published | TBD |
@@ -117,6 +117,32 @@ retry hints on those refusals were 3m9s and 46s rather than hours, which is the 
 bucket that refills continuously rather than resetting on a boundary. This project's own
 `TokenBucket` already models Groq that way, on the requests-per-day evidence recorded above.
 Determining the exact window would cost another day of capacity and buys nothing yet.
+
+**The window is established, 2026-09-12, and it is not a window: Groq's tokens-per-day is a
+bucket of 200,000 that refills continuously at 200,000 per 86,400 s** — about 2.3148 tokens a
+second, 8,333 an hour, per pool and per model. The paragraph above left it `TBD`; the refusals it
+cites already held the answer. Every day-scope refusal this project has received gives the
+shortfall (`Requested` less what the limit leaves after `Used`) and a retry hint, and **in all six
+the hint equals the shortfall divided by 200,000 / 86,400 s, to the millisecond** — four on
+`openai/gpt-oss-120b` and two on `openai/gpt-oss-20b`, on both accounts
+(`runs/quota-walls.jsonl`, each body parsed and divided by a command, 2026-09-12):
+
+| Refused at | Pool | Model | Used | Requested | Shortfall | Retry hint | Shortfall ÷ 2.31481/s |
+|---|---|---|---|---|---|---|---|
+| 2026-09-10T03:54:20Z | `groq#1` | `openai/gpt-oss-120b` | 199,125 | 1,314 | 439 | 189.648 s | 189.648 s |
+| 2026-09-10T03:54:27Z | `groq#1` | `openai/gpt-oss-120b` | 199,253 | 854 | 107 | 46.224 s | 46.224 s |
+| 2026-09-10T04:22:05Z | `groq#1` | `openai/gpt-oss-120b` | 199,532 | 599 | 131 | 56.592 s | 56.592 s |
+| 2026-09-10T04:50:14Z | `groq#1` | `openai/gpt-oss-120b` | 199,005 | 1,328 | 333 | 143.856 s | 143.856 s |
+| 2026-09-12T06:45:00Z | `groq#2` | `openai/gpt-oss-20b` | 199,017 | 1,288 | 305 | 131.760 s | 131.760 s |
+| 2026-09-12T06:46:55Z | `groq#1` | `openai/gpt-oss-20b` | 199,470 | 1,076 | 546 | 235.872 s | 235.872 s |
+
+**Two things this explains that were recorded as puzzles.** 3.6 spent 399,757 tokens before Groq
+said `Used 199125`, because the bucket had been refilling for the whole run; and 5.1's
+preflights plus the start of 5.2's run put 208,977 recorded 20b tokens on `groq#1` before any
+refusal, for the same reason. **What it means for planning:** an emptied pool is full again 24
+hours later, and holds roughly 8,333 tokens for every hour it has rested — so a run that meets
+the wall resumes in part within hours and in full after a day. The client's own bucket still
+starts full in every process (below), so the 429 remains the authority.
 
 **One caution for anyone reading a resumed run's spend.** The client's quota buckets are
 **per process**: a new session starts them full, so the modelled daily ceiling bounds a
@@ -263,8 +289,22 @@ paid out of the day's quota rather than the re-run allowance, and it changes no 
 on `openai/gpt-oss-20b`: run `20260912-052224-4f8be8`, 98 requests and 77,286 recorded tokens,
 stopped at 13 of 15 and superseded; and run `20260912-054709-c34308`, 81 requests and 67,520
 recorded tokens, 15 of 15. Together 76,922 tokens on `groq#1` and 67,884 on `groq#2`, no daily
-wall. The first 20b tokens this project has spent in volume; 20b's own tokens-per-day is still
-`TBD`. The A2-cheap working-set run in the table started the same day.
+wall. The first 20b tokens this project has spent in volume; 20b's own tokens-per-day was still
+`TBD` after them (this sentence said "is still" until the run below observed it). The A2-cheap
+working-set run in the table started the same day.
+
+**That run met 20b's daily wall on both pools, and 20b's tokens-per-day is observed at 200,000.**
+Run `20260912-055938-9712c8`, `runs/20260912-055938-9712c8/ledger.jsonl`, 2026-09-12: Groq
+refused `groq#2` at 06:45:00Z (`TPD: Limit 200000, Used 199017`) and `groq#1` at 06:46:55Z
+(`Used 199470`), and the run stopped as `pools_exhausted` at **105 of 150 tasks complete**, 0
+failed but the one in flight, which a resume retries. By then it had 556 attempt rows and 555,409
+recorded tokens (289 rows on `groq#1`, 267 on `groq#2`), every one `openai/gpt-oss-20b`. **The
+run's request ceilings counted 582 requests, and the 26 without an attempt row are two kinds of
+refusal**: 25 over the model's own output (HTTP 400) and 1 at the daily limit itself (the 429
+that ended the run). A quota refusal leaves no attempt row either — 3.6's ledger holds 12 walls
+and not one non-`ok` attempt row — so "requests" in this project means *answered* requests, and
+the gap to the ceiling's count is every refusal, not only the 400s. **It is paused, not
+finished**: no figure is read from it until all 150 tasks have an outcome.
 
 **What that costs is TBD**, because tokens per task is not measured until 2.4. The table
 below is arithmetic over hypothetical per-task costs, not a prediction about this system,

@@ -116,7 +116,12 @@ strong-model run had shown: **Groq refused the cheap model's own tool calls with
 runs score such a refusal as an unsolved trajectory, `provider_rejected`, which the rule
 escalates; A1's measured run, which retried its one such refusal, is unchanged. The always-cheap
 run over the working set started on 2026-09-12 and has no figure yet, which is why A2's row
-above is still `TBD`.
+above is still `TBD`: it reached Groq's daily token limit on both pools at 105 of 150 tasks and
+resumes on a later day. **How the cascade will be read was committed before any of its figures
+exist** — composed from that run and A1's, cost as every recorded token, and a verdict fixed in
+advance ([docs/RESULTS.md](docs/RESULTS.md#a2--the-cascade--52)). And that limit settled a
+question open since 3.6: Groq's tokens-per-day is a bucket that refills continuously, all six of
+its daily-limit refusals so far agreeing to the millisecond ([docs/PROVIDERS.md](docs/PROVIDERS.md)).
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
 sessions and one Groq daily quota wall. That is reported here the way it landed rather than
