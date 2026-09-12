@@ -354,3 +354,13 @@ rows — working exactly as documented. So of 26 failures, **eight are the model
 data wrong.** None of this re-scores anything and none of it may: the rule is what it was
 when it was committed, and the figure stands as taken. What it establishes is how much room
 sits between the reported number and the true one.
+
+**And that room runs in both directions, which this section did not anticipate — corrected
+2026-09-12.** The costs listed above push the number only down, and that stands. A defective
+reference does more: it also *accepts* any wrong answer that reproduces its defect. 4.4 read
+all 34 of A1's failures and, among the ten tasks A1 lost and A0 won, found **eight A0 solves
+whose rows equal a reference verified to return wrong data** — found without reading any of
+A0's other solves, so eight is a floor on that count. Execution accuracy here is therefore
+**agreement with the reference queries**, not a lower bound on correct answers, and the
+paragraph above that called it one is superseded by this one. Both directions are counted in
+[`docs/FAILURES.md`](FAILURES.md). The rule is unchanged, and nothing is re-scored.

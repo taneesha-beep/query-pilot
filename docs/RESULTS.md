@@ -45,12 +45,15 @@ whole 1,034-task frame is 49 tasks, **4.7389%**, which is where the rule's own t
 it; the 7 above is the same measurement taken over the 150 tasks this figure is a rate on,
 executed through the same sandbox that ran the candidates.
 
-**82.6667% is a lower bound**, and every reason is documented rather than discovered: the
-rule compares multisets rather than sets, columns positionally, and refuses a truncated
-result outright; the sandbox's 30-second deadline rejects correct-but-slow reformulations;
-and ties in an ordered reference are not repairable. Every one of those pushes the number
-down. Whether reference queries that are themselves wrong push it down further is
-[2.5](FAILURES.md)'s question.
+**Everything the rule does pushes 82.6667% down**, and every reason is documented rather than
+discovered: the rule compares multisets rather than sets, columns positionally, and refuses a
+truncated result outright; the sandbox's 30-second deadline rejects correct-but-slow
+reformulations; and ties in an ordered reference are not repairable. Every one of those pushes
+the number down. **Reference queries that are themselves wrong push it both ways**: 9 of A0's 26
+failures are the reference, and at least 8 of its 124 solves are wrong answers a wrong
+reference agrees with — so the figure is agreement with the references, not a floor on correct
+answers. [docs/FAILURES.md](FAILURES.md) carries both counts. *This paragraph opened "82.6667%
+is a lower bound" until 2026-09-12, when 4.4 found the second direction.*
 
 ### By difficulty
 
@@ -297,9 +300,12 @@ Pooling `empty` into `error` would manufacture a denominator of 6 out of a denom
 and `empty` is reported apart for a reason this split makes concrete: an empty result **can be
 the correct answer** here, for 7 of these 150 tasks.
 
-**The zero is itself the finding.** **676 tool calls across the 150 trajectories — 156
-`list_tables`, 251 `describe_table`, 198 `execute_sql`, 71 `sample_rows` — and every one of
-those 198 statements ran**, against 20 real schemas the model had never been shown. Recovery rate is the
+**The zero is itself the finding.** **652 tool calls across the 150 trajectories — 150
+`list_tables`, 243 `describe_table`, 193 `execute_sql`, 66 `sample_rows` — and every one of
+those 193 statements ran**, against 20 real schemas the model had never been shown. *This
+sentence said 676 and 198 until 2026-09-12: those count the six trajectories that were cut off
+mid-task and retried as well, where every other figure here reads only the trajectory that
+stands. `docs/a1-failure-counts.json` holds both; the committed metrics file always said 652.* Recovery rate is the
 number A0 structurally cannot produce, and on this substrate with this model there was almost
 nothing to recover from. That is a fact about Spider and about `openai/gpt-oss-120b`, not a
 defect in the metric — and it is why the interesting claim in this project moves to
@@ -391,7 +397,11 @@ that identifies the trailing space. Then it hit `TOOL_CALL_LIMIT` and its final 
 
 **A1 was punished for being right.** It disbelieved an empty result, investigated, found a
 real defect in the stored data, and ran out of room to answer. A0 was rewarded for being
-unable to look. Three of the eight `no_sql` tasks are this shape.
+unable to look. **Five of the eight `no_sql` tasks are this shape** — `dev-0186`, `dev-0207`,
+`dev-0238`, `dev-0254` and `dev-0256`, all `flight_2`, whose stored airport codes and cities are
+padded with spaces. Counted when 4.4 read all 34 failures; this sentence said three until
+2026-09-12, from a partial reading. And A0's "solve" here, and on every `flight_2` task it won
+and A1 lost, is a wrong answer the defective reference agrees with — [docs/FAILURES.md](FAILURES.md).
 
 ### What this figure is, and is not
 

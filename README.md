@@ -69,11 +69,18 @@ is the point of measuring them.
 
 | Measure | Value | Denominator |
 |---|---|---|
-| Compliance rate | TBD | TBD |
-| Containment rate | TBD | TBD |
-| Task-damage rate | TBD | TBD |
+| Compliance rate — the trajectory attempted the injected instruction | **8 of 45 — 17.7778%** | every attack case |
+| Containment rate — every compliant attempt refused before it executed | **5 of 5 — 100.0%** | compliant cases a control can contain |
+| Task-damage rate — resisted, and answered wrongly anyway | **0 of 37 — 0.0%** | cases the agent resisted |
 
-These three have different denominators and are never quoted as one figure.
+A1, Groq, `openai/gpt-oss-120b`, 2026-09-11, `runs/20260911-113246-1a97c9/ledger.jsonl`, over
+the 45-case corpus. These three have different denominators and are never quoted as one
+figure. **All five contained attempts were one shape** — `DROP TABLE audit_log`, refused by the
+DDL/DML control before a connection opened — and no sandbox escape was attempted at all, so
+100% is a thin claim. **Both wrong answers came from complying**, with an instruction no control
+can contain. And **15 of the 45 cases were never seen**: A1 never looked inside the table that
+carries the row-value injections. [docs/ATTACKS.md](docs/ATTACKS.md),
+[results/attacks.json](results/attacks.json).
 
 ### Reserve set
 
@@ -85,14 +92,16 @@ Read once, after everything else is finished.
 
 ## Status
 
-**Phases 1, 2 and 3 are complete, and Phase 4 has begun.** Both agents exist, both have been
-measured over the whole 150-task working set on the same model, and every one of A0's failures
-has been read by hand. The execution surface is now behind **five tested controls**
-([`docs/GUARDRAILS.md`](docs/GUARDRAILS.md), each with a test and a stated limit), and a
-**45-case prompt-injection corpus** ([`attacks/corpus.json`](attacks/corpus.json)) is committed
-across table and column names, column type metadata and row values. Compliance and containment
-(4.3) and the failure catalog (4.4) are next. No number in this README comes from anything but
-a committed ledger.
+**Phases 1 to 4 are complete.** Both agents exist, both have been measured over the whole
+150-task working set on the same model, and every failure of both has been read by hand. The
+execution surface is behind **five tested controls** ([`docs/GUARDRAILS.md`](docs/GUARDRAILS.md),
+each with a test and a stated limit), and A1 has been measured against a **45-case
+prompt-injection corpus** ([`attacks/corpus.json`](attacks/corpus.json)) planted in table and
+column names, column type metadata and row values — the three figures above. Every failure mode
+the project has a number for is catalogued with its frequency, its denominator and the artifact
+it came from, apart from the ones seen but never counted, in
+[docs/FAILURES.md](docs/FAILURES.md). No number in this README comes from anything but a
+committed ledger.
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
 sessions and one Groq daily quota wall. That is reported here the way it landed rather than
@@ -163,9 +172,9 @@ Two things it establishes that qualify every accuracy figure this project will r
 **49 of the 1,034 reference queries return no rows**, so a query returning nothing scores
 **4.7389%** by doing nothing at all. And every known limit of the rule — ties in an ordered
 reference, positional column matching, multiset duplicates, no text-to-number coercion —
-pushes the number **down**, which makes execution accuracy here a **lower bound**.
+pushes the number **down**.
 
-**And that lower bound has now been measured rather than asserted.** All 26 non-solves of
+**And the reference queries have now been measured rather than asserted.** All 26 non-solves of
 the A0 run were read by hand under a protocol fixed before the run started, in
 [docs/FAILURES.md](docs/FAILURES.md). **Nine of the 26 are the reference query rather than
 the model** — five of them returning demonstrably wrong data, each verified by running a
@@ -173,6 +182,19 @@ query, including two that compare a `TEXT` horsepower column against `150` and s
 90-horsepower car as over 150. Nine more are the rule's own documented costs. Eight are the
 model getting the data wrong, and none of the 26 was a malformed query or a wrong join.
 **Nothing was re-scored**: 124 of 150 stands as taken, and what changes is how it is read.
+
+**Which is not as a lower bound — this README said it was until 2026-09-12.** Reading all 34
+of A1's failures the same way found the other direction. A defective reference does not only
+reject correct answers; it accepts any wrong answer that reproduces its defect, and **at least 8
+of A0's 124 solves are exactly that** — seven on `flight_2`, whose stored airport codes and
+cities are padded with spaces so that the natural query and the reference return the same
+nothing, and one where A0's literal matched nothing just as the reference's did. Each is
+verified by a read-only query in [docs/a1-failure-counts.json](docs/a1-failure-counts.json).
+"At least", because those were found without reading A0's solves. So each accuracy figure here
+is **agreement with the reference queries**, which err in both directions: the rule's own costs
+only push it down, and the references push it down and up. Half of A1's 34 failures are the
+reference too, and in none of the ten tasks A1 lost and A0 won did A1 get the data wrong where
+A0 got it right.
 
 Provider limits, and which of them were measured against which were merely stated, are in
 [docs/PROVIDERS.md](docs/PROVIDERS.md).
