@@ -70,8 +70,9 @@ for is anywhere near it.
 - **A correct-but-pathologically-slow reformulation.** A correlated-subquery form returning the
   same rows as a reference was measured at over 60 s against that reference's 0.289 s. No
   timeout value saves that query, so the timeout necessarily costs some correct answers — one
-  of the reasons execution accuracy here is a lower bound. What it buys in exchange is a run
-  that finishes.
+  of the costs that push execution accuracy down (the figure is agreement with the reference
+  queries, not a lower bound; see `docs/FAILURES.md`). What it buys in exchange is a run that
+  finishes.
 - **A single VM instruction that does not return.** The deadline is sampled between
   instructions, not inside one. Nothing in this substrate does that, and the alternative
   (`Connection.interrupt` from a watchdog thread) has the same limit for the same reason.

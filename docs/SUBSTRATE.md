@@ -139,6 +139,35 @@ that read happens, no claim is made about reference correctness, and if that rea
 meaningful share of wrong references, **every accuracy figure in this project is a lower
 bound** and will say so.
 
+*Superseded 2026-09-12.* The reads happened — A0's 26 failures in 2.5 and A1's 34 in 4.4
+([docs/FAILURES.md](FAILURES.md)) — and they found wrong references in **both** directions. A
+wrong reference rejects correct answers, and it also accepts any wrong answer that reproduces
+its defect: at least 8 of A0's 124 solves are that. So accuracy here is agreement with the
+reference queries, not a lower bound on correct answers.
+
+### Defects in the stored data, found since
+
+Each was found because a failure pointed at it; **the substrate has never been swept for
+defects as a whole**. Every query that follows is read-only, and the per-task evidence is in
+[`docs/a1-failure-counts.json`](a1-failure-counts.json).
+
+- **`flight_2` — padded airport codes and cities.** All 1,200 rows of `flights` store both
+  `SourceAirport` and `DestAirport` with a leading space (`' APG'`), and all 100 `City` values
+  in `airports` end with a space (`'Aberdeen '`, `'Anthony '`); `airports.AirportCode` is not
+  padded. So any equality against a clean literal, and the `flights`–`airports` join itself,
+  matches nothing. **Seven `flight_2` reference queries on the working set return no rows or a
+  count of 0 where the stored data holds the answer** — `dev-0186`, `dev-0207`, `dev-0227`,
+  `dev-0238`, `dev-0248`, `dev-0254`, `dev-0256`. The references still *execute*, which is why
+  the 1,034 of 1,034 above could not see it.
+- **`car_1` — numbers stored as `TEXT`.** `cars_data.Horsepower` and `cars_data.MPG` are
+  declared `TEXT`, so a reference comparing or ordering them against a number compares strings:
+  `'90' > '150'` is true, and `'null'` sorts first. Three working-set references are wrong for
+  this reason — `dev-0125`, `dev-0126`, `dev-0133`.
+
+A defect in a reference *query* rather than in the data — a lowercase literal that matches no
+stored value (`dev-0388`), a `GROUP BY` that returns every row where the question asks for the
+maximum (`dev-0820`) — is catalogued in `docs/FAILURES.md`, not here.
+
 ## The sampling frame
 
 The working set and the reserve set are drawn from **the 1,034 tasks whose reference query

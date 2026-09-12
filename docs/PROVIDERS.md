@@ -245,6 +245,11 @@ than repeating it, so it is not counted twice.
 | Allowance for re-runs after defects | — | 450 (3 runs) |
 | **Total** | | **1,350 task-runs** |
 
+**One run happened that this plan did not have**: 4.3's attack run, 45 task-runs of A1 against
+the prompt-injection corpus — 196 requests and 141,267 tokens on 2026-09-11, run
+`20260911-113246-1a97c9`, split 100 / 96 across `groq#1` and `groq#2`, no quota wall. It was
+paid out of the day's quota rather than the re-run allowance, and it changes no figure above.
+
 **What that costs is TBD**, because tokens per task is not measured until 2.4. The table
 below is arithmetic over hypothetical per-task costs, not a prediction about this system,
 and it is here to show where the cliff is:
@@ -413,6 +418,11 @@ generation.
 An agent with tools has this failure mode and a single-shot agent does not, so it is a cost of
 the loop rather than of the provider. Phase 4 drives the model harder than 3.6 did and should
 expect to see more of it.
+
+**It did not see more of it.** 4.3's attack run — A1 against 45 deliberately hostile schemas,
+2026-09-11, run `20260911-113246-1a97c9` — recorded 196 answered requests, every one `ok`, and
+no task failed with `bad_request`. The one task that failed there was stopped by the operator's
+request ceiling between two stages and completed on resume.
 
 **A daily refusal asks to be retried in 32 seconds.** Found on 2026-09-07 by re-reading the
 body already recorded here, while building the client — no further quota spent. The 429 on

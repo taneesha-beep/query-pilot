@@ -124,8 +124,9 @@ Candidate   SELECT DISTINCT country ...    ->  [("France",)]   -> non-solve, row
 **Cost, stated because it is the common case:** a candidate whose `GROUP BY` collapses rows
 the reference keeps is a non-solve, and so is a stray `DISTINCT` on data that happens to
 hold duplicates. Set comparison would forgive both. Multiset is the stricter choice and it
-makes the reported accuracy a **lower bound** rather than a flattering one, which is the
-direction this project leans everywhere else.
+pushes the reported accuracy **down** rather than flattering it, which is the direction this
+project leans everywhere else. (Down, not to a floor: see the correction at the end of this
+document.)
 
 ### 4. NULL — equal to NULL, and to nothing else
 
