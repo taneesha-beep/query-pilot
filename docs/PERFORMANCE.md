@@ -322,7 +322,8 @@ A2-cheap against 115.
 - **The difference is zero, to within 0.6 s, in every session but four**, and those four are the
   sessions where Groq refused one of several pools for the day. There the ceiling, as fixed,
   credits the refused pool with a full per-minute bucket at the session's start and with the
-  day's refill after the refusal, and the run used neither:
+  day's refill after the refusal, and the run used neither. From `refused_pools`, a diagnostic
+  added once the figures were seen and labelled so in the file:
 
 | Session | Pool refused for the day | Credited by the refusal / served | Credited after it / served | Difference |
 |---|---|---|---|---|
@@ -340,6 +341,24 @@ hints on those refusals said 57, 144, 132, 236, 165 and 10 s (`retry_after_s`,
 `runs/quota-walls.jsonl`). That is a real, small loss of this scheduler's: a Groq pool refused
 for the day refills at about 2.3 tokens a second, one A1 request every seven minutes or so, and
 the scheduler does not look again for an hour.
+
+#### What changed between the reading and the figures
+
+The reading was committed first (`d027fc7`); three things changed before the figures were
+committed (`7a32ce7`), and none of them moved a ceiling, a running time or a ratio.
+
+- **A defect, fixed to match the text above.** The first version of the code called a request
+  held whenever its pool reopened anywhere in the gap before it. The definition says the pool must
+  reopen within the tolerance of the send. Fixing it moved every A0 and A1 request from held to
+  not held, which is how the `observe` lag was found.
+- **How "capacity unused when the last request went out" becomes seconds.** It was first divided
+  by the ceiling's rate at that instant. That misstated it in two A1 sessions — 03:01:17Z, which
+  ran past the point where the day line overtakes the minute line, and 03:54:26Z, where nothing
+  needed refill — so it is now counted back along the ceiling's own admission. **This was chosen
+  after those two sessions' figures were seen.** It moves only the split between "unused" and
+  "difference".
+- **Two diagnostics were added after the figures were seen**, `opened_during_gap` and
+  `refused_pools`. Both are labelled so in the file, and neither is part of the reading.
 
 #### What this measurement is not
 

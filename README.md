@@ -3,8 +3,10 @@
 An agent that answers natural-language questions against relational databases it has not
 been shown in full. It discovers a schema through tools, writes SQL, executes it in a
 sandbox, and repairs its own query when execution fails. **Every claim made here is
-verified by execution rather than by reading the SQL** — a query is correct when the rows
-it returns match the rows the reference query returns. No model judges another model
+verified by execution rather than by reading the SQL** — a query counts as solved when the
+rows it returns match the rows the reference query returns, which is agreement with the
+reference and not proof of a right answer (see Status below; this line said "is correct" until
+2026-09-12). No model judges another model
 anywhere in this project. The substrate is Spider dev; the agent is measured on a 150-task
 working set, and a disjoint 150-task reserve set is read exactly once at the end.
 
