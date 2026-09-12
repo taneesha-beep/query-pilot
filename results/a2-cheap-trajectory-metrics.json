@@ -1,0 +1,92 @@
+{
+  "run_id": "20260912-055938-9712c8",
+  "computed_at": "2026-09-12T12:41:45+00:00",
+  "tasks": {
+    "transcripts_read": 150,
+    "with_outcome": 150,
+    "solved": 89,
+    "incomplete_transcripts": 0,
+    "counts_disagreeing_with_end": 0,
+    "terminations": {
+      "answer": 113,
+      "provider_rejected": 28,
+      "tool_call_limit": 9
+    }
+  },
+  "tool_calls_per_task": {
+    "n": 150,
+    "mean": 4.52,
+    "median": 4.0,
+    "p90": 9,
+    "min": 0,
+    "max": 12
+  },
+  "turns_to_solve": {
+    "n": 89,
+    "mean": 5.427,
+    "median": 5,
+    "p90": 8,
+    "min": 3,
+    "max": 12,
+    "distribution": {
+      "3": 8,
+      "4": 22,
+      "5": 26,
+      "6": 13,
+      "7": 8,
+      "8": 5,
+      "9": 5,
+      "10": 1,
+      "12": 1
+    }
+  },
+  "recovery_rate": {
+    "error": {
+      "denominator": 0,
+      "recovered": 0,
+      "rate": "TBD"
+    },
+    "empty": {
+      "denominator": 8,
+      "recovered": 0,
+      "rate": 0.0
+    },
+    "error_or_empty": {
+      "denominator": 8,
+      "recovered": 0,
+      "rate": 0.0
+    },
+    "first_execute_sql": {
+      "rows": 100,
+      "none": 42,
+      "empty": 8
+    },
+    "tasks_with_no_execute_sql": 42,
+    "trajectories_with_any_execute_sql_error": 1,
+    "trajectories_with_any_execute_sql_empty": 11
+  },
+  "wasted_calls": {
+    "tasks_counted": 108,
+    "tasks_without_final_sql": 42,
+    "tasks_without_tool_calls": 1,
+    "calls_counted": 498,
+    "wasted": 63,
+    "rate": 0.126506,
+    "per_task_mean": 0.5833
+  },
+  "repairs": {
+    "attempts": 30,
+    "successes": 30,
+    "blocked": {
+      "provider_rejected": 5
+    }
+  },
+  "definitions": {
+    "tool_calls_per_task": "tool_result events, not the tool calls an assistant message asked for: a trajectory stopped at the turn limit keeps calls that were never executed.",
+    "turns_to_solve": "assistant messages, over solved tasks only. A repair turn counts, because it is a request the run paid for.",
+    "recovery_rate": "three denominators, never one. `error` is the headline: the first execute_sql came back ok=false. `empty` is reported apart because an empty result can be the correct answer -- docs/EQUIVALENCE.md prices that at 4.7389% of the frame -- so that denominator holds tasks with nothing to recover from. A task with no execute_sql is in none of them.",
+    "wasted_calls": "calls after the last one that contributed to the final query. Contributed: an execute_sql whose sql equals the final answer normalised; a describe_table or sample_rows whose table appears in the final query's identifiers; a list_tables whenever the final query names a table. APPROXIMATE, and in one direction: a describe_table on a table the final query never mentions is counted wasted even when it was the call that ruled that table out. An upper bound on waste, not a measurement of it.",
+    "percentile": "nearest rank, ceil(fraction x n), no interpolation.",
+    "median": "mean of the two middle values at even n."
+  }
+}

@@ -20,7 +20,8 @@ it does not appear in this table.
 |---|---|---|---|---|---|---|
 | A0 single-shot | **124 / 150 — 82.6667%** | 860.8 | Groq | `openai/gpt-oss-120b` | 2026-09-08 | `runs/20260908-133316-faecd5/ledger.jsonl` |
 | A1 agent | **116 / 150 — 77.3333%** | 6,646.8 | Groq | `openai/gpt-oss-120b` | 2026-09-10 | `runs/20260910-024454-1f69bc/ledger.jsonl` |
-| A2 cascade | TBD | TBD | TBD | TBD | TBD | TBD |
+| A2-cheap — A1's loop on the cheap model | **89 / 150 — 59.3333%** | 9,492.9 | Groq | `openai/gpt-oss-20b` | 2026-09-12 | `runs/20260912-055938-9712c8/ledger.jsonl` |
+| A2 cascade — cheap, escalated to A1 | **117 / 150 — 78.0%** | 10,032.3 | Groq | `openai/gpt-oss-20b`, then `openai/gpt-oss-120b` | 2026-09-12 · 2026-09-10 | the A2-cheap and A1 ledgers above |
 
 **A query returning nothing scores 7 of 150 — 4.6667% — of this working set for free**,
 because that many of its reference queries return no rows. That floor belongs beside the
@@ -39,10 +40,21 @@ tools would win**, both of them A0 writing a literal that does not match the sto
 spelling. Total cost: A0 106,740 tokens, A1 771,028, **$0.00 each** — both providers are
 free tiers, so the cost that matters is quota.
 
-Full write-up and the comparison table in [docs/RESULTS.md](docs/RESULTS.md),
+**The cascade lost too, and by the rule written down before its figures existed.** A2 solves
+one task more than A1 and costs **10,032.3 tokens a solved task against 6,646.8** — 1.52× the
+tokens. The escalation rule is not why: on the cheap model it hands on 46 tasks, not one of which
+the cheap model had solved, and catches 46 of its 61 failures. **The cheap model is simply not
+cheaper here** — it spent 5,632.4 tokens a task against the strong model's 5,140.2, and every
+token costs the same $0.00. What would flip it is a price: if a cheap token cost less than
+**53.12%** of a strong one, the cascade would win. What it does save is the scarce model's quota
+— 328,916 strong-model tokens against A1's 771,028.
+
+Full write-up and the comparison tables in [docs/RESULTS.md](docs/RESULTS.md),
 machine-readable in [results/a0-working.json](results/a0-working.json),
-[results/a1-working.json](results/a1-working.json) and
-[results/a1-trajectory-metrics.json](results/a1-trajectory-metrics.json).
+[results/a1-working.json](results/a1-working.json),
+[results/a1-trajectory-metrics.json](results/a1-trajectory-metrics.json),
+[results/a2-cheap-working.json](results/a2-cheap-working.json) and
+[results/a2-working.json](results/a2-working.json).
 
 ### Execution accuracy by difficulty
 
@@ -103,7 +115,8 @@ it came from, apart from the ones seen but never counted, in
 [docs/FAILURES.md](docs/FAILURES.md). No number in this README comes from anything but a
 committed ledger.
 
-**Phase 5 has started: the escalation rule is frozen, and the cheap model's run is under way.**
+**Phase 5 is measured: the cascade lost on cost per solved task** (the Results table above and
+[docs/RESULTS.md](docs/RESULTS.md#a2--the-cascade--52)). How it got there:
 A2 runs A1's loop on the cheap model (`openai/gpt-oss-20b`) and hands a task to the strong one
 only when the cheap trajectory announces its own failure — it never answered, its answer failed
 validation, or its first query errored or came back empty. The rule was committed before any
@@ -115,13 +128,13 @@ strong-model run had shown: **Groq refused the cheap model's own tool calls with
 — and under this project's retry rule those were failed tasks the rule never saw. So the cheap
 runs score such a refusal as an unsolved trajectory, `provider_rejected`, which the rule
 escalates; A1's measured run, which retried its one such refusal, is unchanged. The always-cheap
-run over the working set started on 2026-09-12 and has no figure yet, which is why A2's row
-above is still `TBD`: it reached Groq's daily token limit on both pools at 105 of 150 tasks and
-resumes on a later day. **How the cascade will be read was committed before any of its figures
-exist** — composed from that run and A1's, cost as every recorded token, and a verdict fixed in
-advance ([docs/RESULTS.md](docs/RESULTS.md#a2--the-cascade--52)). And that limit settled a
-question open since 3.6: Groq's tokens-per-day is a bucket that refills continuously, all six of
-its daily-limit refusals so far agreeing to the millisecond ([docs/PROVIDERS.md](docs/PROVIDERS.md)).
+run over the working set ran on 2026-09-12 and finished the same day, 150 of 150, after meeting
+Groq's daily token limit on both pools at 105 and continuing on a third key. **How the cascade
+would be read was committed before any of its figures existed** (`29464c1`) — composed from that
+run and A1's, cost as every recorded token, and a verdict fixed in advance. And that limit
+settled a question open since 3.6: Groq's tokens-per-day is a bucket that refills continuously,
+all six of its daily-limit refusals agreeing to the millisecond
+([docs/PROVIDERS.md](docs/PROVIDERS.md)).
 
 **A1 is measured and it lost.** 116 of 150 against A0's 124, for 7.22× the tokens, over six
 sessions and one Groq daily quota wall. That is reported here the way it landed rather than

@@ -1,0 +1,4349 @@
+{
+  "measurement": {
+    "agent": "A2",
+    "split": "working",
+    "tasks_declared": 150,
+    "composed_from": {
+      "cheap": {
+        "agent": "A2-cheap",
+        "provider_and_model": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "date": "2026-09-12",
+        "started_at": "2026-09-12T05:59:38.572359+00:00",
+        "ended_at": "2026-09-12T12:41:35.768844+00:00",
+        "run_id": "20260912-055938-9712c8",
+        "ledger": "runs/20260912-055938-9712c8/ledger.jsonl",
+        "results": "results/a2-cheap-working.json",
+        "earlier_attempts": {
+          "dev-0044": {
+            "attempt_rows": 3,
+            "tokens": 2094
+          },
+          "dev-0999": {
+            "attempt_rows": 4,
+            "tokens": 3430
+          }
+        },
+        "refused_requests": {
+          "dev-0025": 1,
+          "dev-0063": 1,
+          "dev-0078": 1,
+          "dev-0105": 1,
+          "dev-0109": 1,
+          "dev-0110": 1,
+          "dev-0126": 1,
+          "dev-0150": 1,
+          "dev-0152": 1,
+          "dev-0177": 1,
+          "dev-0207": 1,
+          "dev-0263": 1,
+          "dev-0363": 1,
+          "dev-0374": 1,
+          "dev-0399": 1,
+          "dev-0404": 1,
+          "dev-0407": 1,
+          "dev-0427": 1,
+          "dev-0446": 1,
+          "dev-0491": 1,
+          "dev-0504": 1,
+          "dev-0614": 1,
+          "dev-0617": 1,
+          "dev-0643": 1,
+          "dev-0700": 1,
+          "dev-0760": 1,
+          "dev-0820": 1,
+          "dev-0837": 1,
+          "dev-0844": 1,
+          "dev-0886": 1,
+          "dev-0898": 1,
+          "dev-0924": 1,
+          "dev-0991": 1
+        }
+      },
+      "strong": {
+        "agent": "A1",
+        "provider_and_model": [
+          "groq/openai/gpt-oss-120b"
+        ],
+        "date": "2026-09-10",
+        "started_at": "2026-09-10T02:44:54.324291+00:00",
+        "ended_at": "2026-09-10T05:09:07.633569+00:00",
+        "run_id": "20260910-024454-1f69bc",
+        "ledger": "runs/20260910-024454-1f69bc/ledger.jsonl",
+        "results": "results/a1-working.json",
+        "earlier_attempts": {
+          "dev-0044": {
+            "attempt_rows": 4,
+            "tokens": 3126
+          },
+          "dev-0254": {
+            "attempt_rows": 10,
+            "tokens": 11243
+          },
+          "dev-0496": {
+            "attempt_rows": 5,
+            "tokens": 3715
+          },
+          "dev-0758": {
+            "attempt_rows": 4,
+            "tokens": 3299
+          },
+          "dev-0816": {
+            "attempt_rows": 1,
+            "tokens": 634
+          }
+        },
+        "refused_requests": {
+          "dev-0758": 1
+        }
+      },
+      "escalation": {
+        "file": "docs/escalation-a2-cheap-working.json",
+        "run_id": "20260912-055938-9712c8",
+        "rule": "5.1, frozen at c1f8520 (constraint 88)"
+      }
+    },
+    "note": "Composed, not run: no request was made for this file. Every figure comes from the two runs named above, on their providers, models, dates and ledgers, and from the frozen rule's decisions on the cheap one."
+  },
+  "definitions": {
+    "composition": "Composed, not run. A task whose cheap trajectory the frozen escalation rule is silent on takes the always-cheap run's outcome; a task it fires on takes 3.6's outcome on the same task (the trajectory that stands). One escalation at most. The escalated task's cheap tokens count as well as its strong ones.",
+    "cost": "Recorded tokens: prompt plus completion of every attempt row in the run's ledger, attributed to its task by the row's task_id, retried attempts included. Always-cheap and always-strong: every row of their run. Cascade: every cheap row, all tasks, plus 3.6's rows for the escalated tasks. Cost per solved task is that over solved tasks.",
+    "cost_standing_trajectories_only": "Beside the headline and labelled: each task's standing trajectory alone (the per-task prompt and completion tokens in the committed projection), leaving out attempts spent before a retry.",
+    "refused_requests": "Requests the provider answered with HTTP 400: a provider_rejected termination, a repair whose request was refused (repair_blocked = provider_rejected), and a task row that failed as bad_request. None has an attempt row and no ledger records its tokens, so every cost here is short by them. Counted, never estimated.",
+    "verdict": "Fixed before the always-cheap run was complete: the cascade wins 5.2's metric iff its cost per solved task (recorded tokens) is strictly below always-strong's; otherwise it loses. Compared exactly, as cross-multiplied integers, never on rounded figures.",
+    "near": "No threshold. No second draw of either model exists, so no measured noise band to derive one from; the difference from always-strong is written in tasks and as a token ratio, without an adjective.",
+    "frontier": "On (solved tasks, recorded tokens): an agent is dominated by another that solved at least as many tasks for at most as many tokens, and is strictly better on one.",
+    "break_even_price_ratio": "Not a verdict. Every token here is one unit and costs $0.00, whichever model spent it. r* = (S * N_cascade / N_strong - S_escalated) / C, where C is the cascade's cheap tokens, S_escalated its strong tokens, and S and N_strong always-strong's tokens and solved tasks: at any price of a cheap token relative to a strong one below r*, the cascade's cost per solved task is below always-strong's. r* <= 0: no price does it."
+  },
+  "execution_accuracy": {
+    "solved": 117,
+    "of": 150,
+    "percent": 78.0,
+    "empty_result_floor": {
+      "tasks": 7,
+      "of": 150,
+      "percent": 4.6667
+    }
+  },
+  "escalation": {
+    "escalated": 46,
+    "of": 150,
+    "rate": 0.306667,
+    "clauses": {
+      "did_not_answer": 37,
+      "validation_failed": 42,
+      "first_query_error": 0,
+      "first_query_empty": 8
+    },
+    "task_ids": [
+      "dev-0025",
+      "dev-0063",
+      "dev-0078",
+      "dev-0105",
+      "dev-0109",
+      "dev-0110",
+      "dev-0126",
+      "dev-0137",
+      "dev-0150",
+      "dev-0152",
+      "dev-0177",
+      "dev-0186",
+      "dev-0207",
+      "dev-0227",
+      "dev-0237",
+      "dev-0238",
+      "dev-0248",
+      "dev-0254",
+      "dev-0256",
+      "dev-0263",
+      "dev-0363",
+      "dev-0374",
+      "dev-0399",
+      "dev-0404",
+      "dev-0407",
+      "dev-0427",
+      "dev-0446",
+      "dev-0484",
+      "dev-0491",
+      "dev-0504",
+      "dev-0528",
+      "dev-0549",
+      "dev-0614",
+      "dev-0617",
+      "dev-0643",
+      "dev-0700",
+      "dev-0760",
+      "dev-0820",
+      "dev-0837",
+      "dev-0844",
+      "dev-0886",
+      "dev-0897",
+      "dev-0898",
+      "dev-0909",
+      "dev-0924",
+      "dev-0991"
+    ]
+  },
+  "routes": {
+    "rule_silent": {
+      "tasks": 104,
+      "cheap_solved": 89,
+      "strong_solved": 88
+    },
+    "rule_fired": {
+      "tasks": 46,
+      "cheap_solved": 0,
+      "strong_solved": 28
+    }
+  },
+  "paired": {
+    "against_always_strong": {
+      "both": 113,
+      "A2_only": 4,
+      "A1_only": 3,
+      "neither": 30
+    },
+    "against_always_cheap": {
+      "both": 89,
+      "A2_only": 28,
+      "A2_cheap_only": 0,
+      "neither": 33
+    }
+  },
+  "tokens": {
+    "basis": "recorded attempt rows, attributed by task_id, retried attempts included",
+    "by_model": {
+      "groq/openai/gpt-oss-20b": 844865,
+      "groq/openai/gpt-oss-120b": 328916
+    },
+    "total": 1173781,
+    "per_declared_task": 7825.2,
+    "per_solved_task": 10032.3,
+    "standing_trajectories_only": {
+      "by_model": {
+        "groq/openai/gpt-oss-20b": 839341,
+        "groq/openai/gpt-oss-120b": 317673
+      },
+      "total": 1157014,
+      "per_solved_task": 9889.0
+    },
+    "refused_requests": {
+      "cheap": 33,
+      "strong": 0
+    },
+    "money": 0.0
+  },
+  "frontier": {
+    "points": [
+      {
+        "agent": "A2-cheap",
+        "solved": 89,
+        "of": 150,
+        "percent": 59.3333,
+        "tokens": 844865,
+        "per_solved_task": 9492.9,
+        "tokens_by_model": {
+          "groq/openai/gpt-oss-20b": 844865
+        },
+        "attempt_rows": 837,
+        "tokens_standing_trajectories_only": 839341,
+        "per_solved_task_standing_trajectories_only": 9430.8,
+        "dominated_by": [
+          "A1"
+        ]
+      },
+      {
+        "agent": "A1",
+        "solved": 116,
+        "of": 150,
+        "percent": 77.3333,
+        "tokens": 771028,
+        "per_solved_task": 6646.8,
+        "tokens_by_model": {
+          "groq/openai/gpt-oss-120b": 771028
+        },
+        "attempt_rows": 827,
+        "tokens_standing_trajectories_only": 749011,
+        "per_solved_task_standing_trajectories_only": 6457.0,
+        "dominated_by": []
+      },
+      {
+        "agent": "A2",
+        "solved": 117,
+        "of": 150,
+        "percent": 78.0,
+        "tokens": 1173781,
+        "per_solved_task": 10032.3,
+        "tokens_by_model": {
+          "groq/openai/gpt-oss-20b": 844865,
+          "groq/openai/gpt-oss-120b": 328916
+        },
+        "attempt_rows": 1160,
+        "tokens_standing_trajectories_only": 1157014,
+        "per_solved_task_standing_trajectories_only": 9889.0,
+        "dominated_by": []
+      }
+    ],
+    "verdict": {
+      "metric": "cost per solved task, recorded tokens",
+      "cascade": 10032.3,
+      "always_strong": 6646.8,
+      "cascade_wins": false,
+      "tasks_against_always_strong": 1,
+      "token_ratio_against_always_strong": 1.5224
+    },
+    "break_even_price_ratio": 0.5312
+  },
+  "rows_that_could_move": {
+    "empty_reference": [
+      {
+        "task_id": "dev-0186",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0227",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0237",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed",
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": true,
+        "solved": true
+      },
+      {
+        "task_id": "dev-0238",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed",
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0248",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0254",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed",
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0909",
+        "db_id": "network_1",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": true,
+        "solved": true
+      }
+    ],
+    "verified_wrong_reference": [
+      {
+        "task_id": "dev-0186",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0207",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0227",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0238",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed",
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0248",
+        "db_id": "flight_2",
+        "clauses": [
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0254",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed",
+          "first_query_empty"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0256",
+        "db_id": "flight_2",
+        "clauses": [
+          "did_not_answer",
+          "validation_failed"
+        ],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      },
+      {
+        "task_id": "dev-0388",
+        "db_id": "course_teach",
+        "clauses": [],
+        "cheap_solved": false,
+        "strong_solved": false,
+        "solved": false
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "task_id": "dev-0003",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3786,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3786,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0007",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8637,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8637,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0008",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2114,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2114,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0020",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2945,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2945,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0025",
+      "db_id": "concert_singer",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 1307,
+        "strong": 5207
+      },
+      "tokens_standing": {
+        "cheap": 1307,
+        "strong": 5207
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0030",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3473,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3473,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0044",
+      "db_id": "concert_singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 10,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8918,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6824,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0046",
+      "db_id": "pets_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3349,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3349,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0051",
+      "db_id": "pets_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8796,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8796,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0063",
+      "db_id": "pets_1",
+      "clauses": [
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 2774,
+        "strong": 5102
+      },
+      "tokens_standing": {
+        "cheap": 2774,
+        "strong": 5102
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0076",
+      "db_id": "pets_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3971,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3971,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0078",
+      "db_id": "pets_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 610,
+        "strong": 4909
+      },
+      "tokens_standing": {
+        "cheap": 610,
+        "strong": 4909
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0086",
+      "db_id": "pets_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3697,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3697,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0101",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4406,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4406,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0105",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 611,
+        "strong": 4953
+      },
+      "tokens_standing": {
+        "cheap": 611,
+        "strong": 4953
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0106",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8029,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8029,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0109",
+      "db_id": "car_1",
+      "clauses": [
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 8
+      },
+      "tokens": {
+        "cheap": 2932,
+        "strong": 8305
+      },
+      "tokens_standing": {
+        "cheap": 2932,
+        "strong": 8305
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0110",
+      "db_id": "car_1",
+      "clauses": [
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 9
+      },
+      "tokens": {
+        "cheap": 2948,
+        "strong": 10361
+      },
+      "tokens_standing": {
+        "cheap": 2948,
+        "strong": 10361
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0123",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4097,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4097,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0125",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4613,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4613,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0126",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1313,
+        "strong": 4273
+      },
+      "tokens_standing": {
+        "cheap": 1313,
+        "strong": 4273
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0133",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8131,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8131,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0137",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 9
+      },
+      "tokens": {
+        "cheap": 17739,
+        "strong": 9279
+      },
+      "tokens_standing": {
+        "cheap": 17739,
+        "strong": 9279
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0146",
+      "db_id": "car_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3006,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3006,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0150",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 2071,
+        "strong": 3132
+      },
+      "tokens_standing": {
+        "cheap": 2071,
+        "strong": 3132
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0152",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 1326,
+        "strong": 17848
+      },
+      "tokens_standing": {
+        "cheap": 1326,
+        "strong": 17848
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0177",
+      "db_id": "car_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 7
+      },
+      "tokens": {
+        "cheap": 3094,
+        "strong": 6783
+      },
+      "tokens_standing": {
+        "cheap": 3094,
+        "strong": 6783
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0186",
+      "db_id": "flight_2",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 10,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 10205,
+        "strong": 14565
+      },
+      "tokens_standing": {
+        "cheap": 10205,
+        "strong": 14565
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0188",
+      "db_id": "flight_2",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2447,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2447,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0192",
+      "db_id": "flight_2",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2072,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2072,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0207",
+      "db_id": "flight_2",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 1262,
+        "strong": 15009
+      },
+      "tokens_standing": {
+        "cheap": 1262,
+        "strong": 15009
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0227",
+      "db_id": "flight_2",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 11,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 14581,
+        "strong": 3890
+      },
+      "tokens_standing": {
+        "cheap": 14581,
+        "strong": 3890
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0237",
+      "db_id": "flight_2",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 17105,
+        "strong": 3269
+      },
+      "tokens_standing": {
+        "cheap": 17105,
+        "strong": 3269
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0238",
+      "db_id": "flight_2",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 15580,
+        "strong": 15512
+      },
+      "tokens_standing": {
+        "cheap": 15580,
+        "strong": 15512
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0242",
+      "db_id": "flight_2",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4124,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4124,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0248",
+      "db_id": "flight_2",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 10
+      },
+      "tokens": {
+        "cheap": 16642,
+        "strong": 10325
+      },
+      "tokens_standing": {
+        "cheap": 16642,
+        "strong": 10325
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0254",
+      "db_id": "flight_2",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 23
+      },
+      "tokens": {
+        "cheap": 15981,
+        "strong": 27219
+      },
+      "tokens_standing": {
+        "cheap": 15981,
+        "strong": 15976
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0256",
+      "db_id": "flight_2",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 16230,
+        "strong": 15828
+      },
+      "tokens_standing": {
+        "cheap": 16230,
+        "strong": 15828
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0261",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2879,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2879,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0263",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 3
+      },
+      "tokens": {
+        "cheap": 621,
+        "strong": 2098
+      },
+      "tokens_standing": {
+        "cheap": 621,
+        "strong": 2098
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0272",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3132,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3132,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0276",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2103,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2103,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0278",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5187,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5187,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0292",
+      "db_id": "employee_hire_evaluation",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3305,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3305,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0299",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4261,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4261,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0301",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3158,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3158,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0313",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3054,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3054,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0317",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2802,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2802,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0322",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3596,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3596,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0327",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3358,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3358,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0331",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 7518,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 7518,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0354",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 10265,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 10265,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0363",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1307,
+        "strong": 3993
+      },
+      "tokens_standing": {
+        "cheap": 1307,
+        "strong": 3993
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0366",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4045,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4045,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0374",
+      "db_id": "cre_Doc_Template_Mgt",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1284,
+        "strong": 4014
+      },
+      "tokens_standing": {
+        "cheap": 1284,
+        "strong": 4014
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0388",
+      "db_id": "course_teach",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3613,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3613,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0399",
+      "db_id": "course_teach",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 605,
+        "strong": 4916
+      },
+      "tokens_standing": {
+        "cheap": 605,
+        "strong": 4916
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0404",
+      "db_id": "course_teach",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 8
+      },
+      "tokens": {
+        "cheap": 1955,
+        "strong": 7140
+      },
+      "tokens_standing": {
+        "cheap": 1955,
+        "strong": 7140
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0407",
+      "db_id": "course_teach",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1283,
+        "strong": 3904
+      },
+      "tokens_standing": {
+        "cheap": 1283,
+        "strong": 3904
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0413",
+      "db_id": "museum_visit",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3051,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3051,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0423",
+      "db_id": "museum_visit",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8135,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8135,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0425",
+      "db_id": "museum_visit",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5985,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5985,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0427",
+      "db_id": "museum_visit",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1312,
+        "strong": 3955
+      },
+      "tokens_standing": {
+        "cheap": 1312,
+        "strong": 3955
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0446",
+      "db_id": "wta_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 608,
+        "strong": 3356
+      },
+      "tokens_standing": {
+        "cheap": 608,
+        "strong": 3356
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0461",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4620,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4620,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0478",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2945,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2945,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0483",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 10,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 13858,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 13858,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0484",
+      "db_id": "wta_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 27767,
+        "strong": 5190
+      },
+      "tokens_standing": {
+        "cheap": 27767,
+        "strong": 5190
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0488",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8495,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8495,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0489",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2066,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2066,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0490",
+      "db_id": "wta_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2948,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2948,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0491",
+      "db_id": "battle_death",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 607,
+        "strong": 5041
+      },
+      "tokens_standing": {
+        "cheap": 607,
+        "strong": 5041
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0496",
+      "db_id": "battle_death",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6230,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6230,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0504",
+      "db_id": "battle_death",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 1368,
+        "strong": 5276
+      },
+      "tokens_standing": {
+        "cheap": 1368,
+        "strong": 5276
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0508",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2246,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2246,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0511",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4224,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4224,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0524",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2160,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2160,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0528",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 16524,
+        "strong": 3069
+      },
+      "tokens_standing": {
+        "cheap": 16524,
+        "strong": 3069
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0541",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 9010,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 9010,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0545",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4336,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4336,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0549",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed",
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 13
+      },
+      "tokens": {
+        "cheap": 23451,
+        "strong": 25401
+      },
+      "tokens_standing": {
+        "cheap": 23451,
+        "strong": 25401
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0553",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5406,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5406,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0562",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 7689,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 7689,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0569",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3766,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3766,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0571",
+      "db_id": "student_transcripts_tracking",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 12521,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 12521,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0589",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5059,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5059,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0606",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3517,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3517,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0607",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3710,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3710,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0613",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3368,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3368,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0614",
+      "db_id": "tvshow",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 0,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 0,
+        "strong": 3017
+      },
+      "tokens_standing": {
+        "cheap": 0,
+        "strong": 3017
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0615",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4668,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4668,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0617",
+      "db_id": "tvshow",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 611,
+        "strong": 3013
+      },
+      "tokens_standing": {
+        "cheap": 611,
+        "strong": 3013
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0638",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4142,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4142,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0639",
+      "db_id": "tvshow",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 7951,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 7951,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0643",
+      "db_id": "tvshow",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 625,
+        "strong": 4138
+      },
+      "tokens_standing": {
+        "cheap": 625,
+        "strong": 4138
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0649",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3516,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3516,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0653",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2786,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2786,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0654",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4066,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4066,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0656",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4798,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4798,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0663",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3972,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3972,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0675",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4809,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4809,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0679",
+      "db_id": "poker_player",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2960,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2960,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0691",
+      "db_id": "voter_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3796,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3796,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0699",
+      "db_id": "voter_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4119,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4119,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0700",
+      "db_id": "voter_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 10
+      },
+      "tokens": {
+        "cheap": 1355,
+        "strong": 11369
+      },
+      "tokens_standing": {
+        "cheap": 1355,
+        "strong": 11369
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0710",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 10018,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 10018,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0722",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5555,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5555,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0739",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5557,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5557,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0745",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5156,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5156,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0747",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 7377,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 7377,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0758",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 10,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 13901,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 13901,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0760",
+      "db_id": "world_1",
+      "clauses": [
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 2194,
+        "strong": 4071
+      },
+      "tokens_standing": {
+        "cheap": 2194,
+        "strong": 4071
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0763",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5370,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5370,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0775",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 4838,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 4838,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0780",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 10,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 11705,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 11705,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0800",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3250,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3250,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0801",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2145,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2145,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0806",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5678,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5678,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0816",
+      "db_id": "world_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 9286,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 9286,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0820",
+      "db_id": "world_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1359,
+        "strong": 4767
+      },
+      "tokens_standing": {
+        "cheap": 1359,
+        "strong": 4767
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0830",
+      "db_id": "orchestra",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 5,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3837,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3837,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0837",
+      "db_id": "orchestra",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 4
+      },
+      "tokens": {
+        "cheap": 623,
+        "strong": 2988
+      },
+      "tokens_standing": {
+        "cheap": 623,
+        "strong": 2988
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0844",
+      "db_id": "orchestra",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1289,
+        "strong": 3917
+      },
+      "tokens_standing": {
+        "cheap": 1289,
+        "strong": 3917
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0849",
+      "db_id": "orchestra",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 9341,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 9341,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0851",
+      "db_id": "orchestra",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5541,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5541,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0855",
+      "db_id": "orchestra",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5223,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5223,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0870",
+      "db_id": "network_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2792,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2792,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0883",
+      "db_id": "network_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 8,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8385,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8385,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0886",
+      "db_id": "network_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 2,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 1274,
+        "strong": 3918
+      },
+      "tokens_standing": {
+        "cheap": 1274,
+        "strong": 3918
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0888",
+      "db_id": "network_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 12,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 12585,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 12585,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0889",
+      "db_id": "network_1",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 9183,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 9183,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0897",
+      "db_id": "network_1",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 13,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 15676,
+        "strong": 5209
+      },
+      "tokens_standing": {
+        "cheap": 15676,
+        "strong": 5209
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0898",
+      "db_id": "network_1",
+      "clauses": [
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 6
+      },
+      "tokens": {
+        "cheap": 2853,
+        "strong": 5036
+      },
+      "tokens_standing": {
+        "cheap": 2853,
+        "strong": 5036
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0909",
+      "db_id": "network_1",
+      "clauses": [
+        "first_query_empty"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 11,
+        "strong": 8
+      },
+      "tokens": {
+        "cheap": 11636,
+        "strong": 7338
+      },
+      "tokens_standing": {
+        "cheap": 11636,
+        "strong": 7338
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0924",
+      "db_id": "dog_kennels",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 12,
+        "strong": 5
+      },
+      "tokens": {
+        "cheap": 17987,
+        "strong": 4918
+      },
+      "tokens_standing": {
+        "cheap": 17987,
+        "strong": 4918
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0937",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6134,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6134,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0946",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6119,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6119,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0952",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6023,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6023,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0965",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2310,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2310,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0969",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3171,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3171,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0973",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 3271,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 3271,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0974",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6586,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6586,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0980",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 7894,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 7894,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0991",
+      "db_id": "dog_kennels",
+      "clauses": [
+        "did_not_answer",
+        "validation_failed"
+      ],
+      "escalated": true,
+      "solved": true,
+      "cheap_solved": false,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 1,
+        "strong": 3
+      },
+      "tokens": {
+        "cheap": 603,
+        "strong": 2095
+      },
+      "tokens_standing": {
+        "cheap": 603,
+        "strong": 2095
+      },
+      "refused_requests": {
+        "cheap": 1,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-0999",
+      "db_id": "dog_kennels",
+      "clauses": [],
+      "escalated": false,
+      "solved": false,
+      "cheap_solved": false,
+      "strong_solved": false,
+      "attempt_rows": {
+        "cheap": 16,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 20385,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 16955,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-1001",
+      "db_id": "singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 3,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2198,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2198,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-1005",
+      "db_id": "singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 4,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 2894,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 2894,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-1014",
+      "db_id": "singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 6,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 5033,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 5033,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-1022",
+      "db_id": "singer",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 7,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 6290,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 6290,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    },
+    {
+      "task_id": "dev-1031",
+      "db_id": "real_estate_properties",
+      "clauses": [],
+      "escalated": false,
+      "solved": true,
+      "cheap_solved": true,
+      "strong_solved": true,
+      "attempt_rows": {
+        "cheap": 9,
+        "strong": 0
+      },
+      "tokens": {
+        "cheap": 8931,
+        "strong": 0
+      },
+      "tokens_standing": {
+        "cheap": 8931,
+        "strong": 0
+      },
+      "refused_requests": {
+        "cheap": 0,
+        "strong": 0
+      }
+    }
+  ]
+}

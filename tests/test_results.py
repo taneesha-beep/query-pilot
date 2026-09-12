@@ -390,3 +390,95 @@ def test_every_verified_wrong_reference_was_an_a0_solve_and_an_a1_loss():
         assert not a1_by_id[item["task_id"]].get("solved")
         assert item["stored_data_answers"]
         assert item["reference_returns"] != item["stored_data_answers"]
+
+
+# --- 5.2: the always-cheap run, A2-cheap — A1's loop on the cheap model ------------------------
+
+A2_CHEAP = REPO / "results" / "a2-cheap-working.json"
+A2_CHEAP_METRICS = REPO / "results" / "a2-cheap-trajectory-metrics.json"
+
+
+def a2_cheap() -> dict:
+    return json.loads(A2_CHEAP.read_text())
+
+
+def a2_cheap_metrics() -> dict:
+    return json.loads(A2_CHEAP_METRICS.read_text())
+
+
+def test_a2_cheaps_projection_carries_the_four_things_a_figure_needs_to_be_a_result():
+    measurement = a2_cheap()["measurement"]
+    assert measurement["provider_and_model"] == ["groq/openai/gpt-oss-20b"]
+    assert measurement["date"] == "2026-09-12"
+    assert measurement["ledger"] == "runs/20260912-055938-9712c8/ledger.jsonl"
+    assert measurement["run_id"] == "20260912-055938-9712c8"
+    assert measurement["agent"] == "A2-cheap" and measurement["split"] == "working"
+
+
+def test_a2_cheaps_figures_are_the_ones_docs_results_quotes():
+    """Groq, openai/gpt-oss-20b, 2026-09-12, run 20260912-055938-9712c8, six stages and one
+    daily wall on two pools. A rate exists only because every declared task has an outcome."""
+    document = a2_cheap()
+    assert document["run"]["status"] == "complete"
+    assert document["run"]["tasks_complete"] == 150 and document["run"]["tasks_failed"] == 0
+    accuracy = document["execution_accuracy"]
+    assert (accuracy["solved"], accuracy["of"], accuracy["percent"]) == (89, 150, 59.3333)
+    tokens = document["tokens"]
+    assert (tokens["total"], tokens["per_declared_task"], tokens["per_solved_task"]) == (
+        844_865,
+        5632.4,
+        9492.9,
+    )
+    assert document["run"]["attempts"] == 837 and document["run"]["error_classes"] == {}
+    # The cheap model spends MORE per task than the strong one: the cascade's premise, measured.
+    assert tokens["per_declared_task"] > a1()["tokens"]["per_declared_task"]
+
+
+def test_a2_cheap_scored_every_refused_generation_as_an_unsolved_trajectory():
+    """`provider_rejected` is complete and unsolved, and ends with no statement. Every no_sql
+    ends with no statement: 28 refused, 9 out of tool calls, and 5 that answered with no
+    statement and whose one repair Groq refused (`repair_blocked`)."""
+    document = a2_cheap()
+    assert document["terminations"] == {
+        "answer": 113,
+        "provider_rejected": 28,
+        "tool_call_limit": 9,
+    }
+    assert document["validation_rules"] == {"no_statement": 42}
+    assert document["reasons"]["no_sql"] == 42
+    no_sql = [t for t in document["tasks"] if t.get("reason") == "no_sql"]
+    shapes = [(t["termination"], t.get("repair_blocked")) for t in no_sql]
+    assert Counter(shapes) == {
+        ("provider_rejected", None): 28,
+        ("tool_call_limit", None): 9,
+        ("answer", "provider_rejected"): 5,
+    }
+    assert all(t["validation_rule"] == "no_statement" for t in no_sql)
+    assert all("provider_rejection" not in t for t in document["tasks"])
+
+
+def test_a2_cheap_was_measured_on_a1s_150_tasks_under_a1s_limits():
+    """The model is the one thing that moved (constraint 40)."""
+    assert {t["task_id"] for t in a2_cheap()["tasks"]} == {t["task_id"] for t in a1()["tasks"]}
+    assert {t["turn_limit"] for t in a2_cheap()["tasks"]} == {14}
+    assert {t["tool_call_limit"] for t in a2_cheap()["tasks"]} == {12}
+    floor = a2_cheap()["execution_accuracy"]["empty_result_floor"]
+    assert (floor["tasks"], floor["of"], floor["percent"]) == (7, 150, 4.6667)
+
+
+def test_a2_cheaps_metrics_and_projection_describe_the_same_run():
+    metrics, document = a2_cheap_metrics(), a2_cheap()
+    assert metrics["run_id"] == document["measurement"]["run_id"]
+    assert metrics["tasks"]["with_outcome"] == document["run"]["tasks_complete"] == 150
+    assert metrics["tasks"]["solved"] == document["execution_accuracy"]["solved"] == 89
+    assert metrics["tasks"]["terminations"] == document["terminations"]
+    assert metrics["tasks"]["counts_disagreeing_with_end"] == 0
+    assert metrics["tasks"]["incomplete_transcripts"] == 0
+    recovery = metrics["recovery_rate"]
+    assert recovery["error"] == {"denominator": 0, "recovered": 0, "rate": "TBD"}
+    assert recovery["first_execute_sql"] == {"rows": 100, "none": 42, "empty": 8}
+    assert metrics["repairs"] == {
+        "attempts": 30,
+        "successes": 30,
+        "blocked": {"provider_rejected": 5},
+    }

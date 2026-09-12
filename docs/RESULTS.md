@@ -433,16 +433,84 @@ and A1 lost, is a wrong answer the defective reference agrees with — [docs/FAI
 
 ## A2 — the cascade — 5.2
 
-**No figure yet, on purpose.** The always-cheap run — A1's loop on `openai/gpt-oss-20b`, Groq,
-run `20260912-055938-9712c8`, `runs/20260912-055938-9712c8/ledger.jsonl` — stopped at Groq's
-daily token limit on both pools on 2026-09-12 with **105 of 150 tasks complete**, and resumes on
-a later day ([PROVIDERS.md](PROVIDERS.md)). A run with tasks unanswered has no accuracy figure,
-so none is read from it and none appears here.
+**The cascade lost, and it is reported that way.** It solved **one task more** than
+always-strong and paid **1.52× the tokens** to do it: **10,032.3 tokens a solved task against
+A1's 6,646.8**. By the rule fixed in writing before its figures existed (below, committed in
+`29464c1` while the cheap run stood at 105 of 150), that is a loss. The reason is not the
+escalation rule, which works better on the cheap model than on the strong one; it is that **the
+cheap model is not cheaper here.** It spent 5,632.4 tokens a task against the strong model's
+5,140.2, and in this project a token is a token whichever model spends it.
 
-**What follows was fixed in writing on 2026-09-12, while that run stood at 47 of 150, and is
-committed before any cascade figure exists** — so that how the cascade is read cannot be chosen
-after seeing which way it lands. The same text travels as `DEFINITIONS` in the file the figures
-will be written to, `results/a2-working.json`.
+### The three, and the one table
+
+| Agent | What it is | Execution accuracy | Tokens | Tokens per solved task | Requests | Provider · model | Date | Ledger |
+|---|---|---|---|---|---|---|---|---|
+| **A2-cheap** — always-cheap | A1's loop on the cheap model | **89 / 150 — 59.3333%** | 844,865 | 9,492.9 | 837 | Groq · `openai/gpt-oss-20b` | 2026-09-12 | `runs/20260912-055938-9712c8/ledger.jsonl` |
+| **A1** — always-strong | 3.6, as measured and frozen | **116 / 150 — 77.3333%** | 771,028 | **6,646.8** | 827 | Groq · `openai/gpt-oss-120b` | 2026-09-10 | `runs/20260910-024454-1f69bc/ledger.jsonl` |
+| **A2** — the cascade | A2-cheap, escalated to A1 when the rule fires | **117 / 150 — 78.0%** | 1,173,781 | 10,032.3 | 1,160 | Groq · both models above | 2026-09-12 and 2026-09-10 | both ledgers above |
+
+Tokens are recorded tokens, every attempt row, retried attempts included; requests are answered
+requests (attempt rows). On the standing-trajectory basis the order is the same: A2-cheap
+9,430.8, A1 6,457.0, A2 9,889.0 a solved task. Money: **$0.00** for all three. Files:
+`results/a2-cheap-working.json`, `results/a1-working.json`, `results/a2-working.json`, and the
+rule's decisions per task in `docs/escalation-a2-cheap-working.json`.
+
+**On the frontier** (solved tasks against tokens): **A2-cheap is dominated by A1**, which solved
+27 more tasks for 73,837 fewer tokens. Neither A1 nor A2 is dominated: A2 has the one extra
+task, A1 has 402,753 fewer tokens. **The verdict is 5.2's metric, cost per
+solved task, and A2 loses it** (`cascade_wins: false`, compared exactly).
+
+**A2-cheap alone.** Groq, `openai/gpt-oss-20b`, 2026-09-12, run `20260912-055938-9712c8`, the
+same 150 tasks and the same four limits as 3.6 — the model is the one thing that moved.
+Terminations: `answer` 113, **`provider_rejected` 28**, `tool_call_limit` 9. Its 42 `no_sql`
+are all "no statement": 28 refused, 9 out of tool calls, 5 that answered with a value and whose
+one repair Groq refused. By difficulty: easy 27 of 36, medium 39 of 65, hard 14 of 25, extra 9
+of 24. It ran no `execute_sql` on 42 trajectories; no first query errored, so recovery rate's
+headline is `TBD` over 0 here too. 837 attempt rows over six sessions — four ended by a request
+ceiling, one by the daily wall on both pools, the sixth complete — 54.3
+minutes running across 05:59:39Z–12:41:35Z, on three Groq pools: 337 on `groq#1`, 311 on
+`groq#2`, 189 on `groq#3`. **33 requests Groq refused over the model's own output have no attempt
+row, and their tokens are in no figure here.**
+
+**The rule on the cheap model** (`docs/escalation-a2-cheap-working.json`, the rule of `c1f8520`,
+untuned): it escalates **46 of 150**, and **not one of the 46 had solved** — its precision holds.
+It catches **46 of the 61 failures, 75.4098%**, against 26.4706% on the strong model: the cheap
+model's failures announce themselves. Clauses: did not answer 37, validation failed 42, first
+query errored 0, first query empty 8. **Running no `execute_sql` solved 9 of 42 here** (21.4%)
+where it solved 21 of 24 on the strong model — the clause 5.1 rejected on 3.6's data would have
+been a signal on this one. It was not added: the rule was frozen before this run (constraint 88).
+
+**The cascade.** Composed from those two runs. **Where the rule was silent** — 104 tasks — the
+cheap model solved 89, and the strong model had solved 88 of the same tasks. **Where it fired**
+— 46 — the cheap model had solved none and the strong model solves 28. Against always-strong,
+the cascade wins 4 tasks and loses 3 (`dev-0106`, `dev-0571`, `dev-0613`, `dev-0980` against
+`dev-0331`, `dev-0483`, `dev-0496`), every one of them a task the rule left with the cheap model;
+on the escalated 46 the two are the same trajectory by construction. **What the escalations cost:
+281,088 cheap tokens spent on the 46 tasks before they were handed on, plus 328,916 strong
+tokens — 21,785.9 tokens for each of the 28 solves they bought.**
+
+### Why it lost, and what would flip it
+
+- **The cheap model is not cheaper per task.** A1's loop on 20b spent 844,865 tokens on 150 tasks
+  against 120b's 771,028 — more discovery calls (4.52 a task against 4.35), longer trajectories,
+  and 28 refusals that end a trajectory after its tokens are spent. So the cascade starts behind
+  always-strong before it escalates anything.
+- **Every escalation pays twice.** The 46 escalated tasks had already cost 281,088 cheap tokens,
+  a third of the cheap run, and bought nothing on the cheap side.
+- **What would flip it: a price.** Every token here is one unit and costs $0.00. **The break-even
+  price ratio is 0.5312** — if a cheap token cost less than 53.12% of a strong one, the cascade's
+  cost per solved task would fall below always-strong's. On free tiers the useful reading is the
+  split by model: **the cascade spent 328,916 strong-model tokens where always-strong spent
+  771,028 — 442,112 fewer, 57.3406% of the scarce model's daily allowance left unspent** — for
+  844,865 cheap-model tokens drawn from a separate allowance.
+- **The one extra task is one draw.** Neither run has been repeated, and 117 against 116 is the
+  net of four tasks won and three lost. No threshold for "near" was set (below), so it is
+  reported as one task and not as "matching" always-strong.
+
+**What follows was fixed in writing on 2026-09-12, while that run stood at 47 of 150, and was
+committed before any cascade figure existed** (`29464c1`) — so that how the cascade is read
+could not be chosen after seeing which way it lands. The same text travels as `DEFINITIONS` in
+`results/a2-working.json`.
 
 ### How the cascade is built: composed, not run
 
@@ -471,7 +539,8 @@ retried tasks' earlier attempts: `dev-0044` 3,126, `dev-0254` 11,243, `dev-0496`
 
 **Beside it, labelled, the standing-trajectory basis** — each task's final trajectory alone —
 for all three. **Neither basis sees a request the provider refused**: it has no attempt row and
-no ledger records its tokens (25 of them on the cheap run by the time it paused, 1 on 3.6's).
+no ledger records its tokens (33 on the cheap run — 25 when this was first written at 105 of 150
+— and 1 on 3.6's, which is not an escalated task).
 They are counted beside every cost and never estimated.
 
 ### When the cascade wins
@@ -500,8 +569,12 @@ is built on the cheap model's tokens being cheaper.
 - **Rule for refused output.** 3.6 ran under `fail_task` and retried its one refusal
   (`dev-0758`); the cheap run scores such a refusal as `provider_rejected`, unsolved and
   escalated. A composed escalation of `dev-0758` would carry 3.6's retried outcome.
-- **Dates and pools.** Always-strong ran on 2026-09-10, always-cheap from 2026-09-12; both
-  used both Groq pools.
+- **Dates and pools.** Always-strong ran on 2026-09-10 on two Groq pools. Always-cheap ran on
+  2026-09-12 on **three**: after the daily wall the author added a third key from a third
+  account, `groq#3`, and a separate daily counter was confirmed before it was used (999
+  requests remaining on it against 802 on `groq#1`). It served 189 of the 837 attempt rows. A
+  pool is an account, not a model: every row names `openai/gpt-oss-20b`. *(This line said
+  "both used both Groq pools" when first committed.)*
 - **The rule was calibrated inside the working set.** 5.1's preflight ran the 15 smoke tasks,
   which are working-set tasks, and the rule's one change after a preflight — `provider_rejected`
   in clause 1, by the author's decision before the freeze — came from them.
@@ -509,12 +582,17 @@ is built on the cheap model's tokens being cheaper.
   cascade recovers only failures that announce themselves.
 - **Accuracy is agreement with the references**, which err both ways. The seven tasks whose
   reference returns no rows, and the eight whose references 4.4 verified by query return wrong
-  data, are listed with all
-  three agents' outcomes — among them, a cheap first query that comes back empty on an
-  empty-reference task fires clause 4 and hands a free "solve" to the strong model. **The seven
-  are found by running each reference through the sandbox, not read from a results file**:
-  `reference_rows` in `results/a1-working.json` is blank wherever A1 wrote no SQL, because the
-  comparison never ran, so that file shows 4 empty references where the split has 7.
+  data, are listed with all three agents' outcomes in `results/a2-working.json` — among them, a
+  cheap first query that comes back empty on an empty-reference task fires clause 4 and hands a
+  free "solve" to the strong model. **The seven are found by running each reference through the
+  sandbox, not read from a results file**: `reference_rows` in `results/a1-working.json` is blank
+  wherever A1 wrote no SQL, because the comparison never ran, so that file shows 4 empty
+  references where the split has 7.
+  **What happened on them:** clause 4 fired on all seven, but the cheap model had "solved" none
+  of them — so no free solve was handed away. A0 collected 7 of 7, A1 2 of 7, A2-cheap 0 of 7,
+  and the cascade 2 of 7, both through the strong model (`dev-0237`, `dev-0909`). Six of the
+  seven are `flight_2`. None of the three solved any of the eight verified wrong references, so
+  those move no figure in this table.
 - **Stopping and resuming costs tokens.** A task in flight when a run stops is retried from
   nothing, and its first attempt stays in the run's total; both runs spanned several stops.
 - **The projection's token note** says "every attempt, answered or refused" — true of what has an

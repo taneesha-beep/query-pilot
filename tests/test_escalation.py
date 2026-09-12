@@ -427,3 +427,82 @@ def test_the_preflight_tripped_neither_stop_condition(preflight) -> None:
     per-minute budget, and no trajectory stopped by the prompt ceiling."""
     assert preflight["attempt_sizes"]["attempts_over_tpm"] == 0
     assert PROMPT_CEILING not in preflight["terminations"]
+
+
+# --- 5.2: the frozen rule applied, untuned, to the always-cheap run -----------------------------
+
+WORKING = REPO / "docs" / "escalation-a2-cheap-working.json"
+CHEAP_RESULTS = REPO / "results" / "a2-cheap-working.json"
+CHEAP_METRICS = REPO / "results" / "a2-cheap-trajectory-metrics.json"
+
+
+@pytest.fixture(scope="module")
+def working() -> dict:
+    return json.loads(WORKING.read_text())
+
+
+def test_the_always_cheap_decisions_are_recomputed_from_their_own_inputs(working) -> None:
+    """Every task's clauses re-decided through the frozen rule, and the table re-tabulated."""
+    decisions = _decisions_from(working)
+    assert [list(d.escalation.clauses) for d in decisions] == [
+        row["clauses"] for row in working["tasks"]
+    ]
+    assert tabulate(decisions, outcomes=True) == working["table"]
+    assert working["definitions"] == DEFINITIONS
+
+
+def test_the_always_cheap_inputs_agree_with_the_runs_committed_files(working) -> None:
+    """The transcripts are not committed; the projection and the metrics file are."""
+    frozen = {task["task_id"]: task for task in json.loads(CHEAP_RESULTS.read_text())["tasks"]}
+    assert {row["task_id"] for row in working["tasks"]} == set(frozen)
+    for row in working["tasks"]:
+        task = frozen[row["task_id"]]
+        assert (row["termination"], row["validation_rule"], row["solved"]) == (
+            task["termination"],
+            task["validation_rule"],
+            task["solved"],
+        )
+    metrics = json.loads(CHEAP_METRICS.read_text())["recovery_rate"]["first_execute_sql"]
+    counted = Counter(row["first_execute_sql"] or "none" for row in working["tasks"])
+    assert dict(counted) == metrics
+
+
+def test_the_always_cheap_run_was_served_by_the_cheap_model_alone(working) -> None:
+    assert working["run_id"] == "20260912-055938-9712c8"
+    assert working["ledger"] == "runs/20260912-055938-9712c8/ledger.jsonl"
+    assert working["requests"]["by_endpoint"].keys() == {"groq openai/gpt-oss-20b"}
+    assert working["attempt_sizes"]["served_by"].keys() == {"groq openai/gpt-oss-20b"}
+    assert working["tasks_declared"] == 150 and working["undecided"] == []
+    assert working["outcomes_included"] is True
+
+
+def test_the_always_cheap_run_tripped_neither_stop_condition(working) -> None:
+    assert working["attempt_sizes"]["attempts_over_tpm"] == 0
+    assert PROMPT_CEILING not in working["terminations"]
+
+
+def test_the_rule_on_the_cheap_model_escalates_46_and_every_one_had_failed(working) -> None:
+    """Groq, openai/gpt-oss-20b, 2026-09-12, run 20260912-055938-9712c8. Untuned: the rule is
+    `c1f8520`'s. Its precision holds on the cheap model, and its recall is three times 3.6's."""
+    table = working["table"]
+    assert working["terminations"] == {"answer": 113, "provider_rejected": 28, "tool_call_limit": 9}
+    assert table["trajectories"] == 150
+    assert (table["would_escalate"]["count"], table["would_escalate"]["solved"]) == (46, 0)
+    assert (table["would_not_escalate"]["count"], table["would_not_escalate"]["solved"]) == (
+        104,
+        89,
+    )
+    fired = {c: table["clauses"][c]["count"] for c in CLAUSES}
+    assert fired == {
+        DID_NOT_ANSWER: 37,
+        VALIDATION_FAILED: 42,
+        FIRST_QUERY_ERROR: 0,
+        FIRST_QUERY_EMPTY: 8,
+    }
+    assert table["failures"] == {"count": 61, "escalated": 46, "recall": 0.754098}
+    # The rejected candidate would have mattered on this model: 9 of 42 solved. Not tuned in.
+    assert table["not_a_clause"][NO_EXECUTE_SQL] == {
+        "count": 42,
+        "solved": 9,
+        "solve_rate": 0.214286,
+    }
