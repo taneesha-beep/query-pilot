@@ -49,6 +49,7 @@ WORKING_SET_CONFIG = REPO / "config" / "runs" / "working-set.toml"
 A1_WORKING_CONFIG = REPO / "config" / "runs" / "a1-working.toml"
 A2_CHEAP_SMOKE_CONFIG = REPO / "config" / "runs" / "a2-cheap-smoke.toml"
 A2_CHEAP_WORKING_CONFIG = REPO / "config" / "runs" / "a2-cheap-working.toml"
+RESERVE_SET_CONFIG = REPO / "config" / "runs" / "reserve-set.toml"
 #: The two params every A2-cheap declaration adds to A1's, and nothing else: the role with
 #: nowhere to spill, and the rule for a generation the provider refused (5.1, 2026-09-12).
 CHEAP_PARAMS = {"role": "cheap-no-spillover", "rejected_generation": "score_unsolved"}
@@ -766,6 +767,114 @@ def test_the_two_agents_working_set_declarations_differ_in_nothing_but_the_agent
     }
     assert differing == {"agent"}
     assert (a0.agent, a1.agent) == ("A0", "A1")
+
+
+# --- the reserve run's declaration ---------------------------------------------------------------
+
+
+def _a0_working_measured() -> tuple[int, float]:
+    """A0's working-set tokens and running time, read from the committed files, not retyped."""
+    tokens = json.loads((REPO / "results" / "a0-working.json").read_text())["tokens"]["total"]
+    runs = json.loads((REPO / "results" / "scheduler-efficiency.json").read_text())["runs"]
+    running = next(run["summary"]["running_s"] for run in runs if run["agent"] == "A0")
+    return tokens, running
+
+
+def test_the_reserve_declaration_carries_ceilings_of_twice_what_a0s_working_run_measured():
+    """Past twice its expectation a measurement is stopped and reported anyway; this is that."""
+    tokens, running = _a0_working_measured()
+    assert (tokens, running) == (106_740, 737.3566)
+    config = RunConfig.load(RESERVE_SET_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+
+    assert config.token_ceiling == 2 * tokens == 213_480
+    assert config.wall_clock_ceiling_s == math.ceil(2 * running) == 1_475
+
+    # What they admit: the working run's own spend and time, with as much again to spare.
+    assert 2 * tokens <= config.token_ceiling and 2 * running <= config.wall_clock_ceiling_s
+    # And the least time the working spend takes through one pool's per-minute token bucket.
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    assert config.wall_clock_ceiling_s > tokens / limits.tpm * 60
+
+    # What the token ceiling stops: every attempt costing A0's worst measured one, which is
+    # every completion running to the 1,024-token output ceiling.
+    sizes = json.loads((REPO / "docs" / "a0-prompt-sizes.json").read_text())
+    assert 150 * sizes["worst_case_attempt_tokens"] > config.token_ceiling
+
+
+async def test_the_reserve_ceilings_admit_a_run_like_the_working_one_and_stop_one_twice_its_cost(
+    tmp_path,
+):
+    tokens, running = _a0_working_measured()
+    ids = [f"t-{i}" for i in range(150)]
+
+    def declared(run_id: str) -> RunConfig:
+        return RunConfig.load(RESERVE_SET_CONFIG, ids, run_id=run_id)
+
+    # The working run's mean a task, rounded up, finishes.
+    ledger = ledger_for(tmp_path, "like")
+    with ledger:
+        like = await Run(declared("like"), ledger).execute(Spender(cost=math.ceil(tokens / 150)))
+    assert like.status == "complete" and like.tasks_complete == 150
+
+    # 1,500 a task is just over twice the working mean of 711.6: stopped before the end.
+    ledger = ledger_for(tmp_path, "costly")
+    with ledger:
+        costly = await Run(declared("costly"), ledger).execute(Spender(cost=1_500))
+    assert costly.incomplete_reason == IncompleteReason.TOKEN_CEILING
+    assert costly.tasks_remaining > 0 and costly.total_tokens >= 213_480
+
+    # The working run's pace finishes inside one session; over twice it is stopped.
+    clock = SteppingClock()
+    ledger = ledger_for(tmp_path, "paced", clock=clock)
+    with ledger:
+        paced = await Run(declared("paced"), ledger, clock=clock).execute(
+            Spender(cost=1, clock=clock, step=running / 150)
+        )
+    assert paced.status == "complete"
+
+    clock = SteppingClock()
+    ledger = ledger_for(tmp_path, "slow", clock=clock)
+    with ledger:
+        slow = await Run(declared("slow"), ledger, clock=clock).execute(
+            Spender(cost=1, clock=clock, step=2.1 * running / 150)
+        )
+    assert slow.incomplete_reason == IncompleteReason.WALL_CLOCK_CEILING
+    assert slow.tasks_remaining > 0
+
+
+def test_the_reserve_declaration_differs_from_the_working_sets_only_in_split_and_ceilings():
+    """The two figures are compared, so their declarations may differ only where they must."""
+    ids = [f"t-{i}" for i in range(150)]
+    working = RunConfig.load(WORKING_SET_CONFIG, ids, run_id="r-1")
+    reserve_set = RunConfig.load(RESERVE_SET_CONFIG, ids, run_id="r-1")
+
+    differing = {
+        field
+        for field in ("agent", "token_ceiling", "wall_clock_ceiling_s", "concurrency", "params")
+        if getattr(working, field) != getattr(reserve_set, field)
+    }
+    assert differing == {"token_ceiling", "wall_clock_ceiling_s", "params"}
+    assert (working.params, reserve_set.params) == ({"split": "working"}, {"split": "reserve"})
+    assert reserve_set.agent == "A0" and reserve_set.concurrency == 1
+
+
+def test_the_reserve_declaration_is_bound_to_concurrency_1_by_a0s_own_arithmetic():
+    """The working set's condition, on A0's measured sizes.
+
+    The reserve prompts are not measured beforehand: measuring them would read the reserve set.
+    They are built over the same 20 schemas, which are most of every prompt, and one attempt
+    in flight leaves 3.6x of margin under the per-minute token bucket.
+    """
+    sizes = json.loads((REPO / "docs" / "a0-prompt-sizes.json").read_text())
+    client_config = ClientConfig.load()
+    limits = client_config.endpoints[client_config.roles[ROLE].endpoint].limits
+    config = RunConfig.load(RESERVE_SET_CONFIG, [f"t-{i}" for i in range(150)], run_id="r-1")
+
+    survivable = limits.tpm / 60.0 * client_config.settings.wait_ceiling_s
+    assert sizes["split"] == "working" and sizes["databases"] == 20
+    assert config.concurrency == 1
+    assert config.concurrency * sizes["worst_case_attempt_tokens"] * 3 < survivable
 
 
 def _cheap_limits():

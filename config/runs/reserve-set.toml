@@ -1,0 +1,53 @@
+# The reserve run: A0, once, over the 150 reserve tasks, and the ceilings it is held to.
+#
+# The working set's declaration (config/runs/working-set.toml) with two changes and nothing
+# else: its own split, and ceilings derived from what A0's working-set run MEASURED rather
+# than from a hypothetical. A test asserts that nothing else differs, because a difference
+# between the two declarations is one more thing that could explain a difference between
+# the two figures.
+#
+# The task IDs are deliberately NOT here. They live in splits/reserve.json, which only
+# scripts/a0_reserve.py opens.
+
+[run]
+agent = "A0"
+
+# 213,480 tokens, cumulative across every resume of the one run ID.
+#
+# Derivation: twice A0's measured working-set total, 106,740 tokens (Groq,
+# openai/gpt-oss-120b, 2026-09-08, runs/20260908-133316-faecd5/ledger.jsonl;
+# results/a0-working.json). The reserve set has the same 20 databases and the same
+# difficulty mix, and A0 sends one request a task whose prompt is mostly the schema, so
+# the working total is the expectation.
+#
+# Why twice: a measurement that contradicts its expectation by more than 2x is where this
+# project stops and reports rather than carrying on. This ceiling is that rule made
+# mechanical. It admits the working run's own spend with the whole of it again to spare,
+# and stops a run whose tasks average more than twice what the working set's did -- every
+# completion running to the 1,024-token output ceiling, say. At concurrency 1 it can be
+# crossed by at most the one task that crosses it.
+#
+# Raising it is a recorded act: it is inside the fingerprint, so a resume under a raised
+# ceiling is refused until the change is acknowledged in the ledger.
+token_ceiling = 213480
+
+# 1,475 seconds, per session rather than per run.
+#
+# Derivation: twice A0's measured running time on the working set, 737.3566 s
+# (results/scheduler-efficiency.json, A0's run above), rounded up to a whole second. Same
+# reason for twice. That run was paced by the per-minute token bucket on one pool; this one
+# loads three, so it should finish well inside it. A wall-clock stop is not a loss: the
+# ceiling is per session, and the run is resumed under the same ID.
+wall_clock_ceiling_s = 1475
+
+# One, as for the working set and for the same reason: concurrency x tokens-per-attempt
+# must stay under the endpoint's 8,000 tokens a minute. A0's worst measured attempt is
+# 2,236 tokens (docs/a0-prompt-sizes.json), 3.6x of margin. The reserve prompts are not
+# measured beforehand, because measuring them would read the reserve set; they are built
+# over the same 20 schemas, which is most of every prompt.
+concurrency = 1
+
+# Free-form, inside the fingerprint, and never inspected by the run machinery.
+# query_pilot.reserve reads `split` from each ledger's run_start rows to refuse a second run.
+[run.params]
+split = "reserve"
