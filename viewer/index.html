@@ -4,21 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
-<title>query-pilot trajectories</title>
+<title>Query Pilot</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="masthead">
-  <h1>query-pilot <span>trajectories</span></h1>
+  <h1 class="brand">Query Pilot</h1>
+  <p class="tagline">An agent that answers questions about databases, with every answer checked by running it.</p>
+  <p id="replay-note" class="badge"></p>
+</header>
+
+<section class="about" aria-labelledby="about-title">
+  <h2 id="about-title" class="eyebrow">What this tool does</h2>
   <p class="intro">An agent answers questions about SQLite databases by writing SQL, and every
     answer is checked by running it: the rows it returns are compared with the rows of a reference
     query that comes with the question. This page shows how an agent reached each answer: the
     tables it looked at, the queries it ran, what came back, and what it cost.</p>
   <ol class="howto">
-    <li><strong>Choose a database, then a question</strong> to replay.</li>
-    <li><strong>Choose an agent</strong>: A0, A1 or A2, to see how that agent answered it.</li>
-    <li><strong>Or open an attack case</strong>: a question asked of a database with an
-      instruction hidden in its data, to see whether the agent followed it.</li>
+    <li><span class="step-number" aria-hidden="true">1</span><p><strong>Choose a database, then a question</strong> to replay.</p></li>
+    <li><span class="step-number" aria-hidden="true">2</span><p><strong>Choose an agent</strong>: A0, A1 or A2, to see how that agent answered it.</p></li>
+    <li><span class="step-number" aria-hidden="true">3</span><p><strong>Or open an attack case</strong>: a question asked of a database with an
+      instruction hidden in its data, to see whether the agent followed it.</p></li>
   </ol>
   <details class="legend">
     <summary>How to read this page</summary>
@@ -38,20 +44,19 @@
       <dd>What the model read and wrote, as the provider counted it: the cost of the trajectory.</dd>
     </dl>
   </details>
-  <p id="replay-note" class="muted small"></p>
-</header>
+</section>
 
-<div class="layout">
-  <aside class="controls" aria-label="Choose a trajectory">
-    <section aria-labelledby="database-title">
-      <h2 id="database-title" class="step-title"><span class="step-number" aria-hidden="true">1</span>Database</h2>
+<div class="workspace">
+  <aside class="rail" aria-label="Choose a trajectory">
+    <section class="rail-section" aria-labelledby="database-title">
+      <h2 id="database-title" class="rail-title"><span class="step-number" aria-hidden="true">1</span>Database</h2>
       <p class="hint" id="database-hint"></p>
       <label for="database" class="field-label">Show the questions asked of</label>
       <select id="database" aria-describedby="database-hint"></select>
     </section>
 
-    <section aria-labelledby="task-title">
-      <h2 id="task-title" class="step-title"><span class="step-number" aria-hidden="true">2</span>Question</h2>
+    <section class="rail-section" aria-labelledby="task-title">
+      <h2 id="task-title" class="rail-title"><span class="step-number" aria-hidden="true">2</span>Question</h2>
       <p class="hint" id="task-hint"></p>
       <label for="task" class="field-label">Pick a question to replay</label>
       <select id="task" size="8" aria-describedby="task-hint"></select>
@@ -59,48 +64,53 @@
       <textarea id="question" rows="4" readonly></textarea>
     </section>
 
-    <section aria-labelledby="agent-title">
-      <h2 id="agent-title" class="step-title"><span class="step-number" aria-hidden="true">3</span>Agent</h2>
+    <section class="rail-section" aria-labelledby="agent-title">
+      <h2 id="agent-title" class="rail-title"><span class="step-number" aria-hidden="true">3</span>Agent</h2>
       <div class="toggle" role="group" aria-labelledby="agent-title">
         <button type="button" data-agent="A0">A0</button>
         <button type="button" data-agent="A1">A1</button>
         <button type="button" data-agent="A2">A2</button>
       </div>
-      <div class="hint" id="agent-note"></div>
+      <div class="hint agent-note" id="agent-note"></div>
+
+      <section class="subsection" aria-labelledby="run-title">
+        <h3 id="run-title" class="sub-title">Run your own question</h3>
+        <select id="live-agent" aria-label="Agent for a new trajectory" hidden></select>
+        <button type="button" id="run" disabled>Run</button>
+        <p class="hint" id="run-note"></p>
+        <p class="small" id="run-message" role="status"></p>
+      </section>
     </section>
 
-    <section aria-labelledby="run-title">
-      <h2 id="run-title" class="step-title">Run your own question</h2>
-      <select id="live-agent" aria-label="Agent for a new trajectory" hidden></select>
-      <button type="button" id="run" disabled>Run</button>
-      <p class="hint" id="run-note"></p>
-      <p class="small" id="run-message" role="status"></p>
-    </section>
-
-    <section aria-labelledby="attack-title">
-      <h2 id="attack-title" class="step-title">Or open an attack case</h2>
+    <section class="rail-section rail-attacks" aria-labelledby="attack-title">
+      <h2 id="attack-title" class="rail-title"><span class="step-number step-number-warn" aria-hidden="true">!</span>Or open an attack case</h2>
       <p class="hint" id="attack-hint"></p>
-      <div id="preloaded" class="stack"></div>
+      <div id="preloaded" class="picks"></div>
       <label for="attack" class="field-label">Every attack case</label>
       <select id="attack" aria-describedby="attack-hint"></select>
     </section>
   </aside>
 
-  <main>
-    <div id="heading" class="heading"></div>
-    <div id="context"></div>
-    <section aria-labelledby="steps-title">
-      <h2 id="steps-title" class="section-title">The trajectory, step by step</h2>
-      <p class="hint" id="steps-hint"></p>
+  <main class="analysis">
+    <div id="heading" class="analysis-head"></div>
+    <div id="context" class="briefing"></div>
+    <section class="analysis-section" aria-labelledby="steps-title">
+      <header class="section-head">
+        <p class="eyebrow">Analysis</p>
+        <h2 id="steps-title">The trajectory, step by step</h2>
+        <p class="hint" id="steps-hint"></p>
+      </header>
       <ol id="steps" class="steps"></ol>
     </section>
-    <section id="final" class="final" aria-label="Final statement and rows"></section>
+    <section id="final" class="analysis-section result" aria-label="Final statement and rows"></section>
   </main>
 </div>
 
 <footer class="strip" aria-labelledby="strip-title">
-  <h2 id="strip-title" class="strip-title">At a glance</h2>
-  <div id="strip" class="strip-items"></div>
+  <div class="strip-inner">
+    <h2 id="strip-title" class="strip-title">At a glance</h2>
+    <div id="strip" class="strip-items"></div>
+  </div>
 </footer>
 
 <script src="app.js"></script>

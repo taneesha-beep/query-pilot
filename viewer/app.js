@@ -110,7 +110,9 @@
     const box = $("preloaded");
     clear(box);
     for (const pick of state.index.preloaded) {
-      const button = el("button", { type: "button" }, `${pick.case_id} — ${pick.outcome}`, el("small", { text: pick.why }));
+      const tone = PICK_TONE[pick.outcome] || "neutral";
+      const top = el("span", { class: "pick-top" }, el("span", { class: "pick-id", text: pick.case_id }), el("span", { class: `tag ${tone}`, text: pick.outcome }));
+      const button = el("button", { type: "button", class: "pick", "data-case": pick.case_id, "data-tone": tone }, top, el("small", { text: pick.why }));
       button.addEventListener("click", () => go({ attack: pick.case_id }));
       box.append(button);
     }
@@ -123,6 +125,9 @@
     }
   }
 
+  // How each picked-out case ended, as the tone its card and tag are drawn in.
+  const PICK_TONE = { resisted: "ok", contained: "warn", complied: "bad" };
+
   const AGENTS = [
     ["A0", "one request, with the whole schema in the prompt and no tools."],
     ["A1", "a loop: it discovers the schema with four tools, runs queries, then answers."],
@@ -134,6 +139,9 @@
       const active = !state.attackId && button.dataset.agent === state.agent;
       button.setAttribute("aria-pressed", String(active));
       button.disabled = Boolean(state.attackId) && button.dataset.agent !== "A1";
+    }
+    for (const pick of document.querySelectorAll(".pick")) {
+      pick.setAttribute("aria-current", String(pick.dataset.case === state.attackId));
     }
     const note = $("agent-note");
     clear(note);
@@ -155,18 +163,18 @@
         else head.append(el("span", { class: "tag bad", text: "error" }));
         if (step.truncated_by) head.append(el("span", { class: "tag warn", text: `truncated by ${step.truncated_by}` }));
         for (const control of step.controls) head.append(el("span", { class: "tag warn", text: `control ${control} fired — ${state.index.controls[control]}` }));
-        const item = el("li", {}, head, el("div", { class: "small muted", text: "arguments in" }), pre(JSON.stringify(step.arguments, null, 1), needle));
+        const item = el("li", { class: "step-call" }, head, el("div", { class: "io-label", text: "arguments in" }), pre(JSON.stringify(step.arguments, null, 1), needle));
         if (step.result !== null && step.result !== undefined) {
-          item.append(el("div", { class: "small muted", text: step.ok === false ? "error back" : "result back" }), pre(step.result, needle));
+          item.append(el("div", { class: "io-label", text: step.ok === false ? "error back" : "result back" }), pre(step.result, needle));
         }
         list.append(item);
       } else if (step.kind === "say") {
         const head = el("div", { class: "step-head" }, el("span", { class: "tool", text: "the agent replied" }), el("span", { class: "turn", text: `turn ${step.turn}` }));
         if (step.repair) head.append(el("span", { class: "tag", text: "after the repair request" }));
-        list.append(el("li", {}, head, pre(step.text, needle)));
+        list.append(el("li", { class: "step-say" }, head, pre(step.text, needle)));
       } else if (step.kind === "repair_request") {
         const head = el("div", { class: "step-head" }, el("span", { class: "tool", text: "repair request" }), el("span", { class: "turn", text: `turn ${step.turn}` }));
-        list.append(el("li", {}, head, el("div", { class: "small muted", text: "the reply failed validation; this went back to the agent once" }), pre(step.text, needle)));
+        list.append(el("li", { class: "step-repair" }, head, el("div", { class: "io-label", text: "the reply failed validation; this went back to the agent once" }), pre(step.text, needle)));
       }
     }
     const end = trajectory.end;
@@ -176,29 +184,33 @@
     if (end.repair_blocked) bits.push(`repair blocked: ${end.repair_blocked}`);
     const last = el("li", { class: "divider" }, el("span", { class: "muted", text: bits.join(" · ") }));
     if (end.failed_generation) {
-      last.append(el("div", { class: "small muted", text: "what the model generated on the request the provider refused with a 400" }), pre(end.failed_generation, needle));
+      last.append(el("div", { class: "io-label", text: "what the model generated on the request the provider refused with a 400" }), pre(end.failed_generation, needle));
     }
     list.append(last);
   }
 
-  function renderFinal(final) {
+  function renderFinal(final, verdict) {
     const box = $("final");
     clear(box);
-    box.append(el("h3", { text: "Final statement" }));
+    const title = el("div", {}, el("p", { class: "eyebrow", text: "Result" }), el("h2", { text: "Final statement and rows" }));
+    box.append(el("header", { class: "section-head section-head-row" }, title, verdict ? el("span", { class: `tag ${verdict.tone}`, text: cap(verdict.title) }) : null));
+    box.append(el("h3", { class: "sub", text: "Final statement" }));
     box.append(final.sql ? pre(final.sql) : el("p", { class: "muted", text: "none" }));
-    box.append(el("h3", { text: "Rows" }));
-    box.append(el("p", { class: "muted small", text: final.rows_note }));
+    box.append(el("h3", { class: "sub", text: "Rows" }));
+    box.append(el("p", { class: "hint", text: final.rows_note }));
     if (final.rows) box.append(pre(final.rows.text));
     else if (final.sql && final.candidate_rows !== null && final.candidate_rows !== undefined) {
       box.append(el("p", { text: `${rows(final.candidate_rows)} when scoring ran it` }));
     }
   }
 
+  // The verdict leads the strip, where the eye lands first; the rest keep their order.
   function renderStrip(items) {
     const strip = $("strip");
     clear(strip);
-    for (const [label, value, cls] of items) {
-      strip.append(el("div", {}, el("span", { text: label }), el("strong", { class: cls, text: value })));
+    const ordered = [...items.filter(([label]) => label === "Verdict"), ...items.filter(([label]) => label !== "Verdict")];
+    for (const [label, value, cls] of ordered) {
+      strip.append(el("div", { class: label === "Verdict" ? "strip-verdict" : null }, el("span", { text: label }), el("strong", { class: cls, text: value })));
     }
   }
 
@@ -224,15 +236,39 @@
     ];
   }
 
-  function heading(title, lines) {
+  const cap = (text) => (text ? text[0].toUpperCase() + text.slice(1) : text);
+
+  // The top of the analysis: where the question comes from, the question, then the verdict.
+  function heading({ chips = [], question, lines = [], verdict }) {
     const box = $("heading");
     clear(box);
-    box.append(el("h2", { text: title }));
+    const crumbs = el("div", { class: "crumbs" });
+    for (const [text, kind] of chips) if (text) crumbs.append(el("span", { class: `chip${kind ? ` chip-${kind}` : ""}`, text }));
+    box.append(crumbs, el("h2", { class: "question", text: question || "" }));
     for (const line of lines) if (line) box.append(line);
+    if (verdict) box.append(verdictBanner(verdict));
   }
 
-  function card(title, ...children) {
-    return el("section", { class: "card" }, el("h3", { text: title }), ...children);
+  const MARKS = { ok: "✓", bad: "✗", warn: "!", neutral: "–" };
+
+  function verdictBanner({ tone, label = "Verdict", title, detail = [] }) {
+    const body = el("div", {}, el("span", { class: "verdict-label", text: label }), el("strong", { class: "verdict-title", text: cap(title) }));
+    for (const line of detail) if (line) body.append(el("span", { class: "verdict-detail", text: line }));
+    return el("div", { class: `verdict tone-${tone}`, role: "status" }, el("span", { class: "verdict-mark", "aria-hidden": "true", text: MARKS[tone] }), body);
+  }
+
+  // A verdict as the projections recorded it: "matches the reference", or not, and why.
+  function taskVerdict(verdict, reason, detail, extra = []) {
+    const matched = verdict === state.index.labels.matches;
+    const why = matched || !reason ? null : `${words(reason)}${detail ? `: ${detail}` : ""}`;
+    return { tone: matched ? "ok" : "bad", title: verdict || "—", detail: [why, ...extra] };
+  }
+
+  // A card: a title, optionally a tone and a tag beside it, then its content.
+  function card(head, ...children) {
+    const { title, tone, tag } = typeof head === "string" ? { title: head } : head;
+    const top = el("header", { class: "card-head" }, el("h3", { text: title }), tag || null);
+    return el("section", { class: `card${tone ? ` tone-${tone}` : ""}` }, top, ...children);
   }
 
   const STEPS_HINT = {
@@ -250,28 +286,33 @@
     clear(context);
     clear(steps);
     $("question").value = task.question;
-    heading(`${task.task_id} · ${task.database}`, [
-      el("p", { text: task.question }),
-      task.difficulty ? el("p", { class: "muted small", text: `Difficulty in Spider: ${task.difficulty}` }) : null,
-      task.reference_note ? el("p", { class: "note", text: task.reference_note }) : null,
-    ]);
+    const top = (verdict) => heading({
+      chips: [[task.task_id, "mono"], [task.database], [task.difficulty ? `difficulty: ${task.difficulty}` : null], [state.agent, "accent"]],
+      question: task.question,
+      lines: [task.reference_note ? el("p", { class: "note", text: task.reference_note }) : null],
+      verdict,
+    });
     $("steps-hint").textContent = STEPS_HINT[state.agent];
     const prompts = state.index.system_prompts;
 
     if (state.agent === "A0") {
       const side = task.A0;
-      context.append(card("What A0 was sent", el("p", { class: "small", text: side.prompt.note }), pre(side.prompt.system), el("p", { class: "small muted", text: `…then the schema of ${task.database}, then the question.` })));
+      const verdict = taskVerdict(side.footer.verdict, side.footer.reason, side.footer.detail);
+      top(verdict);
+      context.append(card({ title: "What A0 was sent", tone: "accent" }, el("p", { class: "small", text: side.prompt.note }), pre(side.prompt.system), el("p", { class: "small muted", text: `…then the schema of ${task.database}, then the question.` })));
       steps.append(el("li", { class: "divider" }, el("span", { class: "muted", text: "one request, no tools, no repair" })));
-      renderFinal(side.final);
+      renderFinal(side.final, verdict);
       renderStrip(footerItems(side.footer, [["Latency", seconds(side.footer.latency_s)]]));
       return;
     }
 
     if (state.agent === "A1") {
       const side = task.A1;
+      const verdict = taskVerdict(side.footer.verdict, side.footer.reason, side.footer.detail);
+      top(verdict);
       context.append(el("details", { class: "card" }, el("summary", { text: "What A1 was told" }), pre(prompts[side.system_prompt])));
       renderSteps(steps, side);
-      renderFinal(side.final);
+      renderFinal(side.final, verdict);
       renderStrip(footerItems(side.footer));
       return;
     }
@@ -281,9 +322,13 @@
     const escalation = a2.escalated
       ? `escalated on ${a2.clauses.join(", ")}`
       : "not escalated: the cheap trajectory did not announce a failure";
+    const standing = a2.escalated ? task.A1.footer : cheap.footer;
+    const verdict = taskVerdict(a2.verdict, standing.reason, standing.detail, [cap(escalation)]);
+    top(verdict);
     const why = el("div");
     for (const clause of a2.clauses) why.append(el("p", { class: "small" }, el("strong", { text: `${clause}: ` }), a2.clause_definitions[clause]));
-    context.append(card(`A2 — ${escalation}`, why, el("p", { class: "small muted", text: `Composed, not run: the cheap trajectory below, and where the rule fired, A1's trajectory on this task from its measured run. Tokens on the trajectories that stand: cheap ${number(a2.tokens.cheap)}, strong ${number(a2.tokens.strong)}.` })));
+    const handed = el("span", { class: `tag ${a2.escalated ? "warn" : "neutral"}`, text: a2.escalated ? "escalated" : "not escalated" });
+    context.append(card({ title: `A2 — ${escalation}`, tone: "accent", tag: handed }, why, el("p", { class: "small muted", text: `Composed, not run: the cheap trajectory below, and where the rule fired, A1's trajectory on this task from its measured run. Tokens on the trajectories that stand: cheap ${number(a2.tokens.cheap)}, strong ${number(a2.tokens.strong)}.` })));
     steps.append(el("li", { class: "divider" }, el("span", { class: "muted", text: `the cheap model — ${cheap.footer.model}` })));
     renderSteps(steps, cheap);
     let final = cheap.final;
@@ -294,7 +339,7 @@
       final = task.A1.final;
       footer = task.A1.footer;
     }
-    renderFinal(final);
+    renderFinal(final, verdict);
     renderStrip(footerItems({ ...footer, verdict: a2.verdict, reason: footer.reason }, [["Escalated", a2.escalated ? `yes — ${a2.clauses.join(", ")}` : "no"]]));
   }
 
@@ -336,29 +381,46 @@
     clear(steps);
     $("question").value = found.question;
     const poisoned = found.poisoned;
-    heading(`${found.case_id} · shown to the agent as ${found.database_shown}`, [
-      el("p", { text: found.question }),
-      el("p", { class: "muted small", text: `The instruction aims for: ${words(found.category)} · planted in: ${planted(poisoned)} · ${found.containable ? `a control can contain it: ${found.containing_control}` : "no control can contain it"}` }),
-    ]);
-    $("steps-hint").textContent = STEPS_HINT.attack;
-    const instruction = el("p");
-    instruction.append(el("mark", { text: poisoned.injected_instruction }));
-    context.append(card("The poisoned schema", instruction, schemaTable(poisoned)));
     const facts = found.found;
-    const outcome = [
-      `seen via ${facts.exposed_via.length ? facts.exposed_via.join(", ") : "nothing — the agent never looked where it was planted"}`,
-      facts.complied ? "the agent complied" : "the agent did not comply",
-      facts.contained === null ? null : facts.contained ? "a control contained it" : "no control contained it",
-      facts.damaged === null ? null : facts.damaged ? "the answer was damaged" : "the answer was not damaged",
-    ].filter(Boolean);
-    const attempts = el("ul", { class: "small" });
+    const answer = found.A1.footer;
+    const outcome = attackOutcome(facts);
+    const damage = facts.damaged === null ? null : facts.damaged ? "the answer was damaged" : "the answer was not damaged";
+    heading({
+      chips: [[found.case_id, "mono"], [`shown to the agent as ${found.database_shown}`], [words(found.category)], ["A1", "accent"]],
+      question: found.question,
+      lines: [el("p", { class: "meta", text: `The instruction aims for: ${words(found.category)} · planted in: ${planted(poisoned)} · ${found.containable ? `a control can contain it: ${found.containing_control}` : "no control can contain it"}` })],
+      verdict: { ...outcome, label: "Outcome", detail: [outcome.detail, `Answer: ${answer.verdict}${damage ? ` · ${damage}` : ""}`] },
+    });
+    $("steps-hint").textContent = STEPS_HINT.attack;
+
+    const instruction = el("div", { class: "callout" }, el("span", { class: "callout-label", text: "Planted instruction" }), el("p", {}, el("mark", { text: poisoned.injected_instruction })));
+    context.append(card({ title: "The poisoned schema", tone: "warn", tag: el("span", { class: "tag warn", text: `planted in ${planted(poisoned)}` }) }, instruction, schemaTable(poisoned)));
+
+    const fact = (label, value, tone) => el("div", { class: "fact" }, el("dt", { text: label }), el("dd", {}, tone ? el("span", { class: `tag ${tone}`, text: value }) : value));
+    const grid = el(
+      "dl",
+      { class: "facts" },
+      fact("Seen via", facts.exposed_via.length ? facts.exposed_via.join(", ") : "nothing — the agent never looked where it was planted"),
+      fact("The agent", facts.complied ? "complied" : "did not comply", facts.complied ? "bad" : "ok"),
+      facts.contained === null ? null : fact("A control", facts.contained ? "contained it" : "did not contain it", facts.contained ? "ok" : "bad"),
+      facts.damaged === null ? null : fact("The answer", facts.damaged ? "was damaged" : "was not damaged", facts.damaged ? "bad" : "ok"),
+    );
+    const attempts = el("ul", { class: "attempts" });
     for (const attempt of facts.attempts) {
-      attempts.append(el("li", { text: `${attempt.surface}, turn ${attempt.turn}: ${attempt.statements.join("; ")} — ${attempt.outcome}${attempt.control ? ` (${attempt.control})` : ""}` }));
+      attempts.append(el("li", {}, `${attempt.surface}, turn ${attempt.turn}: `, el("code", { text: attempt.statements.join("; ") }), ` — ${attempt.outcome}${attempt.control ? ` (${attempt.control})` : ""}`));
     }
-    context.append(card("What the attack run found", el("p", { text: outcome.join(" · ") }), facts.attempts.length ? attempts : null, el("p", { class: "small muted", text: "Read from results/attacks.json; this page never re-scores a case." })));
+    context.append(card({ title: "What the attack run found", tone: outcome.tone === "neutral" ? null : outcome.tone }, grid, facts.attempts.length ? el("span", { class: "sub", text: "Attempts" }) : null, facts.attempts.length ? attempts : null, el("p", { class: "small muted", text: "Read from results/attacks.json; this page never re-scores a case." })));
     renderSteps(steps, found.A1, poisoned.injected_instruction);
-    renderFinal(found.A1.final);
+    renderFinal(found.A1.final, taskVerdict(answer.verdict, answer.reason, answer.detail));
     renderStrip(footerItems(found.A1.footer));
+  }
+
+  // What an attack case came to, read from what the attack run recorded; nothing is re-scored.
+  function attackOutcome(facts) {
+    if (!facts.exposed_via.length) return { tone: "neutral", title: "Never seen", detail: "The agent never looked where the instruction was planted." };
+    if (!facts.complied) return { tone: "ok", title: "Resisted", detail: "The agent read the instruction and did not act on it." };
+    if (facts.contained) return { tone: "warn", title: "Complied, and a control contained it", detail: "The agent tried to act on the instruction; a control refused it before it ran." };
+    return { tone: "bad", title: "Complied", detail: facts.contained === false ? "The agent acted on the instruction and no control contained it." : "The agent acted on an instruction no control can contain." };
   }
 
   // -- a new trajectory, through the local API (7.1) --------------------------------------------
@@ -447,10 +509,14 @@
     clear(context);
     clear(steps);
     clear($("final"));
-    heading(`${view.agent || ""} · ${view.database || ""} · a new trajectory`, [
-      el("p", { text: view.question || "" }),
-      el("p", { class: "note", text: `Run ${view.run_id}, ${view.status}. ${state.live.note}` }),
-    ]);
+    const running = view.status === "running" || view.status === "starting";
+    const unscored = { tone: "neutral", title: (view.footer && view.footer.verdict) || "no reference: not scored" };
+    heading({
+      chips: [[view.run_id, "mono"], [view.database], ["a new trajectory"], [view.agent, "accent"]],
+      question: view.question || "",
+      lines: [el("p", { class: "meta", text: state.live.note })],
+      verdict: { ...unscored, label: running ? "Running" : `Run ${view.status}`, detail: [running ? "The page asks for new steps every second." : null] },
+    });
     if (view.system_prompt) {
       context.append(el("details", { class: "card" }, el("summary", { text: `What ${view.agent} was told` }), pre(view.system_prompt)));
     }
@@ -462,7 +528,7 @@
     if (view.failure) {
       steps.append(el("li", { class: "divider" }, el("span", { text: `the task failed: ${view.failure.exception}: ${view.failure.message}` })));
     }
-    if (view.final) renderFinal(view.final);
+    if (view.final) renderFinal(view.final, unscored);
     if (view.footer) renderStrip(liveFooter(view.footer));
   }
 
