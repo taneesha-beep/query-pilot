@@ -309,7 +309,7 @@ than repeating it, so it is not counted twice.
 | A2-cheap, working set | 5.2 | 150 |
 | A2 cascade, working set | 5.2 | 150 |
 | Scheduler efficiency | 6.1 | 150 |
-| Reserve | after 7 | 150 |
+| Reserve — taken 2026-09-13, run `20260913-100923-4a20e9`, one session | after 7 | 150 |
 | Allowance for re-runs after defects | — | 450 (3 runs) |
 | **Total** | | **1,350 task-runs** |
 
@@ -661,6 +661,19 @@ is the reserve run and neither costs it more than seconds.
   a second — roughly one A1 request every seven minutes — and the client does not look again for
   an hour. `docs/PERFORMANCE.md` counts what that left unused: 3,866 and 3,616 tokens in A1's two
   such sessions.
+
+**The reserve run, 2026-09-13, met no day-scope refusal**, so no pool was shut for an hour. Run
+`20260913-100923-4a20e9`, A0 on `openai/gpt-oss-120b`, ledger
+`runs/20260913-100923-4a20e9/ledger.jsonl`. Before it, each of the three keys was checked against
+Groq's model list, one request each and no tokens: all three answered 200 and listed
+`openai/gpt-oss-120b`. The run then answered 150 of 150 requests in one session, 225.4 s, 105,398
+tokens: 54 on `groq#1`, 49 on `groq#2`, 47 on `groq#3`. That is 39.93 tasks a minute on three pools,
+against the working run's 12.21 on one. **It met 41 minute-scope refusals** against that run's two:
+31 on `groq#3`, 6 on `groq#1` and 4 on `groq#2`. Each named `TPM: Limit 8000` with 6,583 to 7,490
+used, and gave a retry hint of 1 to 7 s. In all 41, Groq's `Used` was below what this run had
+sent that pool in the minute before, so nothing else was spending those pools. None failed a
+task. Why `groq#3` took three quarters of them is `TBD`. Placed in the run by time from
+`runs/quota-walls.jsonl`, as constraint 105 requires; the ledger carries no wall row.
 
 ## Reproducing this
 

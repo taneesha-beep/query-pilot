@@ -7,7 +7,7 @@ regenerable by `uv run python scripts/make_splits.py`.
 | File | Size | What it is for |
 |---|---|---|
 | [`splits/working.json`](../splits/working.json) | 150 | Every intermediate number in this project. |
-| [`splits/reserve.json`](../splits/reserve.json) | 150 | Read **once**, after Phase 7, and never before. |
+| [`splits/reserve.json`](../splits/reserve.json) | 150 | Read **once**, after Phase 7, and never before — by run `20260913-100923-4a20e9`, 2026-09-13. |
 | [`splits/smoke.json`](../splits/smoke.json) | 15 | Development iteration. **No number from it is ever reported.** |
 | [`splits/frame.json`](../splits/frame.json) | 1,034 | The frame itself: task ID to database and difficulty. |
 
@@ -116,7 +116,9 @@ small, differently shaped, and dominated by whichever schemas happened to fall o
 side, which makes the two numbers noisy and not comparable to each other. A weaker claim
 measured cleanly beats a stronger claim measured badly.
 
-This limitation is repeated next to the reserve figure when that figure is reported.
+This limitation is repeated next to the reserve figure wherever it is reported:
+[RESULTS.md](RESULTS.md#a0-on-the-reserve-set--the-reserve-run), the README and the results page.
+*(This line said "when that figure is reported" until the reserve run, 2026-09-13.)*
 
 ## What the tests hold
 

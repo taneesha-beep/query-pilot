@@ -44,8 +44,10 @@ nothing here.
 
 **How many.** Thirty. If the run produced fewer than thirty non-solves, **all** of them are
 read and every count is reported out of that number, named as such. Nothing tops the sample
-up — not the smoke set, not a second run, and never `splits/reserve.json`, which stays
-untouched until the reserve run.
+up — not the smoke set, not a second run, and never `splits/reserve.json`, which was untouched
+until the reserve run (`20260913-100923-4a20e9`, 2026-09-13). That run's non-solves are counted
+by reason in [RESULTS.md](RESULTS.md#a0-on-the-reserve-set--the-reserve-run) and are not
+catalogued here. *(This said "which stays untouched until the reserve run" until then.)*
 
 > **This is the branch that was taken.** The run produced **26** non-solves, so all 26 were
 > read and every count below is **out of 26**, not out of 30. The clause existed before the

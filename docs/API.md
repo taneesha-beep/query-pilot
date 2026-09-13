@@ -3,8 +3,9 @@
 A question typed against one of the working-set databases, answered by the agent on this
 machine, its trajectory shown step by step in the viewer as it is written. **Local only.** The
 server binds `127.0.0.1` and has no option to bind anything else, because a public URL holding
-this project's keys would let any visitor spend the free tier the reserve run still needs
-(constraint 79). What is deployed is the replay viewer; this serves the same page, from the
+this project's keys would let any visitor spend the free tier the project's runs need
+(constraint 79). *(This said "the free tier the reserve run still needs" until the reserve run was
+taken, 2026-09-13.)* What is deployed is the replay viewer; this serves the same page, from the
 same files, with its Run button alive.
 
 `src/query_pilot/api.py` is the service, `src/query_pilot/agents/live.py` the agent,
@@ -76,7 +77,8 @@ unguarded. What it returned goes in the task row's `detail` with `"scored": fals
 footer says **"no reference: not scored"**. **Any answer is a new draw**: nothing that builds a
 committed file reads `runs/api/`, and a test says so.
 
-A2-cheap is offered because 7.4's clip shows a repair: A1's measured run repaired 1 trajectory
+A2-cheap is offered because 7.4's clip was to show a repair. The author dropped the clip on
+2026-09-13; the reason and the limits derived from it stand. A1's measured run repaired 1 trajectory
 of 150 on the strong model; A2-cheap's repaired 30 of 150 on the cheap one. Each agent runs
 under the refusal rule its measured run declared — `fail_task` for A1, `score_unsolved` for
 A2-cheap (constraint 89).
@@ -92,9 +94,9 @@ Every one has a test showing the request it admits and the one it refuses.
 | Questions in flight | 1, across the server | constraints 46, 64 and 91: one attempt at the prompt ceiling is the strong endpoint's whole per-minute budget |
 | Token ceiling, per question | 30,000 | the largest trajectory in either measured run — 25,401 tokens (A1, `dev-0549`) and 27,767 (A2-cheap, `dev-0484`) |
 | Wall clock, per question | 300 s | the longest trajectory in either measured run — 172.9 s (A1, `dev-0549`) |
-| Daily cap, per model | 93,260 tokens in any rolling 24 hours | Groq's 200,000 tokens a day per pool per model (constraint 95), less the 106,740 A0's working-set run spent (`results/a0-working.json`) — what the reserve run should need. The reserve run then fits even on the same pool on the same day |
+| Daily cap, per model | 93,260 tokens in any rolling 24 hours | Groq's 200,000 tokens a day per pool per model (constraint 95), less the 106,740 A0's working-set run spent (`results/a0-working.json`) — what the reserve run should need. The reserve run then fits even on the same pool on the same day. It was taken on 2026-09-13 and spent 105,398 tokens across three pools; the cap is kept as derived, not re-derived |
 | Set aside per question | 39,777 tokens | the 30,000 ceiling plus one request at the prompt ceiling, 9,777 on 120b (`docs/escalation-a1-working.json`), because the guard checks between turns. A question is refused once 53,484 tokens have been spent on its model in the last 24 hours |
-| Per address | 10 questions an hour | 7.4's clip: with 30 of 150 cheap trajectories repaired, ten tries give an 89.3% chance of at least one repair. **On loopback every caller is the same address, so this is a second global limit**; the daily cap is what protects quota |
+| Per address | 10 questions an hour | 7.4's clip, since dropped: with 30 of 150 cheap trajectories repaired, ten tries give an 89.3% chance of at least one repair. **On loopback every caller is the same address, so this is a second global limit**; the daily cap is what protects quota |
 
 The daily cap is counted from the API's own ledgers under `runs/api/`, so a restart does not
 reset it. A rolling sum is conservative against Groq's continuously refilling bucket. Polls and
