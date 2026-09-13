@@ -46,6 +46,10 @@ files and logs no error. `tests/test_api.py` checks the gate in `app.js`'s sourc
 static host serving `viewer/` answers `api/status` with 404, and requires that nothing under
 `viewer/` is named `api`.
 
+**The deployed copy.** The author's `.github/workflows/static.yml` uploads `./viewer`, and
+nothing else, to GitHub Pages on every push to `main` (https://taneesha-beep.github.io/query-pilot/,
+since 2026-09-13). It runs beside CI rather than after it, so a push that fails CI still deploys.
+
 ## Endpoints
 
 | | |
@@ -127,3 +131,8 @@ two providers this project uses do not.
 Nine requests of the thirty approved, none refused, no repair in either. No key value appeared
 in either run directory or in the server's log. **Neither answer is a result**: acceptance shows
 the path works, and the two questions were typed, not drawn from any split.
+
+
+**Since acceptance.** The author asked one question through their own server on 2026-09-13 at
+05:52Z: A1 on `concert_singer`, run `20260913-055250-7490f9`, 4 requests, 3,048 tokens, `groq#1`,
+ended on `answer`. The daily cap counts it like any other.

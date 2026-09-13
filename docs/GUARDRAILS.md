@@ -114,6 +114,17 @@ creating a file, and `PRAGMA` running. It is also the control that stops a plant
 instruction (`DROP TABLE audit`) and a planted sandbox-escape (`ATTACH`, `VACUUM INTO`) at the
 untrusted surface — the containable half of the 4.2 corpus.
 
+**Corrected 2026-09-13: the whitelist reads the opening keyword only, so a write that opens with
+`WITH` gets past it.** `WITH x AS (SELECT 1) DELETE FROM singer` — and the same shape with
+`INSERT` or `UPDATE` — opens with `WITH` and is admitted by this control. Control 1 then refuses
+it when it executes ("attempt to write a readonly database"), so nothing changes, but that is
+rejection *by* execution, not before it. Found while building 7.1, and pinned by
+`tests/test_api.py::test_a_write_in_a_final_statement_is_refused_and_the_database_is_untouched`.
+Until this correction the paragraph above read as though `DELETE`, `UPDATE` and `INSERT` were
+refused before execution in every form. No attack case used this shape, so 4.3's figures are
+unaffected. The guard itself is left as it is: the attack readers compare against its exact
+words (constraint 83), and changing it is a decision for a later session.
+
 **Why "before execution" is the point.** Today's read-only connection would refuse a `DROP`
 *by executing it and having SQLite raise* — rejection by execution, and only for statements
 that happen to be writes. `PRAGMA` and `ATTACH` are not writes and slip that net. A
@@ -193,7 +204,7 @@ this is stated here rather than discovered in 4.3 — whose measured figures are
 
 | Category | Contained by | Why |
 |---|---|---|
-| Perform a destructive operation | Control 4 | `DROP`/`DELETE`/… do not open with `SELECT`/`WITH`. |
+| Perform a destructive operation | Control 4 | `DROP`/`DELETE`/… do not open with `SELECT`/`WITH`; a `WITH`-prefixed write does, and control 1 refuses it at execution (corrected 2026-09-13, see control 4). |
 | Escape the sandbox path | Control 4 | `ATTACH`/`VACUUM INTO`/`PRAGMA` do not either. |
 | Exfiltrate another table | *nothing* | A `SELECT` read of another table is legal SQL. |
 | Return a fixed wrong answer | *nothing* | The final query executes cleanly; it is simply wrong. |

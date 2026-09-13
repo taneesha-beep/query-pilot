@@ -43,18 +43,19 @@ macOS. Add the `query-pilot` entry below, keeping any servers already there.
 launches a server with no working directory and a minimal `PATH`, so `uv`, a relative path or
 a bare `python` will all fail in ways whose error message never reaches you. The block below
 was started from an unrelated working directory and verified to list four tools and answer a
-query.
+query. The paths said `resume projects`, with a space, until 2026-09-13, when the folder was
+renamed; a config copied from the old text points at a folder that no longer exists.
 
 ```json
 {
   "mcpServers": {
     "query-pilot": {
-      "command": "/Users/taneeshabadhe/Desktop/resume projects/query-pilot/.venv/bin/python",
+      "command": "/Users/taneeshabadhe/Desktop/resume-projects/query-pilot/.venv/bin/python",
       "args": [
         "-m",
         "query_pilot.mcp_server",
         "--database-root",
-        "/Users/taneeshabadhe/Desktop/resume projects/query-pilot/data/spider/database",
+        "/Users/taneeshabadhe/Desktop/resume-projects/query-pilot/data/spider/database",
         "--db-id",
         "concert_singer"
       ]
