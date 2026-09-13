@@ -178,6 +178,19 @@ table.figures tbody tr:last-child > * { border-bottom: 0; }
 .sources { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--line-strong); color: var(--muted); font-size: 0.8rem; }
 .sources p { margin: 0.1rem 0; font-family: var(--mono); font-size: 0.76rem; }
 
+/* Spider's credit, which its licence asks for wherever its material is shown. */
+.credit {
+  width: calc(100% - 3rem);
+  max-width: var(--page);
+  margin: 1.5rem auto;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+}
+.credit a { color: inherit; text-decoration: underline; }
+.report-page .credit { max-width: 68rem; margin: 0 auto 2.5rem; }
+
 /* -- what this tool does ---------------------------------------------------------------------- */
 
 .eyebrow {

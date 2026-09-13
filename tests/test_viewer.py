@@ -342,9 +342,19 @@ def test_controls_are_read_the_way_the_attack_readers_read_them() -> None:
 # -- the page itself ------------------------------------------------------------------------------
 
 
+#: The only addresses the page may name, as links a reader follows and never as anything it loads:
+#: Spider's source and its licence, which the licence asks the credit to give.
+CREDIT_LINKS = (
+    "https://yale-lily.github.io/spider",
+    "https://creativecommons.org/licenses/by-sa/4.0/",
+)
+
+
 def test_the_page_loads_nothing_from_anywhere_else() -> None:
     for path in PAGE:
         text = path.read_text(encoding="utf-8")
+        for link in CREDIT_LINKS:
+            text = text.replace(f'<a href="{link}"', "<a")
         assert "http://" not in text and "https://" not in text, path
         assert "//cdn" not in text, path
     html = (REPO / "viewer" / "index.html").read_text(encoding="utf-8")

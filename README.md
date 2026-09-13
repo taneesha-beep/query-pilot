@@ -122,3 +122,7 @@ The same four tools are also an MCP server any MCP client can use: [docs/MCP.md]
 | The local API                | [docs/API.md](docs/API.md)                                                |
 | The MCP server               | [docs/MCP.md](docs/MCP.md)                                                |
 | The substrate and the splits | [docs/SUBSTRATE.md](docs/SUBSTRATE.md) · [docs/SPLITS.md](docs/SPLITS.md) |
+
+Questions, reference queries and databases: [Spider](https://yale-lily.github.io/spider) (Yu et al.,
+2018), under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). What this project
+republishes from it and what it changed: [docs/SUBSTRATE.md](docs/SUBSTRATE.md#licence).

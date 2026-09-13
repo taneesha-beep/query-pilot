@@ -45,6 +45,47 @@ distribution the dataset's authors publish, and that was confirmed by downloadin
 `dev.json` SHA256: `30d64a3fccde493226df79687aed9e4a1c0129525baf44f29c0573d914d758a4`
 `tables.json` SHA256: `61bb20aa401f03164e2d7f3b16509b7b5f79cc9c943ca7bd159046df1159e2ed`
 
+## Licence
+
+**The Spider dataset is distributed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)**, as its own page,
+[yale-lily.github.io/spider](https://yale-lily.github.io/spider), states (checked 2026-09-13). The
+download's `README.txt` names no licence. Spider's GitHub repository, `taoyds/spider`, carries
+Apache-2.0 for its code, and none of that code is in this repository: 0.3's temporary copy of the
+difficulty rule was deleted once this project's own implementation matched it on all 1,034 tasks
+(`docs/SPLITS.md`).
+
+**Credit.** Tao Yu, Rui Zhang, Kai Yang, Michihiro Yasunaga, Dongxu Wang, Zifan Li, James Ma,
+Irene Li, Qingning Yao, Shanelle Roman, Zilin Zhang and Dragomir Radev. *Spider: A Large-Scale
+Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task.* EMNLP
+2018. The download's `README.txt` also asks users to cite Finegan-Dollak et al., *Improving
+Text-to-SQL Evaluation Methodology*, ACL 2018, and the original datasets of six databases in
+Spider's training data (Restaurants, GeoQuery, Scholar, Academic, IMDB, Yelp). None of those six is
+among the 20 dev databases used here.
+
+**What this repository republishes from it.** The download itself is not committed (`data/` is
+gitignored). Spider's questions, its reference queries, its table and column names, and rows that
+queries returned from its databases appear in:
+
+- `viewer/data/`, which the public page shows;
+- `tests/transcripts/`, trajectories lifted byte for byte from measured runs;
+- `results/`, each task's reference query beside the agent's;
+- a few `docs/` files that quote stored values, `flight_2`'s padded airport codes among them.
+
+The task IDs in `splits/` are positions in Spider's `dev.json`. The 45 attack cases in `attacks/`
+are this project's own databases and questions, and not Spider's.
+
+**What was changed.** No Spider file is modified or redistributed. This project selected tasks
+from the dev set, ran each question through its agents, and records the following beside Spider's
+question and reference query:
+
+- the model's output;
+- each database's schema, rendered live as `CREATE TABLE` statements;
+- the rows each query returned, capped by the sandbox and marked where cut;
+- whether the agent's rows match the reference's.
+
+The Spider material in those files remains under CC BY-SA 4.0, and reuse of it is on those terms.
+
 ## Fingerprint
 
 Checksums go stale when an archive is re-zipped or a mirror rebuilds. The shape of the
