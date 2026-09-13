@@ -4,10 +4,15 @@
 // comes from viewer/data/, which is built from committed files only; nothing here calls a model,
 // and nothing here computes a verdict. Every string from the data goes into the page through
 // textContent, never as markup: the attack cases carry instructions written to be obeyed.
+//
+// The Run button (7.1) comes alive only when this page is served by the local API: the page is
+// on a loopback address AND its own origin answers api/status as that API. Anywhere else the page
+// never asks, so a deployed copy makes no request beyond its own files and Run stays disabled.
 
 (() => {
-  const state = { index: null, taskId: null, attackId: null, agent: "A1", cache: new Map() };
+  const state = { index: null, taskId: null, attackId: null, agent: "A1", cache: new Map(), live: null, liveRun: null, polling: null };
   const $ = (id) => document.getElementById(id);
+  const LOOPBACK = new Set(["127.0.0.1", "localhost"]);
 
   function el(tag, props = {}, ...children) {
     const node = document.createElement(tag);
@@ -139,6 +144,7 @@
       }
     }
     const end = trajectory.end;
+    if (!end || !end.termination) return; // a live trajectory still being written has no end yet
     const bits = [`ended on ${end.termination}`, `${end.turns} turns`, `${end.tool_calls} tool calls`];
     if (end.repair_attempts) bits.push(`repair ${end.repair_succeeded ? "succeeded" : "did not succeed"}`);
     if (end.repair_blocked) bits.push(`repair blocked: ${end.repair_blocked}`);
@@ -170,10 +176,14 @@
     }
   }
 
-  function footerItems(footer, extra = []) {
-    const controls = footer.controls.length
+  function controlsText(footer) {
+    return footer.controls.length
       ? footer.controls.map((c) => `${c.control} (${c.tool}${c.turn ? `, turn ${c.turn}` : ""})`).join(", ")
       : "none";
+  }
+
+  function footerItems(footer, extra = []) {
+    const controls = controlsText(footer);
     const verdictClass = footer.verdict === state.index.labels.matches ? "verdict-ok" : "verdict-bad";
     return [
       ["Model", footer.model],
@@ -314,6 +324,133 @@
     renderStrip(footerItems(found.A1.footer));
   }
 
+  // -- a new trajectory, through the local API (7.1) --------------------------------------------
+
+  // Null unless this page is on a loopback address and its own origin answers as the local API.
+  async function probeLocalApi() {
+    if (!LOOPBACK.has(location.hostname)) return null;
+    try {
+      const response = await fetch("api/status", { cache: "no-store" });
+      if (!response.ok) return null;
+      const status = await response.json();
+      return status && status.surface === "local API" && status.live === true ? status : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setRunAvailable(available) {
+    if (!state.live) return;
+    $("run").disabled = !available;
+  }
+
+  function liveMessage(text) {
+    $("run-message").textContent = text;
+  }
+
+  function enableLive(status) {
+    state.live = status;
+    $("replay-note").textContent = status.masthead;
+    $("run-note").textContent = status.note;
+    $("question").readOnly = false;
+    const select = $("live-agent");
+    clear(select);
+    for (const [name, agent] of Object.entries(status.agents)) {
+      select.append(el("option", { value: name, text: `${name} — ${agent.model}` }));
+    }
+    select.hidden = false;
+    $("run").addEventListener("click", submit);
+    setRunAvailable(!status.running);
+  }
+
+  async function submit() {
+    const database = $("database").value;
+    const question = $("question").value.trim();
+    if (!database) return liveMessage("Choose one database first: the local API runs a question against one.");
+    if (!question) return liveMessage("Type a question first.");
+    setRunAvailable(false);
+    liveMessage("");
+    try {
+      const response = await fetch("api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ database, question, agent: $("live-agent").value }),
+      });
+      const reply = await response.json();
+      if (!response.ok) {
+        const wait = reply.retry_after_s ? ` Try again in ${Math.ceil(reply.retry_after_s)} s.` : "";
+        liveMessage(`${reply.error}.${wait}`);
+        setRunAvailable(!reply.running);
+        return;
+      }
+      location.hash = new URLSearchParams({ live: reply.run_id }).toString();
+    } catch (error) {
+      liveMessage(`Could not reach the local API: ${error.message}`);
+      setRunAvailable(true);
+    }
+  }
+
+  function liveFooter(footer) {
+    return [
+      ["Model", footer.model || "—"],
+      ["Tool calls", number(footer.tool_calls)],
+      ["Turns", number(footer.turns)],
+      ["Tokens in / out", `${number(footer.tokens_in)} / ${number(footer.tokens_out)}`],
+      [state.index.labels.elapsed, seconds(footer.elapsed_s)],
+      ["Controls fired", controlsText(footer)],
+      ["Ended on", footer.termination || "—"],
+      ["Verdict", footer.verdict],
+    ];
+  }
+
+  function renderLive(view) {
+    const context = $("context");
+    const steps = $("steps");
+    clear(context);
+    clear(steps);
+    clear($("final"));
+    heading(`${view.agent || ""} · ${view.database || ""} · a new trajectory`, [
+      el("p", { text: view.question || "" }),
+      el("p", { class: "note", text: `Run ${view.run_id}, ${view.status}. ${state.live.note}` }),
+    ]);
+    if (view.system_prompt) {
+      context.append(el("details", { class: "card" }, el("summary", { text: `What ${view.agent} was told` }), pre(view.system_prompt)));
+    }
+    renderSteps(steps, { steps: view.steps || [], end: view.end });
+    if (view.status === "running" || view.status === "starting") {
+      steps.append(el("li", { class: "divider" }, el("span", { class: "muted", text: "running: the page asks again every second" })));
+    }
+    if (view.failure) {
+      steps.append(el("li", { class: "divider" }, el("span", { text: `the task failed: ${view.failure.exception}: ${view.failure.message}` })));
+    }
+    if (view.final) renderFinal(view.final);
+    if (view.footer) renderStrip(liveFooter(view.footer));
+  }
+
+  async function pollLive(runId) {
+    clearTimeout(state.polling);
+    if (state.liveRun !== runId) return;
+    try {
+      const response = await fetch(`api/questions/${encodeURIComponent(runId)}`, { cache: "no-store" });
+      const view = await response.json();
+      if (state.liveRun !== runId) return;
+      if (!response.ok) {
+        liveMessage(view.error || `HTTP ${response.status}`);
+        setRunAvailable(true);
+        return;
+      }
+      renderLive(view);
+      if (view.status === "running" || view.status === "starting") {
+        state.polling = setTimeout(() => pollLive(runId), state.live.poll_interval_s * 1000);
+      } else {
+        setRunAvailable(true);
+      }
+    } catch (error) {
+      liveMessage(`Could not reach the local API: ${error.message}`);
+      setRunAvailable(true);
+    }
+  }
+
   async function render() {
     syncToggle();
     try {
@@ -339,6 +476,15 @@
 
   function fromHash() {
     const params = new URLSearchParams(location.hash.slice(1));
+    const live = params.get("live");
+    state.liveRun = state.live && live ? live : null;
+    if (state.liveRun) {
+      state.attackId = null;
+      $("attack").value = "";
+      syncToggle();
+      pollLive(state.liveRun);
+      return;
+    }
     const attack = params.get("attack");
     const task = params.get("task");
     const agent = params.get("agent");
@@ -369,6 +515,11 @@
     }
     window.addEventListener("hashchange", fromHash);
     fromHash();
+    const status = await probeLocalApi();
+    if (status) {
+      enableLive(status);
+      if (new URLSearchParams(location.hash.slice(1)).get("live")) fromHash();
+    }
   }
 
   start().catch((error) => {

@@ -82,6 +82,7 @@ select, textarea {
   padding: 0.35rem;
 }
 textarea { margin-top: 0.4rem; resize: vertical; }
+#live-agent { margin-bottom: 0.4rem; }
 
 button {
   background: var(--panel);

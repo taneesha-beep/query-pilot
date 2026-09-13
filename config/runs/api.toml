@@ -1,0 +1,41 @@
+# One question typed into the local API (7.1), and the ceilings it is held to.
+#
+# Every question is a run of one task, recorded under runs/api/ like any other run: a ledger,
+# a transcript, a fingerprint over this declaration. The agent is set per question — A1 or
+# A2-cheap, `src/query_pilot/agents/live.py` — and so are the role and the refusal rule, which
+# go into [run.params] beside what is declared here. Every ceiling is a POLICY CHOICE and says
+# what it was derived from; `tests/test_api.py` shows what each one admits and stops.
+
+[run]
+agent = "A1"
+
+# 30,000 tokens for one question.
+#
+# Derived from the largest trajectory either model produced in its measured run, so that no
+# trajectory the committed figures describe would have been stopped by it:
+#
+#   - A1, Groq `openai/gpt-oss-120b`, 2026-09-10, run 20260910-024454-1f69bc: dev-0549,
+#     25,401 tokens (results/a1-working.json).
+#   - A2-cheap, Groq `openai/gpt-oss-20b`, 2026-09-12, run 20260912-055938-9712c8: dev-0484,
+#     27,767 tokens (results/a2-cheap-working.json).
+#
+# The guard checks between turns, so a question can pass this by at most one request —
+# 9,777 tokens at the prompt ceiling on 120b (docs/escalation-a1-working.json,
+# `projected_attempt_at_ceiling`). The API's daily cap sets that much aside for every question.
+token_ceiling = 30000
+
+# 300 seconds for one question.
+#
+# Derived from the longest trajectory in either measured run: dev-0549 on A1's, 172.9 s, quota
+# waits included (results/a1-working.json); A2-cheap's longest was dev-0924, 147.3 s. The
+# ceiling stops a question that is stuck, not one that is waiting on the per-minute bucket.
+wall_clock_ceiling_s = 300
+
+# One. Forced for A1 rather than chosen (constraints 46, 64 and 91): one attempt at the prompt
+# ceiling is the strong endpoint's whole per-minute budget. The API also runs one question at a
+# time across the whole server, for the same reason.
+concurrency = 1
+
+# Free-form, inside the fingerprint, never inspected by the run machinery.
+[run.params]
+surface = "api"

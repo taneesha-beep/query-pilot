@@ -336,29 +336,39 @@ class Trajectory:
         return self.end is not None
 
 
-def read_transcript(path: Path | str) -> tuple[Mapping[str, Any], ...]:
+def read_transcript(
+    path: Path | str, *, while_written: bool = False
+) -> tuple[Mapping[str, Any], ...]:
     """Every event of one file, in ``seq`` order.
 
     Sorted rather than trusted to file order: ``seq`` is the ordering guarantee this format
     makes, and a reader that relied on position would quietly stop being correct the day a
     turn's tool calls ran concurrently or the layout became one file per run.
+
+    ``while_written`` is 7.1's, for a file a live trajectory is still appending to: every
+    event the writer has finished ends in a newline, so a last line without one is an event
+    caught half-written and is left for the next read rather than parsed. Off by default,
+    because a finished file is expected whole and a torn line in one must still raise.
     """
     path = Path(path)
     if not path.exists():
         return ()
+    text = path.read_text(encoding="utf-8")
+    if while_written and not text.endswith("\n"):
+        text = text[: text.rfind("\n") + 1]
     events = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in text.splitlines():
         if line.strip():
             events.append(json.loads(line))
     return tuple(sorted(events, key=lambda event: event["seq"]))
 
 
-def read_trajectories(path: Path | str) -> tuple[Trajectory, ...]:
+def read_trajectories(path: Path | str, *, while_written: bool = False) -> tuple[Trajectory, ...]:
     """Split a transcript into its start-to-end brackets, in order."""
     trajectories: list[Trajectory] = []
     start: Mapping[str, Any] | None = None
     events: list[Mapping[str, Any]] = []
-    for event in read_transcript(path):
+    for event in read_transcript(path, while_written=while_written):
         if event["kind"] == START:
             if start is not None:
                 trajectories.append(Trajectory(start, tuple(events)))
