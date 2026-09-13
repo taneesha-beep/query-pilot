@@ -56,12 +56,38 @@ def test_every_figure_it_shows_is_a_committed_summarys() -> None:
     assert a2["frontier"]["verdict"]["cascade_wins"] is False and "cascade lost" in README
 
 
+def test_the_reserve_figure_sits_beside_the_working_figure() -> None:
+    """Changed on purpose after the reserve run: `**TBD.**` gave way to the figure.
+
+    Beside the working figure, not in a footnote, with its difference and no adjective, and the
+    limitation `docs/SPLITS.md` says is repeated wherever the figure is reported.
+    """
+    reserve = load("results/a0-reserve.json")
+    beside = reserve["beside_the_working_set"]
+    section = README[README.index("### Reserve set") : README.index("## Try it")]
+    assert "TBD" not in section
+    assert beside["working"]["run_id"] == load("results/a0-working.json")["measurement"]["run_id"]
+    rows = [line for line in section.splitlines() if line.startswith("| ") and " set " in line]
+    assert share(beside["working"]) in rows[0] and "Working set" in rows[0]
+    assert f"**{share(beside['reserve'])}**" in rows[1] and "Reserve set" in rows[1]
+    for row, side in zip(rows, ("working", "reserve"), strict=True):
+        floor = beside["empty_result_floor"][side]
+        assert f"{floor['tasks']} of {floor['of']}" in row
+    difference = beside["difference"]
+    assert difference["tasks"] < 0
+    assert f"**{-difference['tasks']} fewer matches on the reserve set" in section
+    assert f"\N{MINUS SIGN}{-difference['percentage_points']} percentage points" in section
+    assert "new questions, not new schemas" in section
+    assert "no measured spread" in section
+
+
 def test_every_measured_table_names_its_provider_model_date_and_ledger() -> None:
     for document in (
         load("results/a0-working.json"),
         load("results/a1-working.json"),
         load("results/a2-cheap-working.json"),
         load("results/attacks.json"),
+        load("results/a0-reserve.json"),
     ):
         measurement = document["measurement"]
         assert f"`runs/{measurement['run_id']}/ledger.jsonl`" in README
@@ -72,7 +98,7 @@ def test_every_measured_table_names_its_provider_model_date_and_ledger() -> None
 def test_it_links_the_deployed_page_and_the_results_page() -> None:
     assert f"({SITE})" in README
     assert f"({SITE}results.html)" in README
-    assert "Reserve set" in README and "**TBD.**" in README
+    assert "Reserve set" in README
 
 
 def test_it_keeps_the_projects_vocabulary() -> None:

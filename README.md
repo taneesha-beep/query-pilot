@@ -69,7 +69,18 @@ A2 is composed from the A2-cheap and A1 runs.</sub>
 
 ### Reserve set
 
-Read once, at the very end, with A0. **TBD.**
+Read once, at the very end, with A0: 150 questions nothing was tuned against, over the same 20
+databases as the working set. So it tests new questions, not new schemas.
+
+| A0 single-shot | Matches the reference    | An empty answer matches |
+| -------------- | ------------------------ | ----------------------- |
+| Working set    | 124 / 150 — 82.6667%     | 7 of 150                |
+| Reserve set    | **111 / 150 — 74.0%**    | 7 of 150                |
+
+**13 fewer matches on the reserve set: −8.6667 percentage points.** Each set was run once, so
+there is no measured spread to call that gap large or small; it is reported as it landed.
+
+<sub>Groq, `openai/gpt-oss-120b`, 2026-09-13, `runs/20260913-100923-4a20e9/ledger.jsonl`.</sub>
 
 The [results page](https://taneesha-beep.github.io/query-pilot/results.html) adds results by difficulty, A1's trajectory measures and
 scheduler efficiency; [docs/RESULTS.md](docs/RESULTS.md) has the full write-up.

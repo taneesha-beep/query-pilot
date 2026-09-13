@@ -144,8 +144,10 @@ here reached the limit either.
 - It is **one draw**. A0 sends no temperature, so it runs at the provider's default and a
   second run of the same 150 tasks would not return the same 124. Nothing here is averaged
   over repeats, and the figure should be read with that in mind.
-- It is **not the reserve number**. `splits/reserve.json` has never been read, by this run
-  or any other, and is read once at the end of the project.
+- It is **not the reserve number**. `splits/reserve.json` was not read by this run or any
+  other before the reserve run, `20260913-100923-4a20e9`, read it once on 2026-09-13; that
+  figure is in the last section. *(This line said "has never been read, by this run or any
+  other, and is read once at the end of the project" until the reserve run.)*
 - It **includes the 10 tasks of 2.3's acceptance run**, which are members of the working
   set. Dropping them would report a rate over 140 tasks while calling it the working set.
   Nothing in A0 — its prompt, its extraction, its schema rendering — or in the equivalence
@@ -408,8 +410,9 @@ and A1 lost, is a wrong answer the defective reference agrees with — [docs/FAI
 - **It is one draw.** Neither agent sends a temperature, so both run at the provider's default
   and a second run of these 150 tasks would not return the same numbers. Nothing here is
   averaged over repeats.
-- **It is not the reserve number.** `splits/reserve.json` has never been read, by this run or
-  any other.
+- **It is not the reserve number.** `splits/reserve.json` was not read by this run or any other
+  before the reserve run, `20260913-100923-4a20e9`, which ran A0 alone. *(This line said "has
+  never been read, by this run or any other" until the reserve run.)*
 - **The limits were not moved after seeing the result.** `TURN_LIMIT` 14, `TOOL_CALL_LIMIT` 12,
   `REPAIR_LIMIT` 1 and `PROMPT_CEILING_CHARS` 22,776 are exactly what the run was declared
   with. Eight tasks were lost to `TOOL_CALL_LIMIT` and raising it afterwards would be choosing
@@ -602,22 +605,24 @@ is built on the cheap model's tokens being cheaper.
 
 ## A0 on the reserve set — the reserve run
 
-**Committed before the run, with every reserve figure `TBD`.** This fixes how the reserve figure
-is read before it exists, the way the cascade's section above was fixed before any cascade
-figure. The run happens **once**: nothing it shows is fixed and re-run, and anything it shows is
-written up here as a limitation.
+**Committed before the run, with every reserve figure `TBD`** (`1ad4f9d`), and the declaration and
+code after it (`8c59aac`), both pushed before the first request. This fixed how the reserve figure
+is read before it existed, the way the cascade's section above was fixed before any cascade
+figure. The run happened **once**: nothing it shows is fixed and re-run, and anything it shows is
+written up here as a limitation. **The figures below replaced the `TBD`s after the run; the
+reading around them is unchanged.**
 
 | | |
 |---|---|
 | Agent | A0, `strong` role — on the working set, the agent that matched the most references at the fewest tokens |
 | Provider | Groq |
-| Model | `openai/gpt-oss-120b` (served: TBD) |
-| Date | TBD |
-| Run | TBD |
-| Ledger | TBD |
-| Projection | `results/a0-reserve.json` |
+| Model | `openai/gpt-oss-120b` (served: `openai/gpt-oss-120b`) |
+| Date | 2026-09-13 |
+| Run | `20260913-100923-4a20e9` |
+| Ledger | `runs/20260913-100923-4a20e9/ledger.jsonl` |
+| Projection | [`results/a0-reserve.json`](../results/a0-reserve.json) |
 | Split | `splits/reserve.json` — 150 tasks, the same 20 databases and the same difficulty mix as the working set |
-| Declaration | `config/runs/reserve-set.toml` |
+| Declaration | [`config/runs/reserve-set.toml`](../config/runs/reserve-set.toml) |
 
 ### What runs
 
@@ -637,8 +642,10 @@ anyway; the ceilings make that mechanical. `scripts/a0_reserve.py` is the only r
 
 ### What is reported
 
-> **TBD of 150 — TBD%** match the reference, beside A0's **124 of 150 — 82.6667%** on the
-> working set. **Difference: TBD tasks, TBD percentage points** (reserve minus working).
+> **111 of 150 — 74.0%** match the reference, beside A0's **124 of 150 — 82.6667%** on the
+> working set. **Difference: −13 tasks, −8.6667 percentage points** (reserve minus working).
+>
+> **A0 matched 13 fewer references on the reserve set.** It is reported here the way it landed.
 
 The difference is computed from the counts, to four places, by code committed before the run,
 and it travels in the projection. It is written as a number with no adjective.
@@ -647,25 +654,39 @@ Beside it, whichever way it lands:
 
 | | Working set | Reserve set |
 |---|---|---|
-| Matches the reference | 124 of 150 — 82.6667% | TBD |
-| Empty-result floor — an empty answer matches | 7 of 150 — 4.6667% | TBD |
-| Matches, excluding tasks whose reference returns no rows | 117 of 143 | TBD |
-| easy | 33 of 36 — 91.6667% | TBD |
-| medium | 53 of 65 — 81.5385% | TBD |
-| hard | 19 of 25 — 76.0000% | TBD |
-| extra | 19 of 24 — 79.1667% | TBD |
-| `value_mismatch` · `row_count` · `column_count` | 13 · 11 · 2 | TBD |
-| Tokens · per solved task | 106,740 · 860.8 | TBD |
-| Requests (answered attempt rows) | 150 | TBD |
-| Running time | 737.3566 s | TBD |
-| Quota refusals, placed in the run by time | 2, per-minute | TBD |
-| Groq pools | one — `groq#1` served all 150 | TBD — three loaded: `groq#1`, `groq#2`, `groq#3` |
+| Matches the reference | 124 of 150 — 82.6667% | 111 of 150 — 74.0% |
+| Empty-result floor — an empty answer matches | 7 of 150 — 4.6667% | 7 of 150 — 4.6667% |
+| Matches, excluding tasks whose reference returns no rows | 117 of 143 | 107 of 143 |
+| easy | 33 of 36 — 91.6667% | 31 of 36 — 86.1111% |
+| medium | 53 of 65 — 81.5385% | 48 of 65 — 73.8462% |
+| hard | 19 of 25 — 76.0000% | 19 of 25 — 76.0000% |
+| extra | 19 of 24 — 79.1667% | 13 of 24 — 54.1667% |
+| `value_mismatch` · `row_count` · `column_count` | 13 · 11 · 2 | 15 · 19 · 5 |
+| Tokens · per solved task | 106,740 · 860.8 | 105,398 · 949.5 |
+| Requests (answered attempt rows) | 150 | 150 |
+| Running time | 737.3566 s | 225.4 s |
+| Quota refusals, placed in the run by time | 2, per-minute | 41, per-minute |
+| Groq pools | one — `groq#1` served all 150 | three — `groq#1` 54, `groq#2` 49, `groq#3` 47 |
 
 The reserve floor is measured the way the working set's was: every reserve reference query
 executed through the same sandbox, by the same function, after the run. "Excluding" removes the
 tasks whose reference returns no rows from both the numerator and the denominator; a solve always
 executed its reference, so it needs no row count from a task A0 did not solve. Non-solves are
 counted by reason only. They are not read or catalogued.
+
+**What the counts show, and no more.** Both sets have 7 tasks whose reference returns no rows.
+A0 matched all 7 on the working set and 4 of 7 on the reserve set; without them the two figures
+are 117 and 107 of 143, a difference of 10. By difficulty the gap is 0 on hard, 2 on easy, 5 on
+medium and 6 on extra. `row_count` is the reason that moved most, 11 to 19. No completion stopped
+at the 1,024-token ceiling, and no candidate reached a sandbox cap or its deadline.
+
+**What the run met.** One session, 150 of 150 complete, 0 failed, 150 answered requests on three
+pools, 225.4 s running against the working run's 737.3566 s on one — 39.93 tasks a minute. Groq
+refused 41 requests for a minute — 31 on `groq#3`, 6 on `groq#1`, 4 on `groq#2` — each body naming
+tokens per minute with 6,583 to 7,490 of 8,000 used, and a retry hint of 1 to 7 s. The client
+waited them out; a refused request has no attempt row, so none of the 41 reached a task's outcome. No
+day-scope refusal. 105,398 tokens against a ceiling of 213,480. The refusals come from
+`runs/quota-walls.jsonl`, placed inside the run's one session by time; the ledger carries none.
 
 ### No threshold
 
@@ -698,9 +719,9 @@ worse reserve figure, and it holds without deciding what "meaningfully" means.
 
 ### Declared beside the figure, whichever way it lands
 
-- **Pools.** The working run used one Groq pool; the reserve run loads three. A pool is an
-  account, not a model, and every attempt row names the model it reached.
-- **Dates.** The working run: 2026-09-08. The reserve run: TBD.
+- **Pools.** The working run used one Groq pool; the reserve run used three. A pool is an
+  account, not a model, and every attempt row names `openai/gpt-oss-120b`.
+- **Dates.** The working run: 2026-09-08. The reserve run: 2026-09-13.
 - **The code between the two runs**, as listed under *What runs*.
 
 ### If the run stops
@@ -709,6 +730,7 @@ It is resumed under **the same run ID**: a task with an answer is never re-run, 
 is retried. A new run ID on the reserve set would be a second reading, and the script refuses one.
 If the run cannot finish, the figure is `TBD (run incomplete: …)` and no rate over fewer tasks is
 reported. A ceiling is not raised to finish it without a decision recorded in the run's ledger.
+*It did not stop: one session, no resume.*
 
 Once the figure is committed it is frozen, and any later change to an agent is measured on the
-working set only.
+working set only. **The reserve set has now been read, once, by run `20260913-100923-4a20e9`.**

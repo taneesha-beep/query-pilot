@@ -71,6 +71,9 @@ INPUTS: Final[Mapping[str, str]] = {
     # 7.4's results page, beside the projections above.
     "a1_metrics": "results/a1-trajectory-metrics.json",
     "scheduler": "results/scheduler-efficiency.json",
+    # The reserve run's projection. The page reads its aggregates only, never a task: no reserve
+    # task ID reaches viewer/data/, and splits/reserve.json is never an input.
+    "a0_reserve": "results/a0-reserve.json",
 }
 
 LABELS: Final[Mapping[str, str]] = {
@@ -621,7 +624,15 @@ def build(root: Path | str) -> dict[str, Any]:
         "attacks": index_attacks,
         "preloaded": preloaded_attack_cases(attacks["cases"]),
     }
-    files["results.json"] = results_page(root, a0=a0, a1=a1, cheap=cheap, a2=a2, attacks=attacks)
+    files["results.json"] = results_page(
+        root,
+        a0=a0,
+        a1=a1,
+        cheap=cheap,
+        a2=a2,
+        attacks=attacks,
+        reserve=_load(root, "a0_reserve"),
+    )
     return files
 
 
@@ -675,8 +686,16 @@ def results_page(
     cheap: Mapping[str, Any],
     a2: Mapping[str, Any],
     attacks: Mapping[str, Any],
+    reserve: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Every committed summary, as the tables the results page lays out. Re-scores nothing."""
+    """Every committed summary, as the tables the results page lays out. Re-scores nothing.
+
+    The reserve run's section reads only ``beside_the_working_set``, the comparison the run's
+    script computed with `query_pilot.reserve.compare`: aggregates, never a task.
+    """
+    beside = reserve["beside_the_working_set"]
+    if beside["working"]["run_id"] != a0["measurement"]["run_id"]:
+        raise ValueError("the reserve figure is set beside a different working run than A0's")
     metrics = _load(root, "a1_metrics")
     scheduler = _load(root, "scheduler")
     acc0, acc1 = a0["execution_accuracy"], a1["execution_accuracy"]
@@ -924,21 +943,94 @@ def results_page(
                 INPUTS["scheduler"],
             ],
         },
-        {
-            "id": "reserve",
-            "eyebrow": "Read once",
-            "title": "Reserve set",
-            "lead": (
-                "Read once, after everything else is finished, with A0: the agent that matched "
-                "the most references at the fewest tokens on the working set."
-            ),
-            "columns": ["Agent", "Matches the reference", "Date", "Ledger"],
-            "rows": [["TBD", "TBD", "TBD", "TBD"]],
-            "notes": [],
-            "sources": [],
-        },
+        _reserve_section(beside, reserve, a0, difficulty),
     ]
     return {"definition": MATCH_DEFINITION, "sections": sections}
+
+
+def _reserve_section(
+    beside: Mapping[str, Any],
+    reserve: Mapping[str, Any],
+    a0: Mapping[str, Any],
+    difficulty: tuple[str, ...],
+) -> dict[str, Any]:
+    """The reserve figure beside the working figure, as `docs/RESULTS.md` fixed before the run.
+
+    Every cell comes from ``beside``; a block the run could not finish reads ``TBD``.
+    """
+
+    def share(block: Any) -> str:
+        if not isinstance(block, Mapping) or isinstance(block.get("percent"), str):
+            return "TBD"
+        return _share(block["solved"], block["of"], block["percent"])
+
+    def floor(block: Mapping[str, Any]) -> str:
+        return f"{block['tasks']} of {block['of']} — {block['percent']}%"
+
+    def tokens(block: Mapping[str, Any], key: str) -> str:
+        value = block[key]
+        return "TBD" if isinstance(value, str) else _num(value)
+
+    def level(side: str, name: str) -> str:
+        levels = beside["by_difficulty"][side]
+        return "TBD" if isinstance(levels, str) else share(levels[name])
+
+    difference = beside["difference"]
+    if isinstance(difference["tasks"], str):
+        headline = "The reserve run did not finish, so it has no figure: TBD."
+    elif difference["tasks"] == 0:
+        headline = "The reserve set matched as many references as the working set."
+    else:
+        headline = (
+            f"Reserve minus working: {difference['tasks']:+d} tasks, "
+            f"{difference['percentage_points']:+} percentage points. Each set has been run once, "
+            "so there is no measured spread to call that large or small."
+        )
+    return {
+        "id": "reserve",
+        "eyebrow": "Read once",
+        "title": "Reserve set",
+        "lead": (
+            "A0, run once at the very end on 150 questions nothing was tuned against, beside its "
+            "working-set figure. A0 is the agent that matched the most references at the fewest "
+            "tokens on the working set."
+        ),
+        "columns": ["A0", "Working set", "Reserve set"],
+        "rows": [
+            ["Matches the reference", share(beside["working"]), share(beside["reserve"])],
+            [
+                "An empty answer matches",
+                floor(beside["empty_result_floor"]["working"]),
+                floor(beside["empty_result_floor"]["reserve"]),
+            ],
+            [
+                "Matches, without those",
+                share(beside["excluding_empty_references"]["working"]),
+                share(beside["excluding_empty_references"]["reserve"]),
+            ],
+            *([name, level("working", name), level("reserve", name)] for name in difficulty),
+            [
+                "Tokens",
+                tokens(beside["tokens"]["working"], "total"),
+                tokens(beside["tokens"]["reserve"], "total"),
+            ],
+            [
+                "Tokens per solved task",
+                tokens(beside["tokens"]["working"], "per_solved_task"),
+                tokens(beside["tokens"]["reserve"], "per_solved_task"),
+            ],
+        ],
+        "notes": [
+            headline,
+            "The same 20 databases appear in both sets, so this tests new questions, not new "
+            "schemas.",
+        ],
+        "sources": [
+            f"Reserve: {_source(reserve['measurement'])}",
+            f"Working: {_source(a0['measurement'])}",
+            "results/a0-reserve.json, results/a0-working.json",
+        ],
+    }
 
 
 def _run_card(document: Mapping[str, Any]) -> dict[str, Any]:

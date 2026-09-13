@@ -67,8 +67,21 @@ def test_the_committed_data_rebuilds_exactly_from_committed_files(built) -> None
 def test_the_builder_reads_only_committed_inputs() -> None:
     for relative in v.INPUTS.values():
         assert not relative.startswith(("runs/", "data/")), relative
-        assert "reserve" not in relative
         assert (REPO / relative).exists(), relative
+    # Changed on purpose after the reserve run: its projection is the one reserve input, and the
+    # page reads only its aggregates. splits/reserve.json is never an input.
+    assert [r for r in v.INPUTS.values() if "reserve" in r] == ["results/a0-reserve.json"]
+
+
+def test_no_reserve_task_reaches_anything_the_page_can_show(built) -> None:
+    """The reserve run's task IDs are read from its projection, never from the split file."""
+    reserve = {t["task_id"] for t in load("results/a0-reserve.json")["tasks"]}
+    assert len(reserve) == 150
+    assert not reserve & set(load("splits/working.json")["task_ids"])
+    shown = " ".join([*built, *v.iter_text(built)])
+    assert not reserve & set(re.findall(r"dev-\d{4}", shown))
+    for path in PAGE:
+        assert not reserve & set(re.findall(r"dev-\d{4}", path.read_text(encoding="utf-8")))
 
 
 def test_every_task_shown_is_a_working_set_task_or_an_attack_case(built) -> None:
@@ -140,12 +153,38 @@ def test_the_results_page_is_the_committed_summaries(built) -> None:
     by_agent = {run["agent"]: run["summary"]["ratio_percent"] for run in scheduler["runs"]}
     assert ratios == [f"{by_agent[a]}%" for a in ("A1", "A0", "A2-cheap")]
 
-    assert section(built, "reserve")["rows"] == [["TBD", "TBD", "TBD", "TBD"]]
+    # Changed on purpose after the reserve run: its figure replaces the TBD row, beside A0's.
+    reserve = load("results/a0-reserve.json")
+    beside = reserve["beside_the_working_set"]
+    part = section(built, "reserve")
+    rows = {row[0]: row[1:] for row in part["rows"]}
+    assert rows["Matches the reference"] == [
+        share(a0["execution_accuracy"]),
+        share(reserve["execution_accuracy"]),
+    ]
+    assert beside["working"]["run_id"] == a0["measurement"]["run_id"]
+    floors = [beside["empty_result_floor"][s] for s in ("working", "reserve")]
+    assert rows["An empty answer matches"] == [
+        f"{f['tasks']} of {f['of']} — {f['percent']}%" for f in floors
+    ]
+    assert rows["Matches, without those"] == [
+        share(beside["excluding_empty_references"][s]) for s in ("working", "reserve")
+    ]
+    for level in ("easy", "medium", "hard", "extra"):
+        assert rows[level] == [share(d["by_difficulty"][level]) for d in (a0, reserve)]
+    assert rows["Tokens"] == [f"{d['tokens']['total']:,}" for d in (a0, reserve)]
+    difference = beside["difference"]
+    if difference["tasks"] == 0:
+        assert "as many references" in part["notes"][0]
+    else:
+        assert f"{difference['tasks']:+d} tasks" in part["notes"][0]
+        assert f"{difference['percentage_points']:+} percentage points" in part["notes"][0]
+    assert "new questions, not new schemas" in part["notes"][1]
 
 
 def test_every_measured_section_names_its_provider_model_date_and_ledger(built) -> None:
     for part in built["results.json"]["sections"]:
-        if part["id"] in ("reserve", "difficulty"):
+        if part["id"] == "difficulty":
             continue
         sources = " ".join(part["sources"])
         assert LEDGER.search(sources), part["id"]

@@ -482,3 +482,113 @@ def test_a2_cheaps_metrics_and_projection_describe_the_same_run():
         "successes": 30,
         "blocked": {"provider_rejected": 5},
     }
+
+
+# --- the reserve run -------------------------------------------------------------------------
+#
+# A0, once, on the reserve set: run 20260913-100923-4a20e9. Frozen the way 2.4's figure is, and
+# read the way docs/RESULTS.md fixed before it existed. Nothing here opens splits/reserve.json.
+
+RESERVE = REPO / "results" / "a0-reserve.json"
+
+
+def reserve_results() -> dict:
+    return json.loads(RESERVE.read_text())
+
+
+def test_the_reserve_projection_carries_the_four_things_a_figure_needs_to_be_a_result():
+    measurement = reserve_results()["measurement"]
+
+    assert measurement["provider_and_model"] == ["groq/openai/gpt-oss-120b"]
+    assert measurement["model_returned"] == ["openai/gpt-oss-120b"]
+    assert measurement["date"] == "2026-09-13"
+    assert measurement["ledger"] == "runs/20260913-100923-4a20e9/ledger.jsonl"
+    assert measurement["run_id"] == "20260913-100923-4a20e9"
+    assert measurement["agent"] == "A0" and measurement["split"] == "reserve"
+
+
+def test_the_reserve_figure_is_one_finished_run_over_every_declared_task():
+    document = reserve_results()
+    accuracy = document["execution_accuracy"]
+
+    assert (accuracy["solved"], accuracy["of"], accuracy["percent"]) == (111, 150, 74.0)
+    assert accuracy["of"] == document["measurement"]["tasks_declared"] == 150
+    assert document["run"] == {
+        "status": "complete",
+        "incomplete_reason": None,
+        "tasks_complete": 150,
+        "tasks_failed": 0,
+        "attempts": 150,
+        "error_classes": {},
+    }
+    assert accuracy["solved"] == sum(1 for task in document["tasks"] if task.get("solved"))
+    assert len({task["task_id"] for task in document["tasks"]}) == 150
+    # One session and no resume: the run was read once, not stitched together.
+    counts = document["ledger_summary"]["counts"]
+    assert counts["sessions"] == 1 and counts["attempts_answered"] == 150
+    assert document["ledger_summary"]["attempts_by_model"] == {
+        "groq/openai/gpt-oss-120b[groq#1]": 54,
+        "groq/openai/gpt-oss-120b[groq#2]": 49,
+        "groq/openai/gpt-oss-120b[groq#3]": 47,
+    }
+    assert document["tokens"]["total"] == 105_398
+    assert document["tokens"]["per_solved_task"] == 949.5
+
+
+def test_the_reserve_floor_is_beside_its_figure_and_measured_on_its_own_split():
+    accuracy = reserve_results()["execution_accuracy"]
+    floor = accuracy["empty_result_floor"]
+    assert (floor["tasks"], floor["of"], floor["percent"]) == (7, 150, 4.6667)
+    assert "empty_result_floor" not in reserve_results()
+
+
+def test_the_reserve_set_shares_no_task_with_the_working_set():
+    reserve = {task["task_id"] for task in reserve_results()["tasks"]}
+    assert not reserve & {task["task_id"] for task in results()["tasks"]}
+
+
+def test_the_comparison_the_reserve_file_carries_is_recomputed_from_both_projections():
+    from query_pilot import reserve
+
+    document = reserve_results()
+    beside = document["beside_the_working_set"]
+    assert beside == reserve.compare(document, results())
+    assert beside["difference"] == {"tasks": -13, "percentage_points": -8.6667}
+    assert beside["excluding_empty_references"] == {
+        "working": {"solved": 117, "of": 143, "percent": 81.8182},
+        "reserve": {"solved": 107, "of": 143, "percent": 74.8252},
+    }
+    assert beside["threshold"] is None
+    assert beside["reasons"]["reserve"] == {
+        "solved": 111,
+        "row_count": 19,
+        "value_mismatch": 15,
+        "column_count": 5,
+    }
+
+
+def test_nothing_in_the_reserve_run_was_decided_by_a_cap_a_deadline_or_the_output_ceiling():
+    """Measured, and pinned as measured: had any been non-zero it would be reported, not fixed."""
+    assert reserve_results()["sandbox"] == {
+        "candidates_truncated": 0,
+        "candidates_timed_out": 0,
+        "completions_stopped_at_length": 0,
+    }
+    assert '"message"' not in RESERVE.read_text()
+
+
+def test_the_reserve_figures_are_the_ones_docs_results_quotes():
+    text = (REPO / "docs" / "RESULTS.md").read_text()
+    section = text[text.index("## A0 on the reserve set") :]
+    for quoted in (
+        "**111 of 150 — 74.0%**",
+        "**Difference: \N{MINUS SIGN}13 tasks, \N{MINUS SIGN}8.6667 percentage points**",
+        "| Matches the reference | 124 of 150 — 82.6667% | 111 of 150 — 74.0% |",
+        "| 117 of 143 | 107 of 143 |",
+        "| extra | 19 of 24 — 79.1667% | 13 of 24 — 54.1667% |",
+        "| 106,740 · 860.8 | 105,398 · 949.5 |",
+        "`runs/20260913-100923-4a20e9/ledger.jsonl`",
+    ):
+        assert quoted in section, quoted
+    # Every TBD the reading committed in a table has been filled.
+    assert not [line for line in section.splitlines() if line.startswith("|") and "TBD" in line]
