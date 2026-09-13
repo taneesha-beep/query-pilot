@@ -597,3 +597,118 @@ is built on the cheap model's tokens being cheaper.
   nothing, and its first attempt stays in the run's total; both runs spanned several stops.
 - **The projection's token note** says "every attempt, answered or refused" — true of what has an
   attempt row, not of the refused requests above.
+
+---
+
+## A0 on the reserve set — the reserve run
+
+**Committed before the run, with every reserve figure `TBD`.** This fixes how the reserve figure
+is read before it exists, the way the cascade's section above was fixed before any cascade
+figure. The run happens **once**: nothing it shows is fixed and re-run, and anything it shows is
+written up here as a limitation.
+
+| | |
+|---|---|
+| Agent | A0, `strong` role — on the working set, the agent that matched the most references at the fewest tokens |
+| Provider | Groq |
+| Model | `openai/gpt-oss-120b` (served: TBD) |
+| Date | TBD |
+| Run | TBD |
+| Ledger | TBD |
+| Projection | `results/a0-reserve.json` |
+| Split | `splits/reserve.json` — 150 tasks, the same 20 databases and the same difficulty mix as the working set |
+| Declaration | `config/runs/reserve-set.toml` |
+
+### What runs
+
+A0 as it scored 124 of 150 on the working set: the same system prompt, pinned to a literal in
+`tests/test_a1.py`; the schema read live from each database; one request per task, at most 1,024
+output tokens, at the provider's default temperature; the same equivalence rule through the same
+sandbox. Nothing in what A0 sends or how it is scored has changed since that run: A0's prompt was
+split into two parts that join to the pinned string (3.2), the schema renderer was split per
+table without changing a character (3.1), and controls 4 and 5 sit on a separate guarded method
+A0 does not call (4.1).
+
+The declaration is the working set's with two changes: its own split, and ceilings of **twice
+what A0's working run measured** — 213,480 tokens (2 × 106,740) and 1,475 s a session (2 ×
+737.3566 s, rounded up). Past twice its expectation a measurement has to be stopped and reported
+anyway; the ceilings make that mechanical. `scripts/a0_reserve.py` is the only reader of
+`splits/reserve.json`, and it refuses to start a second run on it.
+
+### What is reported
+
+> **TBD of 150 — TBD%** match the reference, beside A0's **124 of 150 — 82.6667%** on the
+> working set. **Difference: TBD tasks, TBD percentage points** (reserve minus working).
+
+The difference is computed from the counts, to four places, by code committed before the run,
+and it travels in the projection. It is written as a number with no adjective.
+
+Beside it, whichever way it lands:
+
+| | Working set | Reserve set |
+|---|---|---|
+| Matches the reference | 124 of 150 — 82.6667% | TBD |
+| Empty-result floor — an empty answer matches | 7 of 150 — 4.6667% | TBD |
+| Matches, excluding tasks whose reference returns no rows | 117 of 143 | TBD |
+| easy | 33 of 36 — 91.6667% | TBD |
+| medium | 53 of 65 — 81.5385% | TBD |
+| hard | 19 of 25 — 76.0000% | TBD |
+| extra | 19 of 24 — 79.1667% | TBD |
+| `value_mismatch` · `row_count` · `column_count` | 13 · 11 · 2 | TBD |
+| Tokens · per solved task | 106,740 · 860.8 | TBD |
+| Requests (answered attempt rows) | 150 | TBD |
+| Running time | 737.3566 s | TBD |
+| Quota refusals, placed in the run by time | 2, per-minute | TBD |
+| Groq pools | one — `groq#1` served all 150 | TBD — three loaded: `groq#1`, `groq#2`, `groq#3` |
+
+The reserve floor is measured the way the working set's was: every reserve reference query
+executed through the same sandbox, by the same function, after the run. "Excluding" removes the
+tasks whose reference returns no rows from both the numerator and the denominator; a solve always
+executed its reference, so it needs no row count from a task A0 did not solve. Non-solves are
+counted by reason only. They are not read or catalogued.
+
+### No threshold
+
+**No difference counts as large or small.** A0 runs at the provider's default temperature and
+each set has been run once, so there is no measured spread to derive a tolerance from — the same
+reason 5.2 set no "near" threshold. An interval computed from a formula would treat 150
+stratified, database-balanced tasks as independent draws, and would still say nothing about how
+much the model varies between two runs of the same tasks. A threshold chosen now would be a
+guess; one chosen after the figure would be choosing the result.
+
+So **the reserve figure and its difference go in the README next to the working figure,
+whichever way they land**, not in a footnote. That is where the roadmap puts a meaningfully
+worse reserve figure, and it holds without deciding what "meaningfully" means.
+
+### What this figure is, and is not
+
+- **It is agreement with the reference queries**, not correctness. References err both ways: at
+  least 8 of A0's 124 working-set solves match references verified to return wrong data. The
+  reserve set's references have not been examined, and will not be.
+- **It measures task generalisation, not schema generalisation.** The same twenty databases
+  appear in both sets, so the reserve figure answers "does this agent hold up on questions it has
+  not been tuned against?" and not "does this agent hold up on databases it has never seen?" The
+  second is the stronger claim and this project does not make it
+  ([SPLITS.md](SPLITS.md#limitation-the-reserve-set-measures-task-generalisation-not-schema-generalisation)).
+- **The two sets share a difficulty mix by construction, not a database spread.** Eleven of the
+  twenty databases have the same count in both; the largest gap is four tasks, on `car_1`.
+- **It is one draw, and so is the working figure.** A difference between them mixes which
+  questions were drawn with the model's own variation, and one run of each cannot separate the
+  two.
+
+### Declared beside the figure, whichever way it lands
+
+- **Pools.** The working run used one Groq pool; the reserve run loads three. A pool is an
+  account, not a model, and every attempt row names the model it reached.
+- **Dates.** The working run: 2026-09-08. The reserve run: TBD.
+- **The code between the two runs**, as listed under *What runs*.
+
+### If the run stops
+
+It is resumed under **the same run ID**: a task with an answer is never re-run, and a failed task
+is retried. A new run ID on the reserve set would be a second reading, and the script refuses one.
+If the run cannot finish, the figure is `TBD (run incomplete: …)` and no rate over fewer tasks is
+reported. A ceiling is not raised to finish it without a decision recorded in the run's ledger.
+
+Once the figure is committed it is frozen, and any later change to an agent is measured on the
+working set only.
