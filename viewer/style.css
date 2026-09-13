@@ -59,6 +59,43 @@ body {
 .masthead h1 { margin: 0; font-size: 1.15rem; font-weight: 650; }
 .masthead h1 span { color: var(--muted); font-weight: 400; }
 .masthead p { margin: 0.25rem 0 0; }
+.intro, .howto, .legend { max-width: 76ch; }
+.intro { margin-top: 0.4rem; }
+.howto { margin: 0.4rem 0 0; padding-left: 1.3rem; }
+.howto li { margin: 0.1rem 0; }
+.legend { margin-top: 0.3rem; }
+.legend dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.3rem 0.9rem;
+  margin: 0.4rem 0 0.3rem;
+  font-size: 0.9rem;
+}
+.legend dt { font-weight: 600; }
+.legend dd { margin: 0; }
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+.step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.78rem;
+}
+.hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.4rem; }
+.hint p { margin: 0.15rem 0; }
+.controls .field-label { font-size: 0.8rem; margin: 0.5rem 0 0.2rem; }
+.section-title { margin: 1rem 0 0.2rem; font-size: 0.95rem; }
 
 .layout {
   display: grid;
@@ -71,7 +108,8 @@ body {
   .layout { grid-template-columns: minmax(0, 1fr); }
 }
 
-.controls section { margin-bottom: 1.1rem; }
+.controls section { margin-bottom: 1rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); }
+.controls section:last-child { border-bottom: 0; }
 .controls label, .label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
 select, textarea, button { font: inherit; color: inherit; }
 select, textarea {
@@ -173,10 +211,27 @@ table.schema td, table.schema th { border-bottom: 1px solid var(--line); padding
   padding: 0.6rem 1.5rem;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.4rem 1.4rem;
   font-size: 0.85rem;
 }
+.strip-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.strip-items { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; }
 .strip div span { display: block; color: var(--muted); font-size: 0.75rem; }
 .strip div strong { font-weight: 600; }
 .strip .verdict-ok { color: var(--ok); }
 .strip .verdict-bad { color: var(--bad); }
+
+/* Last, so it overrides the fixed strip above: on a narrow screen a fixed strip would cover a
+   quarter of it, so it ends the page instead. */
+@media (max-width: 800px) {
+  body { padding-bottom: 0; }
+  .strip { position: static; }
+}

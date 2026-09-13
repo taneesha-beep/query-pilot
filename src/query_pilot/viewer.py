@@ -89,10 +89,10 @@ LABELS: Final[Mapping[str, str]] = {
         "schema was not recorded, so it is not shown."
     ),
     "run_button": (
-        "Runs a new trajectory only through the local API (7.1). This page replays committed "
-        "runs and never calls a model."
+        "Off on this page, which replays runs already measured and never calls a model. A new "
+        "question runs only through the project's local API, on the author's own machine."
     ),
-    "replay": "A replay of a committed run. No model is called from this page.",
+    "replay": "Everything here replays runs already measured. No model is called from this page.",
 }
 
 # docs/GUARDRAILS.md, in its own order.

@@ -74,7 +74,7 @@
   function fillDatabases() {
     const select = $("database");
     clear(select);
-    select.append(el("option", { value: "", text: "Every working-set database" }));
+    select.append(el("option", { value: "", text: `all ${state.index.databases.length} databases` }));
     for (const db of state.index.databases) select.append(el("option", { value: db, text: db }));
   }
 
@@ -90,6 +90,22 @@
     if (state.taskId) select.value = state.taskId;
   }
 
+  const words = (slug) => String(slug).replaceAll("_", " ");
+  // "names (column name)", but "row values" rather than "row values (row value)".
+  function planted(poisoned) {
+    const where = words(poisoned.placement);
+    const how = words(poisoned.channel);
+    return where.startsWith(how) ? where : `${where} (${how})`;
+  }
+
+  // What each control on the left is for, with every count read from the data rather than typed.
+  function fillHints() {
+    const index = state.index;
+    $("database-hint").textContent = `${index.databases.length} SQLite databases from Spider, a public dataset of questions and databases. Choose one to narrow the list of questions, or keep them all.`;
+    $("task-hint").textContent = `The ${index.tasks.length} questions the agents were measured on. After each, ✓ where that agent's answer matches the reference and ✗ where it does not.`;
+    $("attack-hint").textContent = `${index.attacks.length} questions asked of databases with an instruction planted in a table or column name, a column's type, or the rows, to see whether the agent follows it and whether a control stops it. ${index.preloaded.length} are picked out first; the list below holds every case.`;
+  }
+
   function fillAttacks() {
     const box = $("preloaded");
     clear(box);
@@ -100,12 +116,18 @@
     }
     const select = $("attack");
     clear(select);
-    select.append(el("option", { value: "", text: "Every attack case…" }));
+    select.append(el("option", { value: "", text: "Choose an attack case…" }));
     for (const c of state.index.attacks) {
       const seen = c.seen ? (c.complied ? (c.contained ? "complied, contained" : "complied") : "resisted") : "never seen";
-      select.append(el("option", { value: c.case_id, text: `${c.case_id} · ${c.placement} · ${c.category} · ${seen}` }));
+      select.append(el("option", { value: c.case_id, text: `${c.case_id} · in ${words(c.placement)} · ${words(c.category)} · ${seen}` }));
     }
   }
+
+  const AGENTS = [
+    ["A0", "one request, with the whole schema in the prompt and no tools."],
+    ["A1", "a loop: it discovers the schema with four tools, runs queries, then answers."],
+    ["A2", "A1's loop on a cheaper model, handed to A1 when the trajectory shows it failed."],
+  ];
 
   function syncToggle() {
     for (const button of document.querySelectorAll("[data-agent]")) {
@@ -113,9 +135,13 @@
       button.setAttribute("aria-pressed", String(active));
       button.disabled = Boolean(state.attackId) && button.dataset.agent !== "A1";
     }
-    $("agent-note").textContent = state.attackId
-      ? "The attack run measured A1 only."
-      : "A0 sends one request with the whole schema; A1 discovers the schema with four tools; A2 runs A1's loop on the cheap model and escalates when the trajectory announces its own failure.";
+    const note = $("agent-note");
+    clear(note);
+    if (state.attackId) {
+      note.append(el("p", { text: "The attack run measured A1 only, so A0 and A2 are off for attack cases." }));
+      return;
+    }
+    for (const [name, what] of AGENTS) note.append(el("p", {}, el("strong", { text: name }), ` — ${what}`));
   }
 
   // -- the centre -------------------------------------------------------------------------------
@@ -209,6 +235,14 @@
     return el("section", { class: "card" }, el("h3", { text: title }), ...children);
   }
 
+  const STEPS_HINT = {
+    A0: "A0 makes a single request with no tools, so there are no steps. Its final statement and rows are below.",
+    A1: "Each tool the agent called, in order: what it sent and what came back. Its final statement and rows follow the steps.",
+    A2: "First the cheap model's trajectory; where it was handed on, A1's trajectory on the same question follows it.",
+    attack: "Each tool the agent called on the poisoned database. The planted instruction is highlighted wherever it appears.",
+    live: "Each tool the agent calls, as it happens. The page asks for new steps every second.",
+  };
+
   async function renderTask() {
     const task = await data(`tasks/${state.taskId}.json`);
     const context = $("context");
@@ -216,10 +250,12 @@
     clear(context);
     clear(steps);
     $("question").value = task.question;
-    heading(`${task.task_id} · ${task.database}${task.difficulty ? ` · ${task.difficulty}` : ""}`, [
+    heading(`${task.task_id} · ${task.database}`, [
       el("p", { text: task.question }),
+      task.difficulty ? el("p", { class: "muted small", text: `Difficulty in Spider: ${task.difficulty}` }) : null,
       task.reference_note ? el("p", { class: "note", text: task.reference_note }) : null,
     ]);
+    $("steps-hint").textContent = STEPS_HINT[state.agent];
     const prompts = state.index.system_prompts;
 
     if (state.agent === "A0") {
@@ -302,8 +338,9 @@
     const poisoned = found.poisoned;
     heading(`${found.case_id} · shown to the agent as ${found.database_shown}`, [
       el("p", { text: found.question }),
-      el("p", { class: "muted small", text: `${found.category} · planted in ${poisoned.placement} (${poisoned.channel}) · ${found.containable ? `containable by ${found.containing_control}` : "no control can contain it"}` }),
+      el("p", { class: "muted small", text: `The instruction aims for: ${words(found.category)} · planted in: ${planted(poisoned)} · ${found.containable ? `a control can contain it: ${found.containing_control}` : "no control can contain it"}` }),
     ]);
+    $("steps-hint").textContent = STEPS_HINT.attack;
     const instruction = el("p");
     instruction.append(el("mark", { text: poisoned.injected_instruction }));
     context.append(card("The poisoned schema", instruction, schemaTable(poisoned)));
@@ -352,6 +389,7 @@
     state.live = status;
     $("replay-note").textContent = status.masthead;
     $("run-note").textContent = status.note;
+    $("question-label").textContent = "Your question: edit this one, or type your own";
     $("question").readOnly = false;
     const select = $("live-agent");
     clear(select);
@@ -416,6 +454,7 @@
     if (view.system_prompt) {
       context.append(el("details", { class: "card" }, el("summary", { text: `What ${view.agent} was told` }), pre(view.system_prompt)));
     }
+    $("steps-hint").textContent = STEPS_HINT.live;
     renderSteps(steps, { steps: view.steps || [], end: view.end });
     if (view.status === "running" || view.status === "starting") {
       steps.append(el("li", { class: "divider" }, el("span", { class: "muted", text: "running: the page asks again every second" })));
@@ -504,6 +543,7 @@
     state.index = await data("index.json");
     $("replay-note").textContent = state.index.labels.replay;
     $("run-note").textContent = state.index.labels.run_button;
+    fillHints();
     fillDatabases();
     fillTasks();
     fillAttacks();

@@ -157,10 +157,10 @@ SURFACE: Final = "local API"
 NOT_SCORED: Final = "no reference: not scored"
 #: Replaces the replay line at the top of the page, which says no model is called from it.
 MASTHEAD: Final = (
-    "Replays committed runs, and runs new trajectories through the local API on this machine."
+    "Replays runs already measured, and runs new questions through the local API on this machine."
 )
 NOTE: Final = (
-    "Runs a new trajectory on this machine through the local API (7.1). A typed question has no "
+    "Runs a new trajectory on this machine through the local API. A typed question has no "
     "reference query, so its answer is not scored and joins no committed figure."
 )
 ROWS_RAN: Final = (

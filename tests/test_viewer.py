@@ -248,7 +248,7 @@ def test_the_page_never_turns_data_into_markup() -> None:
 def test_the_run_button_is_disabled_until_the_local_api_exists() -> None:
     html = (REPO / "viewer" / "index.html").read_text(encoding="utf-8")
     assert re.search(r'<button[^>]*id="run"[^>]*\bdisabled\b', html)
-    assert "7.1" in v.LABELS["run_button"]
+    assert "local API" in v.LABELS["run_button"]
 
 
 def test_the_page_and_its_labels_keep_the_projects_vocabulary() -> None:
