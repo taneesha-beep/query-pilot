@@ -18,12 +18,12 @@ it does not appear in this table.
 
 ### Execution accuracy and cost
 
-| Agent | Execution accuracy | Tokens per solved task | Provider | Model | Date | Ledger |
-|---|---|---|---|---|---|---|
-| A0 single-shot | **124 / 150 — 82.6667%** | 860.8 | Groq | `openai/gpt-oss-120b` | 2026-09-08 | `runs/20260908-133316-faecd5/ledger.jsonl` |
-| A1 agent | **116 / 150 — 77.3333%** | 6,646.8 | Groq | `openai/gpt-oss-120b` | 2026-09-10 | `runs/20260910-024454-1f69bc/ledger.jsonl` |
-| A2-cheap — A1's loop on the cheap model | **89 / 150 — 59.3333%** | 9,492.9 | Groq | `openai/gpt-oss-20b` | 2026-09-12 | `runs/20260912-055938-9712c8/ledger.jsonl` |
-| A2 cascade — cheap, escalated to A1 | **117 / 150 — 78.0%** | 10,032.3 | Groq | `openai/gpt-oss-20b`, then `openai/gpt-oss-120b` | 2026-09-12 · 2026-09-10 | the A2-cheap and A1 ledgers above |
+| Agent                                   | Execution accuracy       | Tokens per solved task | Provider | Model                                            | Date                    | Ledger                                     |
+| --------------------------------------- | ------------------------ | ---------------------- | -------- | ------------------------------------------------ | ----------------------- | ------------------------------------------ |
+| A0 single-shot                          | **124 / 150 — 82.6667%** | 860.8                  | Groq     | `openai/gpt-oss-120b`                            | 2026-09-08              | `runs/20260908-133316-faecd5/ledger.jsonl` |
+| A1 agent                                | **116 / 150 — 77.3333%** | 6,646.8                | Groq     | `openai/gpt-oss-120b`                            | 2026-09-10              | `runs/20260910-024454-1f69bc/ledger.jsonl` |
+| A2-cheap — A1's loop on the cheap model | **89 / 150 — 59.3333%**  | 9,492.9                | Groq     | `openai/gpt-oss-20b`                             | 2026-09-12              | `runs/20260912-055938-9712c8/ledger.jsonl` |
+| A2 cascade — cheap, escalated to A1     | **117 / 150 — 78.0%**    | 10,032.3               | Groq     | `openai/gpt-oss-20b`, then `openai/gpt-oss-120b` | 2026-09-12 · 2026-09-10 | the A2-cheap and A1 ledgers above          |
 
 **A query returning nothing scores 7 of 150 — 4.6667% — of this working set for free**,
 because that many of its reference queries return no rows. That floor belongs beside the
@@ -60,32 +60,32 @@ machine-readable in [results/a0-working.json](results/a0-working.json),
 
 ### Execution accuracy by difficulty
 
-| Agent | easy | medium | hard | extra | Denominators |
-|---|---|---|---|---|---|
+| Agent          | easy     | medium   | hard     | extra    | Denominators      |
+| -------------- | -------- | -------- | -------- | -------- | ----------------- |
 | A0 single-shot | 91.6667% | 81.5385% | 76.0000% | 79.1667% | 36 / 65 / 25 / 24 |
-| A1 agent | 83.3333% | 75.3846% | 76.0000% | 75.0000% | 36 / 65 / 25 / 24 |
+| A1 agent       | 83.3333% | 75.3846% | 76.0000% | 75.0000% | 36 / 65 / 25 / 24 |
 
 ### Trajectory
 
-| Measure | A1 |
-|---|---|
-| Tool calls per task (mean / median / p90) | 4.3467 / 4 / 7, over 150 |
-| Turns to solve (mean / median / p90) | 4.819 / 5 / 6, over the 116 solved |
-| **Recovery rate — first `execute_sql` errored** | **TBD over a denominator of 0** |
-| Recovery rate — first `execute_sql` empty | 1 of 6 — 16.6667% |
-| Wasted-call rate | 17 of 556 — 3.0576%, over 142 trajectories |
-| Repairs attempted / succeeded | 1 / 1 |
+| Measure                                         | A1                                         |
+| ----------------------------------------------- | ------------------------------------------ |
+| Tool calls per task (mean / median / p90)       | 4.3467 / 4 / 7, over 150                   |
+| Turns to solve (mean / median / p90)            | 4.819 / 5 / 6, over the 116 solved         |
+| **Recovery rate — first `execute_sql` errored** | **TBD over a denominator of 0**            |
+| Recovery rate — first `execute_sql` empty       | 1 of 6 — 16.6667%                          |
+| Wasted-call rate                                | 17 of 556 — 3.0576%, over 142 trajectories |
+| Repairs attempted / succeeded                   | 1 / 1                                      |
 
 A0 has no row here. A single-shot agent has no tool calls, no turns and no recovery, which
 is the point of measuring them.
 
 ### Containment
 
-| Measure | Value | Denominator |
-|---|---|---|
-| Compliance rate — the trajectory attempted the injected instruction | **8 of 45 — 17.7778%** | every attack case |
-| Containment rate — every compliant attempt refused before it executed | **5 of 5 — 100.0%** | compliant cases a control can contain |
-| Task-damage rate — resisted, and answered wrongly anyway | **0 of 37 — 0.0%** | cases the agent resisted |
+| Measure                                                               | Value                  | Denominator                           |
+| --------------------------------------------------------------------- | ---------------------- | ------------------------------------- |
+| Compliance rate — the trajectory attempted the injected instruction   | **8 of 45 — 17.7778%** | every attack case                     |
+| Containment rate — every compliant attempt refused before it executed | **5 of 5 — 100.0%**    | compliant cases a control can contain |
+| Task-damage rate — resisted, and answered wrongly anyway              | **0 of 37 — 0.0%**     | cases the agent resisted              |
 
 A1, Groq, `openai/gpt-oss-120b`, 2026-09-11, `runs/20260911-113246-1a97c9/ledger.jsonl`, over
 the 45-case corpus. These three have different denominators and are never quoted as one
@@ -98,11 +98,11 @@ carries the row-value injections. [docs/ATTACKS.md](docs/ATTACKS.md),
 
 ### Scheduler efficiency
 
-| Run | Running time | Ceiling from the declared quotas | Ratio |
-|---|---|---|---|
-| **A1** — Groq, `openai/gpt-oss-120b`, 2026-09-10 | 5,418.2073 s | 5,244.1274 s | **96.7871%** |
-| A0 — Groq, `openai/gpt-oss-120b`, 2026-09-08 | 737.3566 s | 734.4157 s | 99.6012% |
-| A2-cheap — Groq, `openai/gpt-oss-20b`, 2026-09-12 | 3,255.4176 s | 3,084.1555 s | 94.7392% |
+| Run                                               | Running time | Ceiling from the declared quotas | Ratio        |
+| ------------------------------------------------- | ------------ | -------------------------------- | ------------ |
+| **A1** — Groq, `openai/gpt-oss-120b`, 2026-09-10  | 5,418.2073 s | 5,244.1274 s                     | **96.7871%** |
+| A0 — Groq, `openai/gpt-oss-120b`, 2026-09-08      | 737.3566 s   | 734.4157 s                       | 99.6012%     |
+| A2-cheap — Groq, `openai/gpt-oss-20b`, 2026-09-12 | 3,255.4176 s | 3,084.1555 s                     | 94.7392%     |
 
 **A measurement of this project's scheduler, not of Groq's tiers**: the least time the declared
 per-pool limits allow for the requests each run actually made, against the time the run took,
@@ -118,13 +118,12 @@ before the figures existed (`d027fc7`). [docs/PERFORMANCE.md](docs/PERFORMANCE.m
 ### Reserve set
 
 Read once, after everything else is finished. It runs the best agent measured on the working
-set, and **after Phase 5 that is still A0**: the highest agreement with the references (124 of
-150) at the fewest tokens (860.8 a solved task). Neither A1 (116) nor the cascade (117) overtook
+set, and **after Phase 5 that is still A0**: the highest agreement with the references (124 of 150) at the fewest tokens (860.8 a solved task). Neither A1 (116) nor the cascade (117) overtook
 it.
 
 | Agent | Execution accuracy | Date | Ledger |
-|---|---|---|---|
-| TBD | TBD | TBD | TBD |
+| ----- | ------------------ | ---- | ------ |
+| TBD   | TBD                | TBD  | TBD    |
 
 ## Status
 
@@ -187,8 +186,8 @@ file is what the trajectory metrics, the containment measurement and the viewer 
 **Its final answer is validated before it is executed** — exactly one statement, and that
 statement must open a read-only query. A reply that fails gets **one** repair attempt with the
 validation error fed back, and repair attempts and successes are counted as their own figures.
-A trajectory that ran out of turns or tool calls gets no repair: repair answers *"you replied,
-and the reply was not a single valid statement"*, not *"you never replied"*, and rescuing the
+A trajectory that ran out of turns or tool calls gets no repair: repair answers _"you replied,
+and the reply was not a single valid statement"_, not _"you never replied"_, and rescuing the
 others would hide every trajectory that ran out of room behind an extra request.
 
 **The four trajectory measures above are defined before they are taken**, in
@@ -291,7 +290,3 @@ uv run ruff check .
 ```
 
 The test suite makes no live API calls. It passes with no network and no keys present.
-
-## Licence
-
-MIT. See [LICENSE](LICENSE).
