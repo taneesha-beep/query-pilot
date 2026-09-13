@@ -115,6 +115,68 @@ strong { font-weight: 650; }
   font-size: 0.8rem;
 }
 .badge:empty { display: none; }
+.badge { display: table; margin: 0.9rem auto 0; }
+
+/* Between the two pages. */
+.nav {
+  display: inline-flex;
+  gap: 3px;
+  margin-top: 1.2rem;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+}
+.nav a {
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.12s, color 0.12s;
+}
+.nav a:hover { background: var(--accent-soft); color: var(--accent); }
+.nav a[aria-current="page"] { background: var(--accent); color: var(--accent-ink); }
+.nav a:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+
+/* -- the results page --------------------------------------------------------------------------- */
+
+.report-page { padding-bottom: 0; }
+.report { width: calc(100% - 3rem); max-width: 68rem; margin: 0 auto 3.5rem; }
+.definition {
+  margin: 0 0 1.5rem;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid var(--accent-line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-size: 0.92rem;
+}
+.report-sections { display: grid; gap: 1.25rem; }
+.report-section {
+  padding: 1.5rem 1.7rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+table.figures { width: 100%; border-collapse: collapse; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+table.figures th, table.figures td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.figures thead th {
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+table.figures tbody th { font-weight: 650; }
+table.figures tbody tr:last-child > * { border-bottom: 0; }
+.report-notes { margin: 1rem 0 0; padding-left: 1.15rem; color: var(--ink-soft); font-size: 0.92rem; }
+.report-notes li { margin: 0.3rem 0; }
+.sources { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--line-strong); color: var(--muted); font-size: 0.8rem; }
+.sources p { margin: 0.1rem 0; font-family: var(--mono); font-size: 0.76rem; }
 
 /* -- what this tool does ---------------------------------------------------------------------- */
 

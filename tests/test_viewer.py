@@ -25,7 +25,10 @@ from query_pilot.sandbox import single_read_only_statement
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "viewer" / "data"
-PAGE = [REPO / "viewer" / name for name in ("index.html", "app.js", "style.css")]
+PAGE = [
+    REPO / "viewer" / name
+    for name in ("index.html", "app.js", "style.css", "results.html", "results.js")
+]
 LIFTS = {
     "a1": REPO / "tests" / "transcripts" / "a1-working-lifted" / "transcripts",
     "a2-cheap": REPO / "tests" / "transcripts" / "a2-cheap-working-lifted" / "transcripts",
@@ -88,6 +91,77 @@ def test_nothing_the_page_can_show_carries_a_key(built) -> None:
         assert not KEYS.search(text), text[:120]
     for path in [*PAGE, *(p for lift in LIFTS.values() for p in lift.glob("*.jsonl"))]:
         assert not KEYS.search(path.read_text(encoding="utf-8")), path
+
+
+# -- 7.4's results page --------------------------------------------------------------------------
+
+LEDGER = re.compile(r"runs/\d{8}-\d{6}-[0-9a-f]{6}/ledger\.jsonl")
+
+
+def section(built, name: str) -> dict:
+    return next(s for s in built["results.json"]["sections"] if s["id"] == name)
+
+
+def test_the_results_page_is_the_committed_summaries(built) -> None:
+    a0, a1 = load("results/a0-working.json"), load("results/a1-working.json")
+    cheap, a2 = load("results/a2-cheap-working.json"), load("results/a2-working.json")
+    attacks = load("results/attacks.json")
+    scheduler = load("results/scheduler-efficiency.json")
+
+    def share(block, sep=" / ", count="solved"):
+        return f"{block[count]}{sep}{block['of']} — {block['percent']}%"
+
+    rows = section(built, "comparison")["rows"]
+    assert [r[1] for r in rows] == [
+        share(a0["execution_accuracy"]),
+        share(a1["execution_accuracy"]),
+    ]
+    assert [r[2] for r in rows] == [f"{d['tokens']['total']:,}" for d in (a0, a1)]
+    assert [r[3] for r in rows] == [f"{d['tokens']['per_solved_task']:,}" for d in (a0, a1)]
+    ratio = round(a1["tokens"]["total"] / a0["tokens"]["total"], 2)
+    assert f"{ratio}\u00d7 the tokens" in section(built, "comparison")["notes"][0]
+
+    got = [r[1] for r in section(built, "containment")["rows"]]
+    wanted = [
+        share(attacks[k], " of ", "count") for k in ("compliance", "containment", "task_damage")
+    ]
+    assert got == wanted
+
+    frontier = section(built, "frontier")
+    assert [r[2] for r in frontier["rows"]] == [
+        share(d["execution_accuracy"]) for d in (a0, a1, cheap, a2)
+    ]
+    assert frontier["rows"][-1][4] == f"{a2['frontier']['verdict']['cascade']:,}"
+    assert a2["frontier"]["verdict"]["cascade_wins"] is False
+    assert "The cascade loses" in frontier["notes"][0]
+    assert f"{round(a2['frontier']['break_even_price_ratio'] * 100, 2)}%" in frontier["notes"][2]
+
+    ratios = [r[3] for r in section(built, "scheduler")["rows"]]
+    by_agent = {run["agent"]: run["summary"]["ratio_percent"] for run in scheduler["runs"]}
+    assert ratios == [f"{by_agent[a]}%" for a in ("A1", "A0", "A2-cheap")]
+
+    assert section(built, "reserve")["rows"] == [["TBD", "TBD", "TBD", "TBD"]]
+
+
+def test_every_measured_section_names_its_provider_model_date_and_ledger(built) -> None:
+    for part in built["results.json"]["sections"]:
+        if part["id"] in ("reserve", "difficulty"):
+            continue
+        sources = " ".join(part["sources"])
+        assert LEDGER.search(sources), part["id"]
+        assert "results/" in sources, part["id"]
+        assert re.search(r"2026-09-\d\d", " ".join(map(str, part["rows"])) + sources), part["id"]
+
+
+def test_the_results_page_says_matches_the_reference_and_never_quotes_a_queue_wait(built) -> None:
+    results = built["results.json"]
+    assert "not proof of a right answer" in results["definition"]
+    for text in v.iter_text({"results.json": results}):
+        lowered = text.casefold()
+        assert not re.search(r"\bcorrect\b", lowered), text
+        # The derived queue wait is never quoted without its caveat (constraint 102); this page
+        # quotes none, and adding one means adding the caveat beside it.
+        assert "queue" not in lowered, text
 
 
 # -- the readings the viewer inherits ------------------------------------------------------------

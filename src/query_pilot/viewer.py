@@ -68,6 +68,9 @@ INPUTS: Final[Mapping[str, str]] = {
     "attack_transcripts": "tests/transcripts/attacks-lifted/transcripts",
     "attack_ledger": "tests/transcripts/attacks-lifted/ledger.jsonl",
     "reference_checks": "docs/a1-failure-counts.json",
+    # 7.4's results page, beside the projections above.
+    "a1_metrics": "results/a1-trajectory-metrics.json",
+    "scheduler": "results/scheduler-efficiency.json",
 }
 
 LABELS: Final[Mapping[str, str]] = {
@@ -618,7 +621,324 @@ def build(root: Path | str) -> dict[str, Any]:
         "attacks": index_attacks,
         "preloaded": preloaded_attack_cases(attacks["cases"]),
     }
+    files["results.json"] = results_page(root, a0=a0, a1=a1, cheap=cheap, a2=a2, attacks=attacks)
     return files
+
+
+# -- 7.4: the results page ------------------------------------------------------------------------
+
+#: What "matches the reference" means, said once at the top of the results page (constraint 84).
+MATCH_DEFINITION: Final = (
+    "Matches the reference: the agent's final query returned the same rows as the reference "
+    "query that comes with the question. Some reference queries are themselves wrong, so a match "
+    "is agreement with the reference, not proof of a right answer."
+)
+
+
+#: A multiplication sign, written as an escape so no linter mistakes it for an x.
+_TIMES: Final = "\u00d7"
+
+#: The attack readers' control slugs (`agents/attack_results.py`), named as the page names them.
+_CONTROL_NAMES: Final[Mapping[str, str]] = {
+    "ddl_dml_rejection": f"control 4 ({CONTROLS[4]})",
+    "multi_statement": f"control 5 ({CONTROLS[5]})",
+}
+
+
+def _num(value: float | int) -> str:
+    """A committed figure as the project writes it: thousands separated, no invented decimals."""
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
+    return f"{value:,}"
+
+
+def _share(count: int, of: int, percent: float, sep: str = " / ") -> str:
+    return f"{count}{sep}{of} — {percent}%"
+
+
+def _rate(rate: float) -> str:
+    return f"{round(rate * 100, 4)}%"
+
+
+def _source(measurement: Mapping[str, Any]) -> str:
+    """Provider, model, date and ledger: the four a figure is not a result without (12)."""
+    provider, model = str(measurement["provider_and_model"][0]).split("/", 1)
+    ledger = f"runs/{measurement['run_id']}/ledger.jsonl"
+    return f"{provider.capitalize()}, {model}, {measurement['date']}, {ledger}"
+
+
+def results_page(
+    root: Path,
+    *,
+    a0: Mapping[str, Any],
+    a1: Mapping[str, Any],
+    cheap: Mapping[str, Any],
+    a2: Mapping[str, Any],
+    attacks: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Every committed summary, as the tables the results page lays out. Re-scores nothing."""
+    metrics = _load(root, "a1_metrics")
+    scheduler = _load(root, "scheduler")
+    acc0, acc1 = a0["execution_accuracy"], a1["execution_accuracy"]
+    floor = acc0["empty_result_floor"]
+    empty = {str(t["task_id"]) for t in a0["tasks"] if t["reference_rows"] == 0}
+    if len(empty) != floor["tasks"]:
+        raise ValueError("A0's projection does not hold the empty-reference tasks it counts")
+    collected = {
+        name: sum(bool(t["solved"]) for t in doc["tasks"] if str(t["task_id"]) in empty)
+        for name, doc in (("A0", a0), ("A1", a1))
+    }
+    ratio = round(a1["tokens"]["total"] / a0["tokens"]["total"], 2)
+    points = {str(p["agent"]): p for p in a2["frontier"]["points"]}
+    verdict = a2["frontier"]["verdict"]
+    if verdict["cascade_wins"]:
+        raise ValueError("the committed verdict says the cascade wins; this page says it loses")
+    never_seen = sum(not case["exposed_via"] for case in attacks["cases"])
+    by_control = attacks["containment"]["by_control"]
+    runs = {str(run["agent"]): run for run in scheduler["runs"]}
+    difficulty = ("easy", "medium", "hard", "extra")
+    recovery = metrics["recovery_rate"]
+    wasted = metrics["wasted_calls"]
+
+    def accuracy(doc: Mapping[str, Any]) -> str:
+        acc = doc["execution_accuracy"]
+        return _share(acc["solved"], acc["of"], acc["percent"])
+
+    def stats(block: Mapping[str, Any]) -> str:
+        return " / ".join(_num(block[key]) for key in ("mean", "median", "p90"))
+
+    sections = [
+        {
+            "id": "comparison",
+            "eyebrow": "Headline",
+            "title": "A0 against A1",
+            "lead": (
+                "The same model, answer rules and sandbox. A0 is handed the whole schema in one "
+                "request; A1 has to discover it with four tools."
+            ),
+            "columns": [
+                "Agent",
+                "Matches the reference",
+                "Tokens",
+                "Tokens per solved task",
+                "Requests",
+            ],
+            "rows": [
+                [
+                    label,
+                    accuracy(doc),
+                    _num(doc["tokens"]["total"]),
+                    _num(doc["tokens"]["per_solved_task"]),
+                    _num(doc["run"]["attempts"]),
+                ]
+                for label, doc in (("A0 single-shot", a0), ("A1 agent loop", a1))
+            ],
+            "notes": [
+                f"The loop lost: A1 matched {acc0['solved'] - acc1['solved']} fewer references "
+                f"for {ratio}{_TIMES} the tokens, so there is no cost per additional solved task.",
+                f"{floor['tasks']} of {floor['of']} reference queries return no rows, so an empty "
+                f"answer matches them for free ({floor['percent']}% of the set). A0 collected "
+                f"{collected['A0']} of them and A1 {collected['A1']}.",
+            ],
+            "sources": [
+                f"A0: {_source(a0['measurement'])}",
+                f"A1: {_source(a1['measurement'])}",
+                "results/a0-working.json, results/a1-working.json",
+            ],
+        },
+        {
+            "id": "containment",
+            "eyebrow": "Under attack",
+            "title": "Containment",
+            "lead": (
+                f"A1 over {attacks['measurement']['cases_declared']} attack cases: instructions "
+                "planted in table and column names, column types and rows."
+            ),
+            "columns": ["Measure", "Result", "Out of"],
+            "rows": [
+                [
+                    label,
+                    _share(block["count"], block["of"], block["percent"], " of "),
+                    block["denominator"],
+                ]
+                for label, block in (
+                    (
+                        "Compliance — the trajectory attempted the planted instruction",
+                        attacks["compliance"],
+                    ),
+                    (
+                        "Containment — every compliant attempt refused before it ran",
+                        attacks["containment"],
+                    ),
+                    (
+                        "Task damage — resisted, and answered wrongly anyway",
+                        attacks["task_damage"],
+                    ),
+                )
+            ],
+            "notes": [
+                "The three have different denominators and are never quoted as one figure.",
+                f"All {attacks['containment']['count']} contained attempts were refused by "
+                f"{' and '.join(_CONTROL_NAMES.get(c, c) for c in sorted(by_control))}, before a "
+                "connection opened.",
+                f"{never_seen} of {attacks['measurement']['cases_declared']} cases were never "
+                "seen: the agent never looked where they were planted.",
+            ],
+            "sources": [f"A1: {_source(attacks['measurement'])}", "results/attacks.json"],
+        },
+        {
+            "id": "frontier",
+            "eyebrow": "Cost",
+            "title": "The cost frontier",
+            "lead": (
+                "What each agent matched, and what it spent. Both providers are free tiers, so "
+                "the cost here is tokens."
+            ),
+            "columns": [
+                "Agent",
+                "Model",
+                "Matches the reference",
+                "Tokens",
+                "Tokens per solved task",
+            ],
+            "rows": [
+                [
+                    "A0 single-shot",
+                    a0["measurement"]["provider_and_model"][0].split("/", 1)[1],
+                    accuracy(a0),
+                    _num(a0["tokens"]["total"]),
+                    _num(a0["tokens"]["per_solved_task"]),
+                ],
+                *(
+                    [
+                        label,
+                        ", then ".join(m.split("/", 1)[1] for m in points[name]["tokens_by_model"]),
+                        _share(points[name]["solved"], points[name]["of"], points[name]["percent"]),
+                        _num(points[name]["tokens"]),
+                        _num(points[name]["per_solved_task"]),
+                    ]
+                    for label, name in (
+                        ("A1 agent loop", "A1"),
+                        ("A2-cheap — A1's loop on the cheap model", "A2-cheap"),
+                        ("A2 cascade — cheap, escalated to A1", "A2"),
+                    )
+                ),
+            ],
+            "notes": [
+                f"The cascade loses: {_num(verdict['cascade'])} tokens a solved task against "
+                f"A1's {_num(verdict['always_strong'])}.",
+                f"The escalation rule handed {a2['escalation']['escalated']} of "
+                f"{a2['escalation']['of']} cheap trajectories to A1.",
+                "It would win only if a cheap token cost less than "
+                f"{round(a2['frontier']['break_even_price_ratio'] * 100, 2)}% of a strong one.",
+            ],
+            "sources": [
+                f"A2-cheap: {_source(cheap['measurement'])}",
+                "A2: composed from the A2-cheap and A1 runs",
+                "results/a2-cheap-working.json, results/a2-working.json",
+            ],
+        },
+        {
+            "id": "difficulty",
+            "eyebrow": "Breakdown",
+            "title": "By Spider difficulty",
+            "lead": "Matches the reference, by the difficulty Spider gives each question.",
+            "columns": ["Agent", *difficulty],
+            "rows": [
+                [label, *(f"{doc['by_difficulty'][d]['percent']}%" for d in difficulty)]
+                for label, doc in (("A0", a0), ("A1", a1), ("A2-cheap", cheap))
+            ],
+            "notes": [
+                "Out of "
+                + " / ".join(str(a1["by_difficulty"][d]["of"]) for d in difficulty)
+                + " tasks."
+            ],
+            "sources": [
+                "results/a0-working.json, results/a1-working.json, results/a2-cheap-working.json"
+            ],
+        },
+        {
+            "id": "trajectory",
+            "eyebrow": "The loop",
+            "title": "A1's trajectories",
+            "lead": "What the loop did, which a single request cannot have.",
+            "columns": ["Measure", "A1"],
+            "rows": [
+                [
+                    "Tool calls per task (mean / median / p90)",
+                    f"{stats(metrics['tool_calls_per_task'])}, over "
+                    f"{metrics['tool_calls_per_task']['n']}",
+                ],
+                [
+                    "Turns to solve (mean / median / p90)",
+                    f"{stats(metrics['turns_to_solve'])}, over the "
+                    f"{metrics['turns_to_solve']['n']} solved",
+                ],
+                [
+                    "Recovery after a first query that errored",
+                    f"{recovery['error']['rate']} over a denominator of "
+                    f"{recovery['error']['denominator']}",
+                ],
+                [
+                    "Recovery after a first query that returned nothing",
+                    f"{recovery['empty']['recovered']} of {recovery['empty']['denominator']} — "
+                    f"{_rate(recovery['empty']['rate'])}",
+                ],
+                [
+                    "Wasted calls",
+                    f"{wasted['wasted']} of {wasted['calls_counted']} — {_rate(wasted['rate'])}, "
+                    f"over {wasted['tasks_counted']} trajectories",
+                ],
+                [
+                    "Repairs attempted / succeeded",
+                    f"{metrics['repairs']['attempts']} / {metrics['repairs']['successes']}",
+                ],
+            ],
+            "notes": ["A0 has no row here: one request has no tool calls, turns or recovery."],
+            "sources": [f"A1: {_source(a1['measurement'])}", INPUTS["a1_metrics"]],
+        },
+        {
+            "id": "scheduler",
+            "eyebrow": "Throughput",
+            "title": "Scheduler efficiency",
+            "lead": (
+                "The least time the declared per-pool limits allow for the requests each run "
+                "made, against the time it ran. Read from ledgers already written."
+            ),
+            "columns": ["Run", "Running time", "Least time the limits allow", "Ratio"],
+            "rows": [
+                [
+                    f"{name} — {runs[name]['model']}, {runs[name]['date']}",
+                    f"{_num(runs[name]['summary']['running_s'])} s",
+                    f"{_num(runs[name]['summary']['ceiling_s'])} s",
+                    f"{runs[name]['summary']['ratio_percent']}%",
+                ]
+                for name in ("A1", "A0", "A2-cheap")
+            ],
+            "notes": [
+                "A measurement of this project's scheduler, not of the provider's tiers; A1's "
+                "run is the headline, fixed before its ratio existed."
+            ],
+            "sources": [
+                *(f"{name}: {runs[name]['ledger']}" for name in ("A1", "A0", "A2-cheap")),
+                INPUTS["scheduler"],
+            ],
+        },
+        {
+            "id": "reserve",
+            "eyebrow": "Read once",
+            "title": "Reserve set",
+            "lead": (
+                "Read once, after everything else is finished, with A0: the agent that matched "
+                "the most references at the fewest tokens on the working set."
+            ),
+            "columns": ["Agent", "Matches the reference", "Date", "Ledger"],
+            "rows": [["TBD", "TBD", "TBD", "TBD"]],
+            "notes": [],
+            "sources": [],
+        },
+    ]
+    return {"definition": MATCH_DEFINITION, "sections": sections}
 
 
 def _run_card(document: Mapping[str, Any]) -> dict[str, Any]:
